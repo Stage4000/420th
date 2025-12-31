@@ -3,6 +3,7 @@
 
 require_once 'steam_auth.php';
 require_once 'db.php';
+require_once 'role_manager.php';
 
 // Check if user is logged in and is a panel admin
 if (!SteamAuth::isLoggedIn()) {
@@ -16,6 +17,7 @@ if (!SteamAuth::isPanelAdmin()) {
 }
 
 $db = Database::getInstance();
+$roleManager = new RoleManager();
 $user = SteamAuth::getCurrentUser();
 
 // Handle role assignment/removal and alias updates
@@ -25,25 +27,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $roleId = isset($_POST['role_id']) ? intval($_POST['role_id']) : 0;
         
         if ($_POST['action'] === 'add_role' && $userId && $roleId) {
-            // Add role to user
+            // Add role to user using RoleManager (handles automatic ALL role)
             try {
-                $db->execute(
-                    "INSERT IGNORE INTO user_roles (user_id, role_id, granted_by) VALUES (?, ?, ?)",
-                    [$userId, $roleId, $user['id']]
-                );
-                $message = "Role added successfully!";
+                $roleManager->addRole($userId, $roleId, $user['id']);
+                $message = "Role added successfully! (Staff roles automatically get ALL role)";
                 $messageType = "success";
             } catch (Exception $e) {
                 $message = "Error adding role: " . $e->getMessage();
                 $messageType = "error";
             }
         } elseif ($_POST['action'] === 'remove_role' && $userId && $roleId) {
-            // Remove role from user
+            // Remove role from user using RoleManager
             try {
-                $db->execute(
-                    "DELETE FROM user_roles WHERE user_id = ? AND role_id = ?",
-                    [$userId, $roleId]
-                );
+                $roleManager->removeRole($userId, $roleId);
                 $message = "Role removed successfully!";
                 $messageType = "success";
             } catch (Exception $e) {
@@ -62,6 +58,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $messageType = "success";
             } catch (Exception $e) {
                 $message = "Error updating alias: " . $e->getMessage();
+                $messageType = "error";
+            }
+        } elseif ($_POST['action'] === 'sync_staff_roles') {
+            // Sync staff roles (add ALL role to all staff)
+            try {
+                $fixed = $roleManager->syncStaffRoles();
+                $message = "Staff roles synced! Added ALL role to $fixed user(s).";
+                $messageType = "success";
+            } catch (Exception $e) {
+                $message = "Error syncing staff roles: " . $e->getMessage();
                 $messageType = "error";
             }
         } elseif ($_POST['action'] === 'search_steam_id') {
@@ -398,6 +404,17 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
                 <?php echo htmlspecialchars($message); ?>
             </div>
         <?php endif; ?>
+        
+        <!-- Role Linking Info -->
+        <div class="info-card" style="margin-bottom: 2rem;">
+            <p><strong>ℹ️ Automatic Role Linking:</strong> Staff roles (ADMIN, MODERATOR, DEVELOPER) automatically receive the ALL role when assigned. Removing the ALL role will also remove all staff roles.</p>
+            <form method="POST" style="margin-top: 1rem;">
+                <input type="hidden" name="action" value="sync_staff_roles">
+                <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem;">
+                    🔄 Sync Staff Roles (Fix Existing Users)
+                </button>
+            </form>
+        </div>
         
         <!-- Role Aliases Management -->
         <div class="users-table" style="margin-bottom: 2rem;">

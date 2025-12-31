@@ -3,6 +3,7 @@
 
 require_once 'steam_auth.php';
 require_once 'db.php';
+require_once 'role_manager.php';
 
 // Check if user is logged in
 if (!SteamAuth::isLoggedIn()) {
@@ -13,6 +14,7 @@ if (!SteamAuth::isLoggedIn()) {
 $user = SteamAuth::getCurrentUser();
 $isPanelAdmin = SteamAuth::isPanelAdmin();
 $db = Database::getInstance();
+$roleManager = new RoleManager();
 
 // Handle whitelist request
 $message = '';
@@ -26,21 +28,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         
         if ($s3Role && $casRole) {
             try {
-                // Start transaction for atomicity
-                $db->getConnection()->beginTransaction();
-                
-                // Add both roles
-                $db->execute(
-                    "INSERT IGNORE INTO user_roles (user_id, role_id) VALUES (?, ?)",
-                    [$user['id'], $s3Role['id']]
-                );
-                $db->execute(
-                    "INSERT IGNORE INTO user_roles (user_id, role_id) VALUES (?, ?)",
-                    [$user['id'], $casRole['id']]
-                );
-                
-                // Commit transaction
-                $db->getConnection()->commit();
+                // Use RoleManager to add roles (handles automatic linking)
+                $roleManager->addRole($user['id'], $s3Role['id']);
+                $roleManager->addRole($user['id'], $casRole['id']);
                 
                 // Refresh user roles in session
                 $roles = SteamAuth::getUserRoles($user['id']);
@@ -50,10 +40,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $message = "You have been successfully whitelisted!";
                 $messageType = "success";
             } catch (Exception $e) {
-                // Rollback on error
-                if ($db->getConnection()->inTransaction()) {
-                    $db->getConnection()->rollBack();
-                }
                 $message = "Error processing whitelist request: " . $e->getMessage();
                 $messageType = "error";
             }
