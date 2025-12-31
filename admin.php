@@ -46,18 +46,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $message = "Error removing role: " . $e->getMessage();
                 $messageType = "error";
             }
-        } elseif ($_POST['action'] === 'update_alias' && $roleId) {
-            // Update role alias
-            $alias = trim($_POST['alias'] ?? '');
+        } elseif ($_POST['action'] === 'update_aliases') {
+            // Update all role aliases at once
             try {
-                $db->execute(
-                    "UPDATE roles SET alias = ? WHERE id = ?",
-                    [$alias, $roleId]
-                );
-                $message = "Role alias updated successfully!";
+                $db->getConnection()->beginTransaction();
+                
+                $updated = 0;
+                foreach ($allRoles as $role) {
+                    if (isset($_POST['alias_' . $role['id']])) {
+                        $alias = trim($_POST['alias_' . $role['id']]);
+                        $db->execute(
+                            "UPDATE roles SET alias = ? WHERE id = ?",
+                            [$alias, $role['id']]
+                        );
+                        $updated++;
+                    }
+                }
+                
+                $db->getConnection()->commit();
+                $message = "Successfully updated $updated role aliases!";
                 $messageType = "success";
             } catch (Exception $e) {
-                $message = "Error updating alias: " . $e->getMessage();
+                if ($db->getConnection()->inTransaction()) {
+                    $db->getConnection()->rollBack();
+                }
+                $message = "Error updating aliases: " . $e->getMessage();
                 $messageType = "error";
             }
         } elseif ($_POST['action'] === 'sync_staff_roles') {
@@ -448,30 +461,29 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
                 <h2>Role Aliases</h2>
                 <p style="margin-top: 0.5rem; color: #8b92a8; font-weight: normal;">Customize display names for roles. Leave blank to use default display name.</p>
             </div>
-            <div style="padding: 2rem;">
-                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+            <form method="POST" id="aliasForm" style="padding: 2rem;">
+                <input type="hidden" name="action" value="update_aliases">
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
                     <?php foreach ($allRoles as $role): ?>
-                        <form method="POST" style="border: 1px solid #2a3142; padding: 1rem; border-radius: 5px;">
-                            <input type="hidden" name="action" value="update_alias">
-                            <input type="hidden" name="role_id" value="<?php echo $role['id']; ?>">
+                        <div style="border: 1px solid #2a3142; padding: 1rem; border-radius: 5px;">
                             <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #e4e6eb;">
                                 <?php echo htmlspecialchars($role['name']); ?>
                                 <small style="font-weight: normal; color: #8b92a8;">(<?php echo htmlspecialchars($role['display_name']); ?>)</small>
                             </label>
                             <input 
                                 type="text" 
-                                name="alias" 
+                                name="alias_<?php echo $role['id']; ?>" 
                                 value="<?php echo htmlspecialchars($role['alias'] ?? ''); ?>" 
                                 placeholder="Enter custom alias..."
-                                style="width: 100%; padding: 0.5rem; border: 1px solid #2a3142; background: #0f1318; color: #e4e6eb; border-radius: 3px; margin-bottom: 0.5rem;"
+                                style="width: 100%; padding: 0.5rem; border: 1px solid #2a3142; background: #0f1318; color: #e4e6eb; border-radius: 3px;"
                             >
-                            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.5rem;">
-                                Update Alias
-                            </button>
-                        </form>
+                        </div>
                     <?php endforeach; ?>
                 </div>
-            </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem; font-size: 1rem;">
+                    💾 Save All Aliases
+                </button>
+            </form>
         </div>
         
         <div class="users-table">
@@ -720,6 +732,46 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
             if (e.target === this) {
                 closeModal();
             }
+        });
+        
+        // AJAX form submission for aliases to reduce page refresh
+        document.getElementById('aliasForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const form = this;
+            const button = form.querySelector('button[type="submit"]');
+            const originalText = button.textContent;
+            
+            button.disabled = true;
+            button.textContent = '⏳ Saving...';
+            
+            const formData = new FormData(form);
+            
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(() => {
+                button.textContent = '✅ Saved!';
+                button.style.background = '#48bb78';
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.background = '';
+                    button.disabled = false;
+                }, 2000);
+            })
+            .catch(error => {
+                button.textContent = '❌ Error';
+                button.style.background = '#f56565';
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.background = '';
+                    button.disabled = false;
+                }, 2000);
+            });
         });
     </script>
 </body>
