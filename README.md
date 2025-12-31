@@ -2,6 +2,22 @@
 
 A PHP-based whitelist management panel with Steam OAuth authentication for the 420th Delta community.
 
+## ✨ New Features
+
+### 🎯 Auto-Whitelist Button
+Users can click the "Whitelist Me!" button on their dashboard to automatically receive S3 and CAS roles. Once whitelisted, the button is replaced with a confirmation badge.
+
+### 🏷️ Role Aliases
+Admins can set custom display names (aliases) for any role in the admin panel. When an alias is set, it will be shown to users instead of the default role name.
+
+### 🚀 PHP Installer
+First-run installation wizard that:
+- Collects database credentials
+- Sets up the database schema automatically
+- Configures Steam API key
+- Makes the first Steam login a PANEL administrator
+- No manual SQL imports needed!
+
 ## Features
 
 - **Steam OAuth Login**: Secure authentication using Steam OpenID
@@ -37,6 +53,26 @@ The system supports the following whitelist roles:
 - Steam API Key ([Get one here](https://steamcommunity.com/dev/apikey))
 
 ### Setup Steps
+
+#### Option 1: Automated Installation (Recommended)
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/Stage4000/420th.git
+   cd 420th
+   ```
+
+2. **Upload to your web server**
+   - Upload all files to your web server's document root or subdirectory
+
+3. **Run the installer**
+   - Navigate to your installation URL (e.g., `http://yourdomain.com`)
+   - The installer will automatically detect first run and guide you through setup
+   - Provide database credentials and Steam API key
+   - Log in with Steam to create your admin account
+   - Done! The first user automatically gets PANEL administrator role
+
+#### Option 2: Manual Installation
 
 1. **Clone the repository**
    ```bash
@@ -146,13 +182,21 @@ The system supports the following whitelist roles:
 2. Click "Sign in with Steam"
 3. Authorize the application through Steam
 4. View your assigned whitelist roles on the dashboard
+5. **New:** Click "Whitelist Me!" to automatically get S3 and CAS roles if you don't have them yet
 
 ### For Admins
 
 1. Log in with a PANEL role account
 2. Click "Access Admin Panel" from the dashboard
-3. Manage user roles by clicking "Manage Roles" for any user
-4. Select/deselect roles and click "Save Changes"
+3. **Manage Role Aliases:**
+   - Scroll to the "Role Aliases" section
+   - Enter custom display names for any role
+   - Click "Update Alias" to save
+   - Users will see the alias instead of the default name
+4. **Manage User Roles:**
+   - View all users in the "All Users" section
+   - Click "Manage Roles" for any user
+   - Select/deselect roles and click "Save Changes"
 
 ## File Structure
 
