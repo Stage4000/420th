@@ -53,7 +53,11 @@ class SteamAuth {
             ],
         ]);
 
-        $result = file_get_contents(STEAM_LOGIN_URL, false, $context);
+        $result = @file_get_contents(STEAM_LOGIN_URL, false, $context);
+        if ($result === false) {
+            error_log("Failed to validate Steam OpenID response");
+            return false;
+        }
 
         preg_match("#^https?://steamcommunity.com/openid/id/([0-9]{17,25})#", $_GET['openid_claimed_id'], $matches);
         $steamId = is_numeric($matches[1]) ? $matches[1] : 0;
@@ -65,8 +69,15 @@ class SteamAuth {
      * Get Steam user info
      */
     public static function getUserInfo($steamId) {
-        $url = "http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=" . STEAM_API_KEY . "&steamids=" . $steamId;
-        $json = file_get_contents($url);
+        $url = "https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=" . STEAM_API_KEY . "&steamids=" . $steamId;
+        
+        // Use error handling for API call
+        $json = @file_get_contents($url);
+        if ($json === false) {
+            error_log("Failed to fetch Steam user info for Steam ID: " . $steamId);
+            return null;
+        }
+        
         $data = json_decode($json, true);
         
         if (isset($data['response']['players'][0])) {

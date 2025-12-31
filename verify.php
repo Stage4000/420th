@@ -6,7 +6,17 @@
  */
 
 // Security: Only allow from localhost
-if (!in_array($_SERVER['REMOTE_ADDR'], ['127.0.0.1', '::1'])) {
+// Check for real IP address, considering proxy headers
+$remoteAddr = $_SERVER['REMOTE_ADDR'];
+if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+    $ips = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+    $remoteAddr = trim($ips[0]);
+} elseif (isset($_SERVER['HTTP_X_REAL_IP'])) {
+    $remoteAddr = $_SERVER['HTTP_X_REAL_IP'];
+}
+
+$allowedIps = ['127.0.0.1', '::1'];
+if (!in_array($remoteAddr, $allowedIps) && !in_array($_SERVER['REMOTE_ADDR'], $allowedIps)) {
     die('This script can only be run from localhost. Delete this file after setup.');
 }
 
@@ -125,14 +135,20 @@ if (!in_array($_SERVER['REMOTE_ADDR'], ['127.0.0.1', '::1'])) {
                 $db = Database::getInstance();
                 echo '<div class="check success"><span class="icon">✅</span><div><strong>Database Connection:</strong> Successful</div></div>';
                 
-                // Check tables
+                // Check tables (using whitelist validation)
                 $tables = ['users', 'roles', 'user_roles'];
+                $allowedTables = ['users', 'roles', 'user_roles'];
                 foreach ($tables as $table) {
+                    // Validate table name against whitelist
+                    if (!in_array($table, $allowedTables)) {
+                        continue;
+                    }
                     try {
+                        // Safe to use after whitelist validation
                         $result = $db->query("SELECT 1 FROM `$table` LIMIT 1");
-                        echo '<div class="check success"><span class="icon">✅</span><div><strong>Table `' . $table . '`:</strong> Exists</div></div>';
+                        echo '<div class="check success"><span class="icon">✅</span><div><strong>Table `' . htmlspecialchars($table) . '`:</strong> Exists</div></div>';
                     } catch (Exception $e) {
-                        echo '<div class="check error"><span class="icon">❌</span><div><strong>Table `' . $table . '`:</strong> Not found (Run database.sql)</div></div>';
+                        echo '<div class="check error"><span class="icon">❌</span><div><strong>Table `' . htmlspecialchars($table) . '`:</strong> Not found (Run database.sql)</div></div>';
                         $errors++;
                     }
                 }
