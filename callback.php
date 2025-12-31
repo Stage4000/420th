@@ -70,7 +70,7 @@ if ($steamId) {
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            background: #0a0e1a;
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -78,34 +78,35 @@ if ($steamId) {
         }
         
         .error-container {
-            background: white;
+            background: #1a1f2e;
             padding: 3rem;
             border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
             text-align: center;
             max-width: 400px;
             width: 90%;
+            border: 1px solid #2a3142;
         }
         
         .error-icon {
             font-size: 3rem;
-            color: #e74c3c;
+            color: #fc8181;
             margin-bottom: 1rem;
         }
         
         h1 {
-            color: #e74c3c;
+            color: #fc8181;
             margin-bottom: 1rem;
         }
         
         .error-message {
-            color: #666;
+            color: #8b92a8;
             margin-bottom: 2rem;
         }
         
         .back-btn {
             display: inline-block;
-            background: #1e3c72;
+            background: #667eea;
             color: white;
             padding: 0.8rem 2rem;
             text-decoration: none;
@@ -114,7 +115,7 @@ if ($steamId) {
         }
         
         .back-btn:hover {
-            background: #2a5298;
+            background: #764ba2;
         }
     </style>
 </head>

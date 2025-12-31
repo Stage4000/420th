@@ -159,7 +159,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            background: #0a0e1a;
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -168,24 +168,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         .installer-container {
-            background: white;
+            background: #1a1f2e;
             padding: 3rem;
             border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
             max-width: 600px;
             width: 100%;
+            border: 1px solid #2a3142;
         }
         
         .logo {
             font-size: 2rem;
             font-weight: bold;
-            color: #1e3c72;
+            color: #e4e6eb;
             margin-bottom: 0.5rem;
             text-align: center;
         }
         
         .subtitle {
-            color: #666;
+            color: #8b92a8;
             margin-bottom: 2rem;
             text-align: center;
         }
@@ -201,16 +202,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: #e0e0e0;
+            background: #2a3142;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            color: #666;
+            color: #8b92a8;
         }
         
         .step.active {
-            background: #1e3c72;
+            background: #667eea;
             color: white;
         }
         
@@ -290,15 +291,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         .info-box {
-            background: #e3f2fd;
-            border-left: 4px solid #2196f3;
+            background: #1e2837;
+            border-left: 4px solid #4299e1;
             padding: 1rem;
             margin-bottom: 1.5rem;
             border-radius: 5px;
         }
         
         .info-box p {
-            color: #1565c0;
+            color: #90cdf4;
             margin: 0;
         }
         

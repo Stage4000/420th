@@ -13,7 +13,7 @@
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            background: #0a0e1a;
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -21,42 +21,49 @@
         }
         
         .login-container {
-            background: white;
+            background: #1a1f2e;
             padding: 3rem;
             border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
             text-align: center;
             max-width: 400px;
             width: 90%;
+            border: 1px solid #2a3142;
+        }
+        
+        .logo-container {
+            margin-bottom: 2rem;
         }
         
         .logo {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #1e3c72;
-            margin-bottom: 0.5rem;
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
         }
         
         .subtitle {
-            color: #666;
+            color: #8b92a8;
             margin-bottom: 2rem;
             font-size: 1.1rem;
         }
         
         .steam-login-btn {
             display: inline-block;
-            background: #000;
+            background: #171a21;
             color: white;
             padding: 1rem 2rem;
             text-decoration: none;
             border-radius: 5px;
             font-size: 1.1rem;
-            transition: background 0.3s;
+            transition: all 0.3s;
             cursor: pointer;
+            border: 1px solid #2a3142;
         }
         
         .steam-login-btn:hover {
-            background: #333;
+            background: #2a475e;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
         
         .steam-icon {
@@ -69,7 +76,7 @@
         
         .description {
             margin-top: 2rem;
-            color: #666;
+            color: #8b92a8;
             font-size: 0.9rem;
         }
     </style>
@@ -94,7 +101,12 @@
     ?>
     
     <div class="login-container">
-        <div class="logo">420th Delta</div>
+        <div class="logo-container">
+            <img src="https://www.420thdelta.net/uploads/monthly_2025_11/banner.png.2aa9557dda39e6c5ba0e3c740df490ee.png" 
+                 alt="420th Delta" 
+                 class="logo"
+                 onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\'font-size: 2rem; font-weight: bold; color: #fff; margin-bottom: 1rem;\'>420th Delta</div>';">
+        </div>
         <div class="subtitle">Whitelist Dashboard</div>
         
         <a href="<?php echo htmlspecialchars($loginUrl); ?>" class="steam-login-btn">

@@ -110,23 +110,32 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f5f5;
+            background: #0a0e1a;
             min-height: 100vh;
         }
         
         .navbar {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            background: #1a1f2e;
             color: white;
             padding: 1rem 2rem;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 1px solid #2a3142;
         }
         
         .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
             font-size: 1.5rem;
             font-weight: bold;
+        }
+        
+        .navbar-logo {
+            height: 40px;
+            width: auto;
         }
         
         .navbar-links {
@@ -140,11 +149,13 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
             text-decoration: none;
             padding: 0.5rem 1rem;
             border-radius: 5px;
-            transition: background 0.3s;
+            transition: all 0.3s;
+            border: 1px solid transparent;
         }
         
         .navbar-links a:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
         }
         
         .container {
@@ -154,7 +165,7 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
         }
         
         .header-card {
-            background: white;
+            background: #1a1f2e;
             padding: 2rem;
             border-radius: 10px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -162,7 +173,7 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
         }
         
         .header-card h1 {
-            color: #1e3c72;
+            color: #e4e6eb;
             margin-bottom: 0.5rem;
         }
         
@@ -173,25 +184,25 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
         }
         
         .message.success {
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
+            background: #1e3a28;
+            border: 1px solid #2d5a3d;
+            color: #68d391;
         }
         
         .message.error {
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
+            background: #3a1e1e;
+            border: 1px solid #5a2d2d;
+            color: #fc8181;
         }
         
         .message.info {
-            background: #d1ecf1;
-            border: 1px solid #bee5eb;
-            color: #0c5460;
+            background: #1e2f3a;
+            border: 1px solid #2d4a5a;
+            color: #90cdf4;
         }
         
         .users-table {
-            background: white;
+            background: #1a1f2e;
             border-radius: 10px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             overflow: hidden;
@@ -199,11 +210,11 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
         
         .table-header {
             padding: 1.5rem;
-            border-bottom: 2px solid #e0e0e0;
+            border-bottom: 2px solid #2a3142;
         }
         
         .table-header h2 {
-            color: #1e3c72;
+            color: #e4e6eb;
         }
         
         table {
@@ -212,7 +223,7 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
         }
         
         thead {
-            background: #f8f9fa;
+            background: #1e2837;
         }
         
         th, td {
@@ -223,11 +234,11 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
         
         th {
             font-weight: 600;
-            color: #333;
+            color: #e4e6eb;
         }
         
         tr:hover {
-            background: #f8f9fa;
+            background: #1e2837;
         }
         
         .user-info {
@@ -303,7 +314,7 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
         }
         
         .modal-content {
-            background: white;
+            background: #1a1f2e;
             padding: 2rem;
             border-radius: 10px;
             max-width: 500px;
@@ -317,7 +328,7 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
         }
         
         .modal-header h2 {
-            color: #1e3c72;
+            color: #e4e6eb;
         }
         
         .role-checkbox {
@@ -325,14 +336,14 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
             align-items: center;
             gap: 0.5rem;
             padding: 0.75rem;
-            border: 1px solid #e0e0e0;
+            border: 1px solid #2a3142;
             border-radius: 5px;
             margin-bottom: 0.5rem;
             cursor: pointer;
         }
         
         .role-checkbox:hover {
-            background: #f8f9fa;
+            background: #1e2837;
         }
         
         .role-checkbox input {
@@ -363,7 +374,13 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
 </head>
 <body>
     <nav class="navbar">
-        <div class="navbar-brand">420th Delta - Admin Panel</div>
+        <div class="navbar-brand">
+            <img src="https://www.420thdelta.net/uploads/monthly_2025_11/banner.png.2aa9557dda39e6c5ba0e3c740df490ee.png" 
+                 alt="420th Delta" 
+                 class="navbar-logo"
+                 onerror="this.style.display='none';">
+            <span>420th Delta - Admin Panel</span>
+        </div>
         <div class="navbar-links">
             <a href="dashboard.php">Dashboard</a>
             <a href="logout.php">Logout</a>
@@ -386,24 +403,24 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
         <div class="users-table" style="margin-bottom: 2rem;">
             <div class="table-header">
                 <h2>Role Aliases</h2>
-                <p style="margin-top: 0.5rem; color: #666; font-weight: normal;">Customize display names for roles. Leave blank to use default display name.</p>
+                <p style="margin-top: 0.5rem; color: #8b92a8; font-weight: normal;">Customize display names for roles. Leave blank to use default display name.</p>
             </div>
             <div style="padding: 2rem;">
                 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
                     <?php foreach ($allRoles as $role): ?>
-                        <form method="POST" style="border: 1px solid #e0e0e0; padding: 1rem; border-radius: 5px;">
+                        <form method="POST" style="border: 1px solid #2a3142; padding: 1rem; border-radius: 5px;">
                             <input type="hidden" name="action" value="update_alias">
                             <input type="hidden" name="role_id" value="<?php echo $role['id']; ?>">
-                            <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #1e3c72;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #e4e6eb;">
                                 <?php echo htmlspecialchars($role['name']); ?>
-                                <small style="font-weight: normal; color: #666;">(<?php echo htmlspecialchars($role['display_name']); ?>)</small>
+                                <small style="font-weight: normal; color: #8b92a8;">(<?php echo htmlspecialchars($role['display_name']); ?>)</small>
                             </label>
                             <input 
                                 type="text" 
                                 name="alias" 
                                 value="<?php echo htmlspecialchars($role['alias'] ?? ''); ?>" 
                                 placeholder="Enter custom alias..."
-                                style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 3px; margin-bottom: 0.5rem;"
+                                style="width: 100%; padding: 0.5rem; border: 1px solid #2a3142; background: #0f1318; color: #e4e6eb; border-radius: 3px; margin-bottom: 0.5rem;"
                             >
                             <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.5rem;">
                                 Update Alias
@@ -493,7 +510,7 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
                         <div>
                             <strong><?php echo htmlspecialchars($role['display_name']); ?></strong>
                             <?php if ($role['description']): ?>
-                                <br><small style="color: #666;"><?php echo htmlspecialchars($role['description']); ?></small>
+                                <br><small style="color: #8b92a8;"><?php echo htmlspecialchars($role['description']); ?></small>
                             <?php endif; ?>
                         </div>
                     </label>
