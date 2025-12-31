@@ -326,7 +326,15 @@ $isWhitelisted = $hasS3 && $hasCAS;
         <div class="whitelist-card">
             <h2 style="margin-bottom: 1rem;">Quick Whitelist</h2>
             <p style="color: #8b92a8; margin-bottom: 1.5rem;">
-                Click the button below to automatically add yourself to the S3 and CAS whitelist roles.
+                Click the button below to automatically add yourself to the 
+                <?php 
+                    // Get role aliases for display
+                    $db = Database::getInstance();
+                    $s3Role = $db->fetchOne("SELECT COALESCE(alias, display_name) as name FROM roles WHERE name = 'S3'");
+                    $casRole = $db->fetchOne("SELECT COALESCE(alias, display_name) as name FROM roles WHERE name = 'CAS'");
+                    echo htmlspecialchars($s3Role ? $s3Role['name'] : 'S3');
+                ?> and 
+                <?php echo htmlspecialchars($casRole ? $casRole['name'] : 'CAS'); ?> whitelist roles.
             </p>
             <form method="POST">
                 <input type="hidden" name="action" value="whitelist_me">

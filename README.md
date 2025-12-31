@@ -5,10 +5,10 @@ A PHP-based whitelist management panel with Steam OAuth authentication for the 4
 ## ✨ New Features
 
 ### 🎯 Auto-Whitelist Button
-Users can click the "Whitelist Me!" button on their dashboard to automatically receive S3 and CAS roles. Once whitelisted, the button is replaced with a confirmation badge.
+Users can click the "Whitelist Me!" button on their dashboard to automatically receive S3 and CAS roles. Once whitelisted, the button is replaced with a confirmation badge showing role aliases.
 
 ### 🏷️ Role Aliases
-Admins can set custom display names (aliases) for any role in the admin panel. When an alias is set, it will be shown to users instead of the default role name.
+Admins can set custom display names (aliases) for any role in the admin panel using a single "Save All Aliases" button. When an alias is set, it will be shown to users instead of the default role name.
 
 ### 🚀 PHP Installer
 First-run installation wizard that:
@@ -18,12 +18,33 @@ First-run installation wizard that:
 - Makes the first Steam login a PANEL administrator
 - No manual SQL imports needed!
 
+### 🔗 Automatic Role Linking
+Smart role management that automatically maintains role relationships:
+- Staff roles (ADMIN, MODERATOR, DEVELOPER) automatically receive the ALL role
+- Removing ALL role also removes all staff roles
+- Includes sync button to fix existing data
+
+### 🌙 Dark Mode Theme
+Professional dark theme with 420th Delta logo integration across all pages.
+
+### 👥 Enhanced User Management
+- Separate user management page with search functionality
+- Pagination for large user lists (20 per page)
+- Quick role assignment modal
+
+### ⚡ Optimized Database
+Restructured database using **boolean columns** for roles instead of junction table:
+- Single query to fetch user roles (no JOINs needed)
+- Faster role checks and assignments
+- Migration script included for existing installations
+
 ## Features
 
 - **Steam OAuth Login**: Secure authentication using Steam OpenID
-- **Role-Based Access Control**: Support for multiple whitelist roles
-- **User Dashboard**: View assigned whitelist roles
-- **Admin Panel**: Manage user roles (requires PANEL role)
+- **Role-Based Access Control**: Support for 12 whitelist roles
+- **User Dashboard**: View assigned whitelist roles with custom aliases
+- **Admin Panel**: Manage user roles and aliases (requires PANEL role)
+- **Optimized Database**: Boolean columns for fast role queries
 - **Database-Driven**: MySQL/MariaDB backend for persistent storage
 
 ## Supported Roles
@@ -43,7 +64,29 @@ The system supports the following whitelist roles:
 - **DEVELOPER**: Developer team member
 - **PANEL**: Panel administrator with user management rights
 
+## Database Structure
+
+The new optimized schema stores roles as boolean columns in the users table:
+- `role_s3`, `role_cas`, `role_s1`, `role_opfor`
+- `role_all`, `role_admin`, `role_moderator`, `role_trusted`
+- `role_media`, `role_curator`, `role_developer`, `role_panel`
+
+The `roles` table is kept for managing aliases and display names.
+
 ## Installation
+
+### Option 1: Automated Installation (Recommended)
+
+1. Upload all files to your web server
+2. Navigate to your installation URL (e.g., `https://yourdomain.com/`)
+3. Follow the installation wizard:
+   - Enter database credentials
+   - Enter Steam API key
+   - Click "Complete Installation"
+4. Log in with Steam to create your admin account
+5. Done! You're automatically granted the PANEL role
+
+### Option 2: Manual Installation
 
 ### Prerequisites
 
@@ -167,11 +210,39 @@ The system supports the following whitelist roles:
    -- Find your user ID
    SELECT id FROM users WHERE steam_id = 'YOUR_STEAM_ID';
    
-   -- Get PANEL role ID
-   SELECT id FROM roles WHERE name = 'PANEL';
+   -- Grant PANEL role using boolean column
+   UPDATE users SET role_panel = 1 WHERE steam_id = 'YOUR_STEAM_ID';
+   ```
+
+## Migrating from Old Schema (Junction Table)
+
+If you have an existing installation using the old `user_roles` junction table, use the migration script:
+
+1. **Backup your database**
+   ```bash
+   mysqldump -u root -p 420th_whitelist > backup_$(date +%Y%m%d).sql
+   ```
+
+2. **Run the migration script**
+   ```bash
+   php migrate_to_boolean_roles.php
+   ```
    
-   -- Grant PANEL role
-   INSERT INTO user_roles (user_id, role_id) VALUES (YOUR_USER_ID, PANEL_ROLE_ID);
+   The script will:
+   - Add boolean role columns to the users table
+   - Migrate all existing role assignments
+   - Backup the old `user_roles` table with timestamp
+   - Verify the migration was successful
+
+3. **Test the migration**
+   - Log in and verify all users still have their correct roles
+   - Check the admin panel to ensure role management works
+   - Verify automatic role linking (staff roles get ALL role)
+
+4. **Clean up (optional)**
+   ```sql
+   -- After confirming migration success, you can drop the backup table
+   DROP TABLE user_roles_backup_YYYYMMDD_HHMMSS;
    ```
 
 ## Usage
@@ -187,16 +258,22 @@ The system supports the following whitelist roles:
 ### For Admins
 
 1. Log in with a PANEL role account
-2. Click "Access Admin Panel" from the dashboard
+2. Click "Admin Panel" from the navigation bar
 3. **Manage Role Aliases:**
    - Scroll to the "Role Aliases" section
    - Enter custom display names for any role
-   - Click "Update Alias" to save
-   - Users will see the alias instead of the default name
+   - Click "💾 Save All Aliases" to save all changes at once
+   - Users will see the alias instead of the default name everywhere
 4. **Manage User Roles:**
-   - View all users in the "All Users" section
+   - Click "Manage Users" to see the user list with search and pagination
+   - Or view recent users on the main admin panel page
    - Click "Manage Roles" for any user
-   - Select/deselect roles and click "Save Changes"
+   - Select/deselect roles using checkboxes
+   - Click "Save Changes"
+   - **Note:** Staff roles (ADMIN, MODERATOR, DEVELOPER) automatically get the ALL role
+5. **Sync Staff Roles:**
+   - Use the "🔄 Sync Staff Roles" button to fix any users missing the ALL role
+   - This ensures all staff members have the ALL role assigned
 
 ## File Structure
 
