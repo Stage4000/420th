@@ -168,15 +168,49 @@ class SteamAuth {
      */
     public static function getUserRoles($userId) {
         $db = Database::getInstance();
-        $result = $db->fetchAll(
-            "SELECT r.name, r.display_name, r.alias 
-             FROM user_roles ur 
-             JOIN roles r ON ur.role_id = r.id 
-             WHERE ur.user_id = ?",
-            [$userId]
-        );
         
-        return $result;
+        // Get user's role columns
+        $user = $db->fetchOne("SELECT * FROM users WHERE id = ?", [$userId]);
+        if (!$user) {
+            return [];
+        }
+        
+        // Get role metadata (aliases, display names)
+        $rolesMetadata = $db->fetchAll("SELECT name, display_name, alias FROM roles");
+        $metadataMap = [];
+        foreach ($rolesMetadata as $meta) {
+            $metadataMap[strtolower($meta['name'])] = $meta;
+        }
+        
+        // Build roles array from boolean columns
+        $roles = [];
+        $roleColumns = [
+            'role_s3' => 'S3',
+            'role_cas' => 'CAS',
+            'role_s1' => 'S1',
+            'role_opfor' => 'OPFOR',
+            'role_all' => 'ALL',
+            'role_admin' => 'ADMIN',
+            'role_moderator' => 'MODERATOR',
+            'role_trusted' => 'TRUSTED',
+            'role_media' => 'MEDIA',
+            'role_curator' => 'CURATOR',
+            'role_developer' => 'DEVELOPER',
+            'role_panel' => 'PANEL',
+        ];
+        
+        foreach ($roleColumns as $column => $roleName) {
+            if (!empty($user[$column])) {
+                $key = strtolower($roleName);
+                $roles[] = [
+                    'name' => $roleName,
+                    'display_name' => isset($metadataMap[$key]) ? $metadataMap[$key]['display_name'] : $roleName,
+                    'alias' => isset($metadataMap[$key]) ? $metadataMap[$key]['alias'] : null,
+                ];
+            }
+        }
+        
+        return $roles;
     }
 
     /**

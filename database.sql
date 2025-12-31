@@ -4,7 +4,7 @@ CREATE DATABASE IF NOT EXISTS `420th_whitelist` CHARACTER SET utf8mb4 COLLATE ut
 
 USE `420th_whitelist`;
 
--- Users table
+-- Users table with boolean role columns for optimized queries
 CREATE TABLE IF NOT EXISTS `users` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `steam_id` VARCHAR(20) UNIQUE NOT NULL,
@@ -12,10 +12,25 @@ CREATE TABLE IF NOT EXISTS `users` (
     `avatar_url` VARCHAR(500),
     `last_login` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-    INDEX `idx_steam_id` (`steam_id`)
+    -- Role assignments as boolean columns
+    `role_s3` TINYINT(1) DEFAULT 0,
+    `role_cas` TINYINT(1) DEFAULT 0,
+    `role_s1` TINYINT(1) DEFAULT 0,
+    `role_opfor` TINYINT(1) DEFAULT 0,
+    `role_all` TINYINT(1) DEFAULT 0,
+    `role_admin` TINYINT(1) DEFAULT 0,
+    `role_moderator` TINYINT(1) DEFAULT 0,
+    `role_trusted` TINYINT(1) DEFAULT 0,
+    `role_media` TINYINT(1) DEFAULT 0,
+    `role_curator` TINYINT(1) DEFAULT 0,
+    `role_developer` TINYINT(1) DEFAULT 0,
+    `role_panel` TINYINT(1) DEFAULT 0,
+    INDEX `idx_steam_id` (`steam_id`),
+    INDEX `idx_role_panel` (`role_panel`),
+    INDEX `idx_role_admin` (`role_admin`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Roles table
+-- Roles table (kept for alias management only, roles stored as boolean columns in users table)
 CREATE TABLE IF NOT EXISTS `roles` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `name` VARCHAR(50) UNIQUE NOT NULL,
@@ -23,21 +38,6 @@ CREATE TABLE IF NOT EXISTS `roles` (
     `alias` VARCHAR(100),
     `description` TEXT,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- User roles mapping table
-CREATE TABLE IF NOT EXISTS `user_roles` (
-    `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `user_id` INT NOT NULL,
-    `role_id` INT NOT NULL,
-    `granted_by` INT,
-    `granted_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
-    FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON DELETE CASCADE,
-    FOREIGN KEY (`granted_by`) REFERENCES `users`(`id`) ON DELETE SET NULL,
-    UNIQUE KEY `unique_user_role` (`user_id`, `role_id`),
-    INDEX `idx_user_id` (`user_id`),
-    INDEX `idx_role_id` (`role_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Insert default roles

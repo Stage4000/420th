@@ -22,27 +22,21 @@ $messageType = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($_POST['action'] === 'whitelist_me') {
-        // Get S3 and CAS role IDs
-        $s3Role = $db->fetchOne("SELECT id FROM roles WHERE name = 'S3'");
-        $casRole = $db->fetchOne("SELECT id FROM roles WHERE name = 'CAS'");
-        
-        if ($s3Role && $casRole) {
-            try {
-                // Use RoleManager to add roles (handles automatic linking)
-                $roleManager->addRole($user['id'], $s3Role['id']);
-                $roleManager->addRole($user['id'], $casRole['id']);
-                
-                // Refresh user roles in session
-                $roles = SteamAuth::getUserRoles($user['id']);
-                $_SESSION['roles'] = $roles;
-                $user['roles'] = $roles;
-                
-                $message = "You have been successfully whitelisted!";
-                $messageType = "success";
-            } catch (Exception $e) {
-                $message = "Error processing whitelist request: " . $e->getMessage();
-                $messageType = "error";
-            }
+        try {
+            // Use RoleManager to add roles (handles automatic linking)
+            $roleManager->addRole($user['id'], 'S3');
+            $roleManager->addRole($user['id'], 'CAS');
+            
+            // Refresh user roles in session
+            $roles = SteamAuth::getUserRoles($user['id']);
+            $_SESSION['roles'] = $roles;
+            $user['roles'] = $roles;
+            
+            $message = "You have been successfully whitelisted!";
+            $messageType = "success";
+        } catch (Exception $e) {
+            $message = "Error processing whitelist request: " . $e->getMessage();
+            $messageType = "error";
         }
     }
 }

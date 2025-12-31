@@ -24,22 +24,22 @@ $user = SteamAuth::getCurrentUser();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         $userId = isset($_POST['user_id']) ? intval($_POST['user_id']) : 0;
-        $roleId = isset($_POST['role_id']) ? intval($_POST['role_id']) : 0;
+        $roleName = isset($_POST['role_name']) ? trim($_POST['role_name']) : '';
         
-        if ($_POST['action'] === 'add_role' && $userId && $roleId) {
+        if ($_POST['action'] === 'add_role' && $userId && $roleName) {
             // Add role to user using RoleManager (handles automatic ALL role)
             try {
-                $roleManager->addRole($userId, $roleId, $user['id']);
+                $roleManager->addRole($userId, $roleName);
                 $message = "Role added successfully! (Staff roles automatically get ALL role)";
                 $messageType = "success";
             } catch (Exception $e) {
                 $message = "Error adding role: " . $e->getMessage();
                 $messageType = "error";
             }
-        } elseif ($_POST['action'] === 'remove_role' && $userId && $roleId) {
+        } elseif ($_POST['action'] === 'remove_role' && $userId && $roleName) {
             // Remove role from user using RoleManager
             try {
-                $roleManager->removeRole($userId, $roleId);
+                $roleManager->removeRole($userId, $roleName);
                 $message = "Role removed successfully!";
                 $messageType = "success";
             } catch (Exception $e) {
@@ -98,15 +98,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Get all users with their roles
+// Get all users with their roles (from boolean columns)
 $users = $db->fetchAll("
-    SELECT u.*, 
-           GROUP_CONCAT(r.display_name SEPARATOR ', ') as roles,
-           GROUP_CONCAT(CONCAT(r.id, ':', r.name) SEPARATOR '||') as role_details
+    SELECT u.*,
+           CONCAT_WS(', ',
+               IF(u.role_s3, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='S3'), NULL),
+               IF(u.role_cas, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='CAS'), NULL),
+               IF(u.role_s1, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='S1'), NULL),
+               IF(u.role_opfor, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='OPFOR'), NULL),
+               IF(u.role_all, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='ALL'), NULL),
+               IF(u.role_admin, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='ADMIN'), NULL),
+               IF(u.role_moderator, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='MODERATOR'), NULL),
+               IF(u.role_trusted, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='TRUSTED'), NULL),
+               IF(u.role_media, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='MEDIA'), NULL),
+               IF(u.role_curator, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='CURATOR'), NULL),
+               IF(u.role_developer, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='DEVELOPER'), NULL),
+               IF(u.role_panel, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='PANEL'), NULL)
+           ) as roles
     FROM users u
-    LEFT JOIN user_roles ur ON u.id = ur.user_id
-    LEFT JOIN roles r ON ur.role_id = r.id
-    GROUP BY u.id
     ORDER BY u.last_login DESC
 ");
 
@@ -508,8 +517,31 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($users as $u): ?>
-                            <tr>
+                        <?php foreach ($users as $u): 
+                            // Build a list of role names from boolean columns
+                            $userRoleNames = [];
+                            $roleColumnMap = [
+                                'role_s3' => 'S3',
+                                'role_cas' => 'CAS',
+                                'role_s1' => 'S1',
+                                'role_opfor' => 'OPFOR',
+                                'role_all' => 'ALL',
+                                'role_admin' => 'ADMIN',
+                                'role_moderator' => 'MODERATOR',
+                                'role_trusted' => 'TRUSTED',
+                                'role_media' => 'MEDIA',
+                                'role_curator' => 'CURATOR',
+                                'role_developer' => 'DEVELOPER',
+                                'role_panel' => 'PANEL',
+                            ];
+                            foreach ($roleColumnMap as $column => $roleName) {
+                                if (!empty($u[$column])) {
+                                    $userRoleNames[] = $roleName;
+                                }
+                            }
+                            $userRolesData = implode(',', $userRoleNames);
+                        ?>
+                            <tr data-user-id="<?php echo $u['id']; ?>" data-user-roles="<?php echo htmlspecialchars($userRolesData); ?>">
                                 <td>
                                     <div class="user-info">
                                         <img src="<?php echo htmlspecialchars($u['avatar_url']); ?>" alt="Avatar" class="user-avatar">
@@ -521,7 +553,7 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
                                     <?php if ($u['roles']): ?>
                                         <div class="roles-list">
                                             <?php
-                                            $roles = explode(', ', $u['roles']);
+                                            $roles = array_filter(explode(', ', $u['roles']));
                                             foreach ($roles as $role):
                                             ?>
                                                 <span class="role-tag"><?php echo htmlspecialchars($role); ?></span>
@@ -533,7 +565,7 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
                                 </td>
                                 <td><?php echo date('M j, Y g:i A', strtotime($u['last_login'])); ?></td>
                                 <td>
-                                    <button class="btn btn-primary" onclick="openManageRoles(<?php echo $u['id']; ?>, '<?php echo htmlspecialchars($u['steam_name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($u['role_details'], ENT_QUOTES); ?>')">
+                                    <button class="btn btn-primary" onclick="openRoleModal(<?php echo $u['id']; ?>, '<?php echo htmlspecialchars($u['steam_name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($userRolesData, ENT_QUOTES); ?>')">
                                         Manage Roles
                                     </button>
                                 </td>
@@ -618,52 +650,13 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
             
             checkboxes.forEach(checkbox => {
                 if (checkbox.checked) {
-                    currentRoles.add(checkbox.getAttribute('data-role-id'));
+                    currentRoles.add(checkbox.getAttribute('data-role-name'));
                 }
             });
             
             // Find roles to add and remove
             const toAdd = [...currentRoles].filter(r => !originalRoles.has(r));
             const toRemove = [...originalRoles].filter(r => !currentRoles.has(r));
-            
-            // Create form and submit
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.style.display = 'none';
-            
-            // Add roles
-            toAdd.forEach(roleId => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'add_role[]';
-                input.value = roleId;
-                form.appendChild(input);
-            });
-            
-            // Remove roles
-            toRemove.forEach(roleId => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'remove_role[]';
-                input.value = roleId;
-                form.appendChild(input);
-            });
-            
-            // Add user ID
-            const userInput = document.createElement('input');
-            userInput.type = 'hidden';
-            userInput.name = 'user_id';
-            userInput.value = currentUserId;
-            form.appendChild(userInput);
-            
-            // Add action
-            const actionInput = document.createElement('input');
-            actionInput.type = 'hidden';
-            actionInput.name = 'action';
-            actionInput.value = 'bulk_update';
-            form.appendChild(actionInput);
-            
-            document.body.appendChild(form);
             
             // Submit each change
             let completed = 0;
@@ -675,8 +668,8 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
             }
             
             // Add roles
-            toAdd.forEach(roleId => {
-                submitRoleChange('add_role', currentUserId, roleId, () => {
+            toAdd.forEach(roleName => {
+                submitRoleChange('add_role', currentUserId, roleName, () => {
                     completed++;
                     if (completed === total) {
                         location.reload();
@@ -685,8 +678,8 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
             });
             
             // Remove roles
-            toRemove.forEach(roleId => {
-                submitRoleChange('remove_role', currentUserId, roleId, () => {
+            toRemove.forEach(roleName => {
+                submitRoleChange('remove_role', currentUserId, roleName, () => {
                     completed++;
                     if (completed === total) {
                         location.reload();
@@ -695,7 +688,7 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
             });
         }
         
-        function submitRoleChange(action, userId, roleId, callback) {
+        function submitRoleChange(action, userId, roleName, callback) {
             const form = document.createElement('form');
             form.method = 'POST';
             form.style.display = 'none';
@@ -711,8 +704,8 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
             form.appendChild(userInput);
             
             const roleInput = document.createElement('input');
-            roleInput.name = 'role_id';
-            roleInput.value = roleId;
+            roleInput.name = 'role_name';
+            roleInput.value = roleName;
             form.appendChild(roleInput);
             
             document.body.appendChild(form);

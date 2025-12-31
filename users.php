@@ -27,20 +27,20 @@ $messageType = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         $userId = isset($_POST['user_id']) ? intval($_POST['user_id']) : 0;
-        $roleId = isset($_POST['role_id']) ? intval($_POST['role_id']) : 0;
+        $roleName = isset($_POST['role_name']) ? trim($_POST['role_name']) : '';
         
-        if ($_POST['action'] === 'add_role' && $userId && $roleId) {
+        if ($_POST['action'] === 'add_role' && $userId && $roleName) {
             try {
-                $roleManager->addRole($userId, $roleId, $user['id']);
+                $roleManager->addRole($userId, $roleName);
                 $message = "Role added successfully!";
                 $messageType = "success";
             } catch (Exception $e) {
                 $message = "Error adding role: " . $e->getMessage();
                 $messageType = "error";
             }
-        } elseif ($_POST['action'] === 'remove_role' && $userId && $roleId) {
+        } elseif ($_POST['action'] === 'remove_role' && $userId && $roleName) {
             try {
-                $roleManager->removeRole($userId, $roleId);
+                $roleManager->removeRole($userId, $roleName);
                 $message = "Role removed successfully!";
                 $messageType = "success";
             } catch (Exception $e) {
@@ -71,16 +71,25 @@ $totalResult = $db->fetchOne($countQuery, $params);
 $totalUsers = $totalResult['total'];
 $totalPages = ceil($totalUsers / $perPage);
 
-// Get users with pagination
+// Get users with pagination (using boolean columns for roles)
 $users = $db->fetchAll("
-    SELECT u.*, 
-           GROUP_CONCAT(r.display_name SEPARATOR ', ') as roles,
-           GROUP_CONCAT(CONCAT(r.id, ':', r.name) SEPARATOR '||') as role_details
+    SELECT u.*,
+           CONCAT_WS(', ',
+               IF(u.role_s3, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='S3'), NULL),
+               IF(u.role_cas, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='CAS'), NULL),
+               IF(u.role_s1, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='S1'), NULL),
+               IF(u.role_opfor, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='OPFOR'), NULL),
+               IF(u.role_all, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='ALL'), NULL),
+               IF(u.role_admin, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='ADMIN'), NULL),
+               IF(u.role_moderator, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='MODERATOR'), NULL),
+               IF(u.role_trusted, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='TRUSTED'), NULL),
+               IF(u.role_media, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='MEDIA'), NULL),
+               IF(u.role_curator, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='CURATOR'), NULL),
+               IF(u.role_developer, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='DEVELOPER'), NULL),
+               IF(u.role_panel, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='PANEL'), NULL)
+           ) as roles
     FROM users u
-    LEFT JOIN user_roles ur ON u.id = ur.user_id
-    LEFT JOIN roles r ON ur.role_id = r.id
     $whereClause
-    GROUP BY u.id
     ORDER BY u.last_login DESC
     LIMIT ? OFFSET ?
 ", array_merge($params, [$perPage, $offset]));
@@ -562,20 +571,36 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
             document.getElementById('modalUserName').textContent = userName;
             
             const user = usersData.find(u => u.id == userId);
-            const userRoles = user.role_details ? user.role_details.split('||').map(d => d.split(':')[0]) : [];
+            
+            // Map role names to boolean columns
+            const roleColumnMap = {
+                'S3': 'role_s3',
+                'CAS': 'role_cas',
+                'S1': 'role_s1',
+                'OPFOR': 'role_opfor',
+                'ALL': 'role_all',
+                'ADMIN': 'role_admin',
+                'MODERATOR': 'role_moderator',
+                'TRUSTED': 'role_trusted',
+                'MEDIA': 'role_media',
+                'CURATOR': 'role_curator',
+                'DEVELOPER': 'role_developer',
+                'PANEL': 'role_panel',
+            };
             
             const roleList = document.getElementById('modalRoleList');
             roleList.innerHTML = '';
             
             allRoles.forEach(role => {
-                const hasRole = userRoles.includes(role.id.toString());
+                const column = roleColumnMap[role.name];
+                const hasRole = user && column && user[column] == 1;
                 const roleItem = document.createElement('div');
                 roleItem.className = 'role-item';
                 roleItem.innerHTML = `
-                    <span style="color: #e4e6eb;">${role.name}</span>
+                    <span style="color: #e4e6eb;">${role.display_name}</span>
                     <button 
                         class="btn btn-${hasRole ? 'secondary' : 'primary'} btn-small"
-                        onclick="toggleRole(${userId}, ${role.id}, ${hasRole})"
+                        onclick="toggleRole(${userId}, '${role.name}', ${hasRole})"
                     >
                         ${hasRole ? 'Remove' : 'Add'}
                     </button>
@@ -585,18 +610,19 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
             
             document.getElementById('roleModal').classList.add('active');
         }
+        }
         
         function closeModal() {
             document.getElementById('roleModal').classList.remove('active');
         }
         
-        function toggleRole(userId, roleId, hasRole) {
+        function toggleRole(userId, roleName, hasRole) {
             const form = document.createElement('form');
             form.method = 'POST';
             form.innerHTML = `
                 <input type="hidden" name="action" value="${hasRole ? 'remove_role' : 'add_role'}">
                 <input type="hidden" name="user_id" value="${userId}">
-                <input type="hidden" name="role_id" value="${roleId}">
+                <input type="hidden" name="role_name" value="${roleName}">
             `;
             document.body.appendChild(form);
             form.submit();

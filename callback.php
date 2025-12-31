@@ -26,16 +26,11 @@ if ($steamId) {
             $user = $db->fetchOne("SELECT id FROM users WHERE steam_id = ?", [$steamId]);
             
             if ($user) {
-                // Get PANEL role ID
-                $panelRole = $db->fetchOne("SELECT id FROM roles WHERE name = 'PANEL'");
-                
-                if ($panelRole) {
-                    // Grant PANEL role to this first user
-                    $db->execute(
-                        "INSERT IGNORE INTO user_roles (user_id, role_id) VALUES (?, ?)",
-                        [$user['id'], $panelRole['id']]
-                    );
-                }
+                // Grant PANEL role to this first user using boolean column
+                $db->execute(
+                    "UPDATE users SET role_panel = 1 WHERE id = ?",
+                    [$user['id']]
+                );
             }
             
             // Mark installation as complete
