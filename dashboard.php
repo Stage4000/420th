@@ -307,7 +307,7 @@ $isWhitelisted = $hasS3 && $hasCAS;
                  alt="420th Delta" 
                  class="navbar-logo"
                  onerror="this.style.display='none';">
-            <span class="navbar-title">420th Delta Dashboard</span>
+            <span class="navbar-title">Dashboard</span>
         </div>
         <div class="navbar-user">
             <img src="<?php echo htmlspecialchars($user['avatar_url']); ?>" alt="Avatar" class="user-avatar">
@@ -346,7 +346,15 @@ $isWhitelisted = $hasS3 && $hasCAS;
                 ✅ You are already whitelisted!
             </div>
             <p style="color: #8b92a8; margin-top: 1rem;">
-                You have S3 and CAS roles assigned.
+                You have <?php 
+                    $s3Alias = '';
+                    $casAlias = '';
+                    foreach ($user['roles'] as $role) {
+                        if ($role['name'] === 'S3') $s3Alias = $role['alias'] ?: $role['display_name'];
+                        if ($role['name'] === 'CAS') $casAlias = $role['alias'] ?: $role['display_name'];
+                    }
+                    echo htmlspecialchars($s3Alias) . ' and ' . htmlspecialchars($casAlias);
+                ?> roles assigned.
             </p>
         </div>
         <?php endif; ?>

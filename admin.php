@@ -207,6 +207,18 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
             color: #90cdf4;
         }
         
+        .info-card {
+            background: #1e2837;
+            border-left: 4px solid #4299e1;
+            padding: 1.5rem;
+            border-radius: 5px;
+            color: #e4e6eb;
+        }
+        
+        .info-card strong {
+            color: #90cdf4;
+        }
+        
         .users-table {
             background: #1a1f2e;
             border-radius: 10px;
@@ -382,10 +394,10 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
     <nav class="navbar">
         <div class="navbar-brand">
             <img src="https://www.420thdelta.net/uploads/monthly_2025_11/banner.png.2aa9557dda39e6c5ba0e3c740df490ee.png" 
-                 alt="420th Delta" 
+                 alt="Logo" 
                  class="navbar-logo"
                  onerror="this.style.display='none';">
-            <span>420th Delta - Admin Panel</span>
+            <span>Admin Panel</span>
         </div>
         <div class="navbar-links">
             <a href="dashboard.php">Dashboard</a>
@@ -407,13 +419,27 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
         
         <!-- Role Linking Info -->
         <div class="info-card" style="margin-bottom: 2rem;">
-            <p><strong>ℹ️ Automatic Role Linking:</strong> Staff roles (ADMIN, MODERATOR, DEVELOPER) automatically receive the ALL role when assigned. Removing the ALL role will also remove all staff roles.</p>
+            <p style="margin-bottom: 0.5rem;"><strong>ℹ️ Automatic Role Linking:</strong> Staff roles (ADMIN, MODERATOR, DEVELOPER) automatically receive the ALL role when assigned. Removing the ALL role will also remove all staff roles.</p>
             <form method="POST" style="margin-top: 1rem;">
                 <input type="hidden" name="action" value="sync_staff_roles">
                 <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem;">
                     🔄 Sync Staff Roles (Fix Existing Users)
                 </button>
             </form>
+        </div>
+        
+        <!--User Management Link -->
+        <div class="users-table" style="margin-bottom: 2rem;">
+            <div class="table-header">
+                <h2>User Management</h2>
+                <p style="margin-top: 0.5rem; color: #8b92a8; font-weight: normal;">Manage whitelist roles for all users</p>
+            </div>
+            <div style="padding: 2rem; text-align: center;">
+                <a href="users.php" class="btn btn-primary" style="display: inline-block; padding: 1rem 2rem; font-size: 1.1rem; text-decoration: none;">
+                    👥 Manage Users & Roles
+                </a>
+                <p style="color: #8b92a8; margin-top: 1rem;">View, search, and manage roles for all users with pagination</p>
+            </div>
         </div>
         
         <!-- Role Aliases Management -->
