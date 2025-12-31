@@ -71,31 +71,48 @@ $totalResult = $db->fetchOne($countQuery, $params);
 $totalUsers = $totalResult['total'];
 $totalPages = ceil($totalUsers / $perPage);
 
-// Get users with pagination (using boolean columns for roles)
+// Get all available roles and cache them for alias lookups
+$allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
+
+// Create a map of role names to their aliases/display names for efficient lookup
+$roleMetadata = [];
+foreach ($allRoles as $role) {
+    $roleMetadata[$role['name']] = $role['alias'] ?: $role['display_name'];
+}
+
+// Get users with pagination (using boolean columns, no subqueries needed)
 $users = $db->fetchAll("
-    SELECT u.*,
-           CONCAT_WS(', ',
-               IF(u.role_s3, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='S3'), NULL),
-               IF(u.role_cas, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='CAS'), NULL),
-               IF(u.role_s1, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='S1'), NULL),
-               IF(u.role_opfor, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='OPFOR'), NULL),
-               IF(u.role_all, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='ALL'), NULL),
-               IF(u.role_admin, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='ADMIN'), NULL),
-               IF(u.role_moderator, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='MODERATOR'), NULL),
-               IF(u.role_trusted, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='TRUSTED'), NULL),
-               IF(u.role_media, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='MEDIA'), NULL),
-               IF(u.role_curator, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='CURATOR'), NULL),
-               IF(u.role_developer, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='DEVELOPER'), NULL),
-               IF(u.role_panel, (SELECT COALESCE(alias, display_name) FROM roles WHERE name='PANEL'), NULL)
-           ) as roles
+    SELECT u.*
     FROM users u
     $whereClause
     ORDER BY u.last_login DESC
     LIMIT ? OFFSET ?
 ", array_merge($params, [$perPage, $offset]));
 
-// Get all available roles
-$allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
+// Add formatted roles to each user
+foreach ($users as &$user) {
+    $roleNames = [];
+    $roleColumnMap = [
+        'role_s3' => 'S3',
+        'role_cas' => 'CAS',
+        'role_s1' => 'S1',
+        'role_opfor' => 'OPFOR',
+        'role_all' => 'ALL',
+        'role_admin' => 'ADMIN',
+        'role_moderator' => 'MODERATOR',
+        'role_trusted' => 'TRUSTED',
+        'role_media' => 'MEDIA',
+        'role_curator' => 'CURATOR',
+        'role_developer' => 'DEVELOPER',
+        'role_panel' => 'PANEL',
+    ];
+    foreach ($roleColumnMap as $column => $roleName) {
+        if (!empty($user[$column])) {
+            $roleNames[] = $roleMetadata[$roleName];
+        }
+    }
+    $user['roles'] = implode(', ', $roleNames);
+}
 ?>
 
 <!DOCTYPE html>
