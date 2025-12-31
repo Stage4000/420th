@@ -61,11 +61,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
                 
                 // Create database if it doesn't exist
-                $testConn->exec("CREATE DATABASE IF NOT EXISTS `$dbName` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-                $testConn->exec("USE `$dbName`");
+                $dbNameSafe = preg_replace('/[^a-zA-Z0-9_]/', '', $dbName); // Sanitize database name
+                $testConn->exec("CREATE DATABASE IF NOT EXISTS `$dbNameSafe` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+                $testConn->exec("USE `$dbNameSafe`");
                 
                 // Create tables
-                $schema = file_get_contents('database.sql');
+                $schemaFile = 'database.sql';
+                if (!file_exists($schemaFile)) {
+                    throw new Exception("Database schema file not found: $schemaFile");
+                }
+                $schema = file_get_contents($schemaFile);
+                if ($schema === false) {
+                    throw new Exception("Failed to read database schema file");
+                }
                 // Remove CREATE DATABASE and USE statements
                 $schema = preg_replace('/CREATE DATABASE.*?;/s', '', $schema);
                 $schema = preg_replace('/USE.*?;/s', '', $schema);

@@ -26,6 +26,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         
         if ($s3Role && $casRole) {
             try {
+                // Start transaction for atomicity
+                $db->getConnection()->beginTransaction();
+                
                 // Add both roles
                 $db->execute(
                     "INSERT IGNORE INTO user_roles (user_id, role_id) VALUES (?, ?)",
@@ -36,6 +39,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     [$user['id'], $casRole['id']]
                 );
                 
+                // Commit transaction
+                $db->getConnection()->commit();
+                
                 // Refresh user roles in session
                 $roles = SteamAuth::getUserRoles($user['id']);
                 $_SESSION['roles'] = $roles;
@@ -44,6 +50,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $message = "You have been successfully whitelisted!";
                 $messageType = "success";
             } catch (Exception $e) {
+                // Rollback on error
+                if ($db->getConnection()->inTransaction()) {
+                    $db->getConnection()->rollBack();
+                }
                 $message = "Error processing whitelist request: " . $e->getMessage();
                 $messageType = "error";
             }

@@ -39,7 +39,9 @@ if ($steamId) {
             }
             
             // Mark installation as complete
-            session_start();
+            if (!isset($_SESSION)) {
+                session_start();
+            }
             $_SESSION['installer_first_user'] = true;
         }
         
