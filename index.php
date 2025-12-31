@@ -76,6 +76,12 @@
 </head>
 <body>
     <?php
+    // Check if installation is needed
+    if (!file_exists('config.php')) {
+        header('Location: install.php');
+        exit;
+    }
+    
     require_once 'steam_auth.php';
     
     // Redirect if already logged in

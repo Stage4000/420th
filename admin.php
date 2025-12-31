@@ -18,7 +18,7 @@ if (!SteamAuth::isPanelAdmin()) {
 $db = Database::getInstance();
 $user = SteamAuth::getCurrentUser();
 
-// Handle role assignment/removal
+// Handle role assignment/removal and alias updates
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         $userId = isset($_POST['user_id']) ? intval($_POST['user_id']) : 0;
@@ -48,6 +48,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $messageType = "success";
             } catch (Exception $e) {
                 $message = "Error removing role: " . $e->getMessage();
+                $messageType = "error";
+            }
+        } elseif ($_POST['action'] === 'update_alias' && $roleId) {
+            // Update role alias
+            $alias = trim($_POST['alias'] ?? '');
+            try {
+                $db->execute(
+                    "UPDATE roles SET alias = ? WHERE id = ?",
+                    [$alias, $roleId]
+                );
+                $message = "Role alias updated successfully!";
+                $messageType = "success";
+            } catch (Exception $e) {
+                $message = "Error updating alias: " . $e->getMessage();
                 $messageType = "error";
             }
         } elseif ($_POST['action'] === 'search_steam_id') {
@@ -367,6 +381,38 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
                 <?php echo htmlspecialchars($message); ?>
             </div>
         <?php endif; ?>
+        
+        <!-- Role Aliases Management -->
+        <div class="users-table" style="margin-bottom: 2rem;">
+            <div class="table-header">
+                <h2>Role Aliases</h2>
+                <p style="margin-top: 0.5rem; color: #666; font-weight: normal;">Customize display names for roles. Leave blank to use default display name.</p>
+            </div>
+            <div style="padding: 2rem;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+                    <?php foreach ($allRoles as $role): ?>
+                        <form method="POST" style="border: 1px solid #e0e0e0; padding: 1rem; border-radius: 5px;">
+                            <input type="hidden" name="action" value="update_alias">
+                            <input type="hidden" name="role_id" value="<?php echo $role['id']; ?>">
+                            <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #1e3c72;">
+                                <?php echo htmlspecialchars($role['name']); ?>
+                                <small style="font-weight: normal; color: #666;">(<?php echo htmlspecialchars($role['display_name']); ?>)</small>
+                            </label>
+                            <input 
+                                type="text" 
+                                name="alias" 
+                                value="<?php echo htmlspecialchars($role['alias'] ?? ''); ?>" 
+                                placeholder="Enter custom alias..."
+                                style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 3px; margin-bottom: 0.5rem;"
+                            >
+                            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.5rem;">
+                                Update Alias
+                            </button>
+                        </form>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
         
         <div class="users-table">
             <div class="table-header">

@@ -2,6 +2,7 @@
 // Main dashboard page
 
 require_once 'steam_auth.php';
+require_once 'db.php';
 
 // Check if user is logged in
 if (!SteamAuth::isLoggedIn()) {
@@ -11,6 +12,53 @@ if (!SteamAuth::isLoggedIn()) {
 
 $user = SteamAuth::getCurrentUser();
 $isPanelAdmin = SteamAuth::isPanelAdmin();
+$db = Database::getInstance();
+
+// Handle whitelist request
+$message = '';
+$messageType = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    if ($_POST['action'] === 'whitelist_me') {
+        // Get S3 and CAS role IDs
+        $s3Role = $db->fetchOne("SELECT id FROM roles WHERE name = 'S3'");
+        $casRole = $db->fetchOne("SELECT id FROM roles WHERE name = 'CAS'");
+        
+        if ($s3Role && $casRole) {
+            try {
+                // Add both roles
+                $db->execute(
+                    "INSERT IGNORE INTO user_roles (user_id, role_id) VALUES (?, ?)",
+                    [$user['id'], $s3Role['id']]
+                );
+                $db->execute(
+                    "INSERT IGNORE INTO user_roles (user_id, role_id) VALUES (?, ?)",
+                    [$user['id'], $casRole['id']]
+                );
+                
+                // Refresh user roles in session
+                $roles = SteamAuth::getUserRoles($user['id']);
+                $_SESSION['roles'] = $roles;
+                $user['roles'] = $roles;
+                
+                $message = "You have been successfully whitelisted!";
+                $messageType = "success";
+            } catch (Exception $e) {
+                $message = "Error processing whitelist request: " . $e->getMessage();
+                $messageType = "error";
+            }
+        }
+    }
+}
+
+// Check if user has S3 and CAS roles
+$hasS3 = false;
+$hasCAS = false;
+foreach ($user['roles'] as $role) {
+    if ($role['name'] === 'S3') $hasS3 = true;
+    if ($role['name'] === 'CAS') $hasCAS = true;
+}
+$isWhitelisted = $hasS3 && $hasCAS;
 ?>
 
 <!DOCTYPE html>
@@ -180,6 +228,60 @@ $isPanelAdmin = SteamAuth::isPanelAdmin();
             color: #1565c0;
             margin: 0;
         }
+        
+        .whitelist-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .whitelist-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+            font-weight: 500;
+        }
+        
+        .whitelist-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .whitelisted-badge {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            display: inline-block;
+        }
+        
+        .message {
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
     </style>
 </head>
 <body>
@@ -193,10 +295,39 @@ $isPanelAdmin = SteamAuth::isPanelAdmin();
     </nav>
     
     <div class="container">
+        <?php if (!empty($message)): ?>
+            <div class="message <?php echo $messageType; ?>">
+                <?php echo htmlspecialchars($message); ?>
+            </div>
+        <?php endif; ?>
+        
         <div class="welcome-card">
             <h1>Welcome, <?php echo htmlspecialchars($user['steam_name']); ?>!</h1>
             <p>Steam ID: <?php echo htmlspecialchars($user['steam_id']); ?></p>
         </div>
+        
+        <?php if (!$isWhitelisted): ?>
+        <div class="whitelist-card">
+            <h2 style="color: #1e3c72; margin-bottom: 1rem;">Quick Whitelist</h2>
+            <p style="color: #666; margin-bottom: 1.5rem;">
+                Click the button below to automatically add yourself to the S3 and CAS whitelist roles.
+            </p>
+            <form method="POST">
+                <input type="hidden" name="action" value="whitelist_me">
+                <button type="submit" class="whitelist-btn">🎯 Whitelist Me!</button>
+            </form>
+        </div>
+        <?php else: ?>
+        <div class="whitelist-card">
+            <h2 style="color: #1e3c72; margin-bottom: 1rem;">Whitelist Status</h2>
+            <div class="whitelisted-badge">
+                ✅ You are already whitelisted!
+            </div>
+            <p style="color: #666; margin-top: 1rem;">
+                You have S3 and CAS roles assigned.
+            </p>
+        </div>
+        <?php endif; ?>
         
         <div class="roles-card">
             <h2>Your Whitelist Roles</h2>
@@ -219,9 +350,11 @@ $isPanelAdmin = SteamAuth::isPanelAdmin();
                         } elseif ($role['name'] === 'PANEL') {
                             $badgeClass = 'panel';
                         }
+                        // Use alias if set, otherwise use display_name
+                        $displayText = !empty($role['alias']) ? $role['alias'] : $role['display_name'];
                         ?>
                         <div class="role-badge <?php echo $badgeClass; ?>">
-                            <?php echo htmlspecialchars($role['display_name']); ?>
+                            <?php echo htmlspecialchars($displayText); ?>
                         </div>
                     <?php endforeach; ?>
                 </div>

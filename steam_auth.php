@@ -169,7 +169,7 @@ class SteamAuth {
     public static function getUserRoles($userId) {
         $db = Database::getInstance();
         $result = $db->fetchAll(
-            "SELECT r.name, r.display_name 
+            "SELECT r.name, r.display_name, r.alias 
              FROM user_roles ur 
              JOIN roles r ON ur.role_id = r.id 
              WHERE ur.user_id = ?",

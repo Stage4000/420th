@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS `roles` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `name` VARCHAR(50) UNIQUE NOT NULL,
     `display_name` VARCHAR(100) NOT NULL,
+    `alias` VARCHAR(100),
     `description` TEXT,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

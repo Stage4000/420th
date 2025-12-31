@@ -1,7 +1,15 @@
 <?php
 // Steam OAuth callback handler
 
+// Check if installation is needed
+if (!file_exists('config.php') && !isset($_GET['installer'])) {
+    header('Location: install.php');
+    exit;
+}
+
 require_once 'steam_auth.php';
+
+$installerMode = isset($_GET['installer']) && $_GET['installer'] == '1';
 
 // Validate Steam response
 $steamId = SteamAuth::validate();
@@ -9,6 +17,32 @@ $steamId = SteamAuth::validate();
 if ($steamId) {
     // Login user
     if (SteamAuth::login($steamId)) {
+        // Check if this is installer mode
+        if ($installerMode) {
+            require_once 'db.php';
+            $db = Database::getInstance();
+            
+            // Get the user that just logged in
+            $user = $db->fetchOne("SELECT id FROM users WHERE steam_id = ?", [$steamId]);
+            
+            if ($user) {
+                // Get PANEL role ID
+                $panelRole = $db->fetchOne("SELECT id FROM roles WHERE name = 'PANEL'");
+                
+                if ($panelRole) {
+                    // Grant PANEL role to this first user
+                    $db->execute(
+                        "INSERT IGNORE INTO user_roles (user_id, role_id) VALUES (?, ?)",
+                        [$user['id'], $panelRole['id']]
+                    );
+                }
+            }
+            
+            // Mark installation as complete
+            session_start();
+            $_SESSION['installer_first_user'] = true;
+        }
+        
         header('Location: dashboard.php');
         exit;
     } else {
