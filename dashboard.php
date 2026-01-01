@@ -138,6 +138,7 @@ $isWhitelisted = $hasS3 && $hasCAS;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
             margin-bottom: 2rem;
             border: 1px solid #2a3142;
+            text-align: center;
         }
         
         .welcome-card h1 {
@@ -147,6 +148,15 @@ $isWhitelisted = $hasS3 && $hasCAS;
         
         .welcome-card p {
             color: #8b92a8;
+        }
+        
+        .user-card-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid #667eea;
+            margin: 0 auto 1rem;
+            display: block;
         }
         
         .roles-card {
@@ -400,6 +410,7 @@ $isWhitelisted = $hasS3 && $hasCAS;
         <?php endif; ?>
         
         <div class="welcome-card">
+            <img src="<?php echo htmlspecialchars($user['avatar_url']); ?>" alt="Avatar" class="user-card-avatar">
             <h1>Welcome, <?php echo htmlspecialchars($user['steam_name']); ?>!</h1>
             <p>Steam ID: <?php echo htmlspecialchars($user['steam_id']); ?></p>
         </div>
@@ -440,6 +451,9 @@ $isWhitelisted = $hasS3 && $hasCAS;
                     echo htmlspecialchars($s3Alias) . ' and ' . htmlspecialchars($casAlias);
                 ?> roles assigned.
             </p>
+            <div class="info-card" style="margin-top: 1.5rem;">
+                <p style="margin: 0;">ℹ️ You may need to reconnect to the game server for whitelist changes to take effect.</p>
+            </div>
         </div>
         <?php endif; ?>
         
@@ -472,13 +486,6 @@ $isWhitelisted = $hasS3 && $hasCAS;
                         </div>
                     <?php endforeach; ?>
                 </div>
-                
-                <?php if ($isPanelAdmin): ?>
-                    <div class="info-card">
-                        <p><strong>Panel Administrator Access:</strong> You have administrative privileges to manage users and roles.</p>
-                    </div>
-                    <a href="admin.php" class="admin-panel-link">🔧 Access Admin Panel</a>
-                <?php endif; ?>
             <?php endif; ?>
         </div>
     </div>

@@ -789,6 +789,8 @@ foreach ($users as &$user) {
         
         function closeModal() {
             document.getElementById('roleModal').classList.remove('active');
+            // Refresh page to update role badges
+            window.location.reload();
         }
         
         function toggleRole(event, userId, roleName, hasRole) {

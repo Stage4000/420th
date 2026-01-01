@@ -521,7 +521,7 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
     <div class="container">
         <div class="header-card">
             <h1>Settings</h1>
-            <p>Configure role aliases and automatic role linking</p>
+            <p style="color: #e4e6eb;">Configure role aliases and automatic role linking</p>
         </div>
         
         <?php if (isset($message)): ?>
