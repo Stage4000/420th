@@ -151,28 +151,12 @@ $isWhitelisted = $hasS3 && $hasCAS;
         }
         
         .user-card-avatar {
-            width: 80px;
-            height: 80px;
+            width: 240px;
+            height: 240px;
             border-radius: 50%;
             border: 3px solid #667eea;
-            margin: 0 auto 1rem;
+            margin: 0 auto 1.5rem;
             display: block;
-        }
-        
-        .roles-card {
-            background: #1a1f2e;
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-            margin-bottom: 2rem;
-            border: 1px solid #2a3142;
-        }
-        
-        .roles-card h2 {
-            color: #e4e6eb;
-            margin-bottom: 1.5rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid #2a3142;
         }
         
         .roles-grid {
@@ -201,17 +185,6 @@ $isWhitelisted = $hasS3 && $hasCAS;
         
         .role-badge.panel {
             background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
-        }
-        
-        .no-roles {
-            text-align: center;
-            padding: 2rem;
-            color: #8b92a8;
-        }
-        
-        .no-roles-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
         }
         
         .admin-panel-link {
@@ -412,7 +385,31 @@ $isWhitelisted = $hasS3 && $hasCAS;
         <div class="welcome-card">
             <img src="<?php echo htmlspecialchars($user['avatar_url']); ?>" alt="Avatar" class="user-card-avatar">
             <h1>Welcome, <?php echo htmlspecialchars($user['steam_name']); ?>!</h1>
-            <p>Steam ID: <?php echo htmlspecialchars($user['steam_id']); ?></p>
+            <p style="margin-bottom: 1.5rem;">Steam ID: <?php echo htmlspecialchars($user['steam_id']); ?></p>
+            
+            <?php if (!empty($user['roles'])): ?>
+                <div class="roles-grid" style="margin-top: 1.5rem;">
+                    <?php foreach ($user['roles'] as $role): ?>
+                        <?php
+                        $badgeClass = '';
+                        if ($role['name'] === 'ALL') {
+                            $badgeClass = 'staff';
+                        } elseif (in_array($role['name'], ['ADMIN', 'MODERATOR', 'DEVELOPER'])) {
+                            $badgeClass = 'admin';
+                        } elseif ($role['name'] === 'PANEL') {
+                            $badgeClass = 'panel';
+                        }
+                        // Use alias if set, otherwise use display_name
+                        $displayText = !empty($role['alias']) ? $role['alias'] : $role['display_name'];
+                        ?>
+                        <div class="role-badge <?php echo $badgeClass; ?>">
+                            <?php echo htmlspecialchars($displayText); ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <p style="color: #8b92a8; margin-top: 1rem; font-style: italic;">No roles assigned</p>
+            <?php endif; ?>
         </div>
         
         <?php if (!$isWhitelisted): ?>
@@ -456,38 +453,6 @@ $isWhitelisted = $hasS3 && $hasCAS;
             </div>
         </div>
         <?php endif; ?>
-        
-        <div class="roles-card">
-            <h2>Your Whitelist Roles</h2>
-            
-            <?php if (empty($user['roles'])): ?>
-                <div class="no-roles">
-                    <div class="no-roles-icon">🔒</div>
-                    <p><strong>No roles assigned</strong></p>
-                    <p>You currently don't have any whitelist roles assigned. Please contact an administrator if you believe this is an error.</p>
-                </div>
-            <?php else: ?>
-                <div class="roles-grid">
-                    <?php foreach ($user['roles'] as $role): ?>
-                        <?php
-                        $badgeClass = '';
-                        if ($role['name'] === 'ALL') {
-                            $badgeClass = 'staff';
-                        } elseif (in_array($role['name'], ['ADMIN', 'MODERATOR', 'DEVELOPER'])) {
-                            $badgeClass = 'admin';
-                        } elseif ($role['name'] === 'PANEL') {
-                            $badgeClass = 'panel';
-                        }
-                        // Use alias if set, otherwise use display_name
-                        $displayText = !empty($role['alias']) ? $role['alias'] : $role['display_name'];
-                        ?>
-                        <div class="role-badge <?php echo $badgeClass; ?>">
-                            <?php echo htmlspecialchars($displayText); ?>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
-        </div>
     </div>
 </body>
 </html>
