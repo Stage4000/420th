@@ -20,7 +20,7 @@ if (!SteamAuth::isPanelAdmin()) {
 $db = Database::getInstance();
 $roleManager = new RoleManager();
 $banManager = new BanManager();
-$user = SteamAuth::getCurrentUser();
+$currentUser = SteamAuth::getCurrentUser();
 
 // Check if current user has ALL flag (can manage bans) and PANEL flag (can manage roles)
 $hasAllFlag = SteamAuth::hasRole('ALL');
@@ -711,8 +711,8 @@ foreach ($users as &$user) {
         <div class="navbar-links" id="navbarLinks">
             <a href="dashboard.php">Dashboard</a>
             <a href="admin.php">Admin Panel</a>
-            <img src="<?php echo htmlspecialchars($user['avatar_url']); ?>" alt="Avatar" class="user-avatar">
-            <span><?php echo htmlspecialchars($user['steam_name']); ?></span>
+            <img src="<?php echo htmlspecialchars($currentUser['avatar_url']); ?>" alt="Avatar" class="user-avatar">
+            <span><?php echo htmlspecialchars($currentUser['steam_name']); ?></span>
             <a href="logout.php" class="logout-btn">Logout</a>
         </div>
     </nav>
