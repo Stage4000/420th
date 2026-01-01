@@ -152,10 +152,49 @@ try {
                 // Check if table already exists
                 $stmt = $pdo->query("SHOW TABLES LIKE 'whitelist_bans'");
                 if ($stmt->rowCount() > 0) {
-                    echo '<div class="status warning">';
-                    echo '<strong>⚠️ Table Already Exists</strong><br>';
-                    echo 'The whitelist_bans table already exists in your database. No migration needed.';
-                    echo '</div>';
+                    // Table exists, check if columns need to be fixed
+                    echo '<div class="step">';
+                    echo '<div class="step-title">Checking existing table structure...</div>';
+                    
+                    $columns = $pdo->query("SHOW COLUMNS FROM whitelist_bans")->fetchAll(PDO::FETCH_ASSOC);
+                    $columnNames = array_column($columns, 'Field');
+                    
+                    $needsFix = false;
+                    if (in_array('banned_by', $columnNames) && !in_array('banned_by_user_id', $columnNames)) {
+                        $needsFix = true;
+                    }
+                    
+                    if ($needsFix) {
+                        echo '<div class="status warning">Found incorrect column names. Fixing...</div>';
+                        
+                        // Rename columns
+                        $pdo->exec("ALTER TABLE whitelist_bans CHANGE COLUMN `banned_by` `banned_by_user_id` int(11) NOT NULL");
+                        if (in_array('unbanned_by', $columnNames)) {
+                            $pdo->exec("ALTER TABLE whitelist_bans CHANGE COLUMN `unbanned_by` `unbanned_by_user_id` int(11) DEFAULT NULL");
+                        }
+                        
+                        // Reorder columns if needed
+                        $pdo->exec("ALTER TABLE whitelist_bans MODIFY COLUMN `unban_date` datetime DEFAULT NULL AFTER `unbanned_by_user_id`");
+                        $pdo->exec("ALTER TABLE whitelist_bans MODIFY COLUMN `unban_reason` text DEFAULT NULL AFTER `unban_date`");
+                        
+                        echo '<div class="status success">✅ Table structure fixed successfully</div>';
+                        echo '</div>';
+                        
+                        echo '<div class="status success">';
+                        echo '<strong>✅ Migration Complete!</strong><br>';
+                        echo 'The whitelist_bans table has been fixed and is now compatible.<br><br>';
+                        echo '<strong>Next Steps:</strong><br>';
+                        echo '1. Delete this migration script (migrate_add_bans.php) for security<br>';
+                        echo '2. Your panel now supports whitelist bans!<br>';
+                        echo '3. Users with the ALL flag can now manage bans from the Users page';
+                        echo '</div>';
+                    } else {
+                        echo '<div class="status success">';
+                        echo '<strong>✅ Table Already Exists</strong><br>';
+                        echo 'The whitelist_bans table already exists with the correct structure. No migration needed.<br><br>';
+                        echo 'You can delete this migration script (migrate_add_bans.php) for security.';
+                        echo '</div>';
+                    }
                 } else {
                     // Create whitelist_bans table
                     echo '<div class="step">';
@@ -164,18 +203,21 @@ try {
                     $sql = "CREATE TABLE `whitelist_bans` (
                         `id` int(11) NOT NULL AUTO_INCREMENT,
                         `user_id` int(11) NOT NULL,
-                        `banned_by` int(11) NOT NULL,
+                        `banned_by_user_id` int(11) NOT NULL,
                         `ban_reason` text DEFAULT NULL,
                         `ban_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
                         `ban_expires` datetime DEFAULT NULL,
                         `is_active` tinyint(1) NOT NULL DEFAULT 1,
-                        `unbanned_by` int(11) DEFAULT NULL,
-                        `unban_reason` text DEFAULT NULL,
+                        `unbanned_by_user_id` int(11) DEFAULT NULL,
                         `unban_date` datetime DEFAULT NULL,
+                        `unban_reason` text DEFAULT NULL,
                         PRIMARY KEY (`id`),
                         KEY `user_id` (`user_id`),
                         KEY `is_active` (`is_active`),
-                        KEY `ban_expires` (`ban_expires`)
+                        KEY `ban_expires` (`ban_expires`),
+                        FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+                        FOREIGN KEY (`banned_by_user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+                        FOREIGN KEY (`unbanned_by_user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
                     
                     $pdo->exec($sql);
