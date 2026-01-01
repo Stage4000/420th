@@ -307,23 +307,50 @@ $isWhitelisted = $hasS3 && $hasCAS;
             scrollbar-color: #667eea #0f1318;
         }
         
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+        
+        .navbar-links {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
         /* Responsive Styles */
         @media (max-width: 768px) {
             .navbar {
-                flex-direction: column;
-                align-items: stretch;
+                flex-wrap: wrap;
                 padding: 1rem;
             }
             
-            .navbar-brand {
-                justify-content: center;
-                margin-bottom: 0.5rem;
+            .mobile-menu-toggle {
+                display: block;
             }
             
-            .navbar-user {
-                justify-content: center;
-                flex-wrap: wrap;
-                gap: 0.5rem;
+            .navbar-links {
+                display: none;
+                width: 100%;
+                flex-direction: column;
+                margin-top: 1rem;
+                padding-top: 1rem;
+                border-top: 1px solid #2a3142;
+            }
+            
+            .navbar-links.active {
+                display: flex;
+            }
+            
+            .navbar-links a, .navbar-links span, .navbar-links img {
+                width: 100%;
+                text-align: center;
             }
             
             .container {
@@ -369,10 +396,11 @@ $isWhitelisted = $hasS3 && $hasCAS;
                  onerror="this.style.display='none';">
             <span class="navbar-title">Dashboard</span>
         </div>
-        <div class="navbar-user">
+        <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+        <div class="navbar-links" id="navbarLinks">
             <?php if ($isPanelAdmin): ?>
-                <a href="admin.php" style="color: #e4e6eb; margin-right: 1rem; text-decoration: none;">Admin Panel</a>
-                <a href="users.php" style="color: #e4e6eb; margin-right: 1rem; text-decoration: none;">Users</a>
+                <a href="admin.php" style="color: #e4e6eb; text-decoration: none;">Admin Panel</a>
+                <a href="users.php" style="color: #e4e6eb; text-decoration: none;">Users</a>
             <?php endif; ?>
             <img src="<?php echo htmlspecialchars($user['avatar_url']); ?>" alt="Avatar" class="user-avatar">
             <span><?php echo htmlspecialchars($user['steam_name']); ?></span>
@@ -459,5 +487,12 @@ $isWhitelisted = $hasS3 && $hasCAS;
         </div>
         <?php endif; ?>
     </div>
+    
+    <script>
+        function toggleMobileMenu() {
+            const navbarLinks = document.getElementById('navbarLinks');
+            navbarLinks.classList.toggle('active');
+        }
+    </script>
 </body>
 </html>
