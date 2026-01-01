@@ -22,6 +22,11 @@ $banManager = new BanManager();
 $banInfo = $banManager->isUserBanned($user['id']);
 $isBanned = $banInfo !== false;
 
+// Refresh user roles from database (ensures roles are up-to-date after ban/unban)
+$freshRoles = SteamAuth::getUserRoles($user['id']);
+$_SESSION['roles'] = $freshRoles;
+$user['roles'] = $freshRoles;
+
 // Handle whitelist request
 $message = '';
 $messageType = '';
