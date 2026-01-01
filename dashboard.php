@@ -160,9 +160,10 @@ $isWhitelisted = $hasS3 && $hasCAS;
         }
         
         .roles-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            display: flex;
+            flex-wrap: wrap;
             gap: 1rem;
+            justify-content: center;
         }
         
         .role-badge {
@@ -327,7 +328,7 @@ $isWhitelisted = $hasS3 && $hasCAS;
             }
             
             .roles-grid {
-                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)) !important;
+                gap: 0.8rem !important;
             }
         }
         
@@ -350,7 +351,7 @@ $isWhitelisted = $hasS3 && $hasCAS;
             }
             
             .roles-grid {
-                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)) !important;
+                gap: 0.6rem !important;
             }
         }
     </style>
