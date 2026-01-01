@@ -4,6 +4,7 @@
 require_once 'steam_auth.php';
 require_once 'db.php';
 require_once 'role_manager.php';
+require_once 'ban_manager.php';
 
 // Check if user is logged in
 if (!SteamAuth::isLoggedIn()) {
@@ -15,6 +16,11 @@ $user = SteamAuth::getCurrentUser();
 $isPanelAdmin = SteamAuth::isPanelAdmin();
 $db = Database::getInstance();
 $roleManager = new RoleManager();
+$banManager = new BanManager();
+
+// Check if user is banned
+$banInfo = $banManager->isUserBanned($user['id']);
+$isBanned = $banInfo !== false;
 
 // Handle whitelist request
 $message = '';
@@ -22,21 +28,32 @@ $messageType = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($_POST['action'] === 'whitelist_me') {
-        try {
-            // Use RoleManager to add roles (handles automatic linking)
-            $roleManager->addRole($user['id'], 'S3');
-            $roleManager->addRole($user['id'], 'CAS');
-            
-            // Refresh user roles in session
-            $roles = SteamAuth::getUserRoles($user['id']);
-            $_SESSION['roles'] = $roles;
-            $user['roles'] = $roles;
-            
-            $message = "You have been successfully whitelisted!";
-            $messageType = "success";
-        } catch (Exception $e) {
-            $message = "Error processing whitelist request: " . $e->getMessage();
+        // Check if user is banned
+        if ($isBanned) {
+            $message = "You cannot whitelist yourself while banned. ";
+            if ($banInfo['ban_expires']) {
+                $message .= "Your ban expires on " . date('F j, Y g:i A', strtotime($banInfo['ban_expires'])) . ".";
+            } else {
+                $message .= "Your ban is indefinite.";
+            }
             $messageType = "error";
+        } else {
+            try {
+                // Use RoleManager to add roles (handles automatic linking)
+                $roleManager->addRole($user['id'], 'S3');
+                $roleManager->addRole($user['id'], 'CAS');
+                
+                // Refresh user roles in session
+                $roles = SteamAuth::getUserRoles($user['id']);
+                $_SESSION['roles'] = $roles;
+                $user['roles'] = $roles;
+                
+                $message = "You have been successfully whitelisted!";
+                $messageType = "success";
+            } catch (Exception $e) {
+                $message = "Error processing whitelist request: " . $e->getMessage();
+                $messageType = "error";
+            }
         }
     }
 }
@@ -450,7 +467,32 @@ $isWhitelisted = $hasS3 && $hasCAS;
             <?php endif; ?>
         </div>
         
-        <?php if (!$isWhitelisted): ?>
+        <?php if ($isBanned): ?>
+        <!-- Banned User Message -->
+        <div class="whitelist-card" style="border: 2px solid #ff6b6b;">
+            <h2 style="margin-bottom: 1rem; color: #ff6b6b;">🚫 Whitelist Banned</h2>
+            <div style="background: rgba(255, 107, 107, 0.1); border: 1px solid rgba(255, 107, 107, 0.3); border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem;">
+                <p style="color: #ff6b6b; margin-bottom: 0.5rem; font-weight: bold;">
+                    You have been banned from using the whitelist system.
+                </p>
+                <?php if ($banInfo['ban_reason']): ?>
+                <p style="color: #8b92a8; margin-bottom: 0.5rem;">
+                    <strong>Reason:</strong> <?php echo htmlspecialchars($banInfo['ban_reason']); ?>
+                </p>
+                <?php endif; ?>
+                <p style="color: #8b92a8; margin: 0;">
+                    <?php if ($banInfo['ban_expires']): ?>
+                        <strong>Expires:</strong> <?php echo date('F j, Y g:i A', strtotime($banInfo['ban_expires'])); ?>
+                    <?php else: ?>
+                        <strong>Duration:</strong> Indefinite
+                    <?php endif; ?>
+                </p>
+            </div>
+            <p style="color: #8b92a8; text-align: center;">
+                You cannot whitelist yourself while banned.
+            </p>
+        </div>
+        <?php elseif (!$isWhitelisted): ?>
         <div class="whitelist-card">
             <h2 style="margin-bottom: 1rem;">Quick Whitelist</h2>
             <p style="color: #8b92a8; margin-bottom: 1.5rem;">

@@ -55,3 +55,23 @@ INSERT INTO `roles` (`name`, `display_name`, `description`) VALUES
     ('DEVELOPER', 'Developer', 'Developer team member'),
     ('PANEL', 'Panel Administrator', 'Panel admin with user management rights')
 ON DUPLICATE KEY UPDATE `display_name` = VALUES(`display_name`), `description` = VALUES(`description`);
+
+-- Whitelist bans table
+CREATE TABLE IF NOT EXISTS `whitelist_bans` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `user_id` INT NOT NULL,
+    `banned_by_user_id` INT NOT NULL,
+    `ban_reason` TEXT,
+    `ban_date` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `ban_expires` DATETIME NULL DEFAULT NULL,
+    `is_active` TINYINT(1) DEFAULT 1,
+    `unbanned_by_user_id` INT NULL DEFAULT NULL,
+    `unban_date` DATETIME NULL DEFAULT NULL,
+    `unban_reason` TEXT NULL,
+    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`banned_by_user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`unbanned_by_user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL,
+    INDEX `idx_user_id` (`user_id`),
+    INDEX `idx_is_active` (`is_active`),
+    INDEX `idx_ban_expires` (`ban_expires`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

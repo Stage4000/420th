@@ -4,6 +4,7 @@
 require_once 'steam_auth.php';
 require_once 'db.php';
 require_once 'role_manager.php';
+require_once 'ban_manager.php';
 
 // Check if user is logged in and is a panel admin
 if (!SteamAuth::isLoggedIn()) {
@@ -18,9 +19,14 @@ if (!SteamAuth::isPanelAdmin()) {
 
 $db = Database::getInstance();
 $roleManager = new RoleManager();
+$banManager = new BanManager();
 $user = SteamAuth::getCurrentUser();
 
-// Handle role assignment/removal
+// Check if current user has ALL flag (can manage bans but not roles)
+$hasAllFlag = $user['role_all'] ? true : false;
+$canManageRoles = $user['role_panel'] ? true : false;
+
+// Handle role assignment/removal and ban management
 $message = '';
 $messageType = '';
 
@@ -32,7 +38,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
                   strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
         
-        if ($_POST['action'] === 'add_role' && $userId && $roleName) {
+        // Only PANEL admins can manage roles
+        if ($_POST['action'] === 'add_role' && $userId && $roleName && $canManageRoles) {
             try {
                 $roleManager->addRole($userId, $roleName);
                 if ($isAjax) {
@@ -52,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $message = "Error adding role: " . $e->getMessage();
                 $messageType = "error";
             }
-        } elseif ($_POST['action'] === 'remove_role' && $userId && $roleName) {
+        } elseif ($_POST['action'] === 'remove_role' && $userId && $roleName && $canManageRoles) {
             try {
                 $roleManager->removeRole($userId, $roleName);
                 if ($isAjax) {
@@ -70,6 +77,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     exit;
                 }
                 $message = "Error removing role: " . $e->getMessage();
+                $messageType = "error";
+            }
+        } elseif ($_POST['action'] === 'ban_user' && $userId && $hasAllFlag) {
+            // Handle ban action (ALL flag holders can ban)
+            try {
+                $banReason = isset($_POST['ban_reason']) ? trim($_POST['ban_reason']) : '';
+                $banDuration = isset($_POST['ban_duration']) ? trim($_POST['ban_duration']) : 'indefinite';
+                $banExpires = null;
+                
+                if ($banDuration !== 'indefinite') {
+                    $hours = intval($banDuration);
+                    if ($hours > 0) {
+                        $banExpires = date('Y-m-d H:i:s', strtotime("+$hours hours"));
+                    }
+                }
+                
+                $banManager->banUser($userId, $user['id'], $banReason, $banExpires);
+                
+                if ($isAjax) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => true, 'message' => 'User banned successfully']);
+                    exit;
+                }
+                $message = "User banned successfully!";
+                $messageType = "success";
+            } catch (Exception $e) {
+                if ($isAjax) {
+                    header('Content-Type: application/json');
+                    http_response_code(400);
+                    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+                    exit;
+                }
+                $message = "Error banning user: " . $e->getMessage();
+                $messageType = "error";
+            }
+        } elseif ($_POST['action'] === 'unban_user' && $userId && $hasAllFlag) {
+            // Handle unban action
+            try {
+                $unbanReason = isset($_POST['unban_reason']) ? trim($_POST['unban_reason']) : '';
+                $banManager->unbanUser($userId, $user['id'], $unbanReason);
+                
+                if ($isAjax) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => true, 'message' => 'User unbanned successfully']);
+                    exit;
+                }
+                $message = "User unbanned successfully!";
+                $messageType = "success";
+            } catch (Exception $e) {
+                if ($isAjax) {
+                    header('Content-Type: application/json');
+                    http_response_code(400);
+                    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+                    exit;
+                }
+                $message = "Error unbanning user: " . $e->getMessage();
                 $messageType = "error";
             }
         }
@@ -105,10 +168,16 @@ foreach ($allRoles as $role) {
     $roleMetadata[$role['name']] = $role['alias'] ?: $role['display_name'];
 }
 
-// Get users with pagination (using boolean columns, no subqueries needed)
+// Get users with pagination and ban information
 $users = $db->fetchAll("
-    SELECT u.*
+    SELECT u.*,
+           wb.id as ban_id,
+           wb.ban_reason,
+           wb.ban_date,
+           wb.ban_expires,
+           wb.is_active as is_banned
     FROM users u
+    LEFT JOIN whitelist_bans wb ON u.id = wb.user_id AND wb.is_active = 1
     $whereClause
     ORDER BY u.last_login DESC
     LIMIT ? OFFSET ?
@@ -137,6 +206,11 @@ foreach ($users as &$user) {
         }
     }
     $user['roles'] = implode(', ', $roleNames);
+    
+    // Check if ban is expired (additional safety check)
+    if ($user['is_banned'] && $user['ban_expires'] && strtotime($user['ban_expires']) < time()) {
+        $user['is_banned'] = 0;
+    }
 }
 ?>
 
@@ -683,6 +757,9 @@ foreach ($users as &$user) {
                             <th>User</th>
                             <th>Steam ID</th>
                             <th>Roles</th>
+                            <?php if ($hasAllFlag): ?>
+                            <th>Ban Status</th>
+                            <?php endif; ?>
                             <th>Last Login</th>
                             <th>Actions</th>
                         </tr>
@@ -711,12 +788,45 @@ foreach ($users as &$user) {
                                         <span style="color: #8b92a8;">No roles</span>
                                     <?php endif; ?>
                                 </td>
+                                <?php if ($hasAllFlag): ?>
+                                <td>
+                                    <?php if ($u['is_banned']): ?>
+                                        <div style="color: #ff6b6b;">
+                                            <strong>🚫 BANNED</strong><br>
+                                            <small style="color: #8b92a8;">
+                                                <?php if ($u['ban_expires']): ?>
+                                                    Expires: <?php echo date('M j, Y g:i A', strtotime($u['ban_expires'])); ?>
+                                                <?php else: ?>
+                                                    Indefinite
+                                                <?php endif; ?>
+                                            </small>
+                                        </div>
+                                    <?php else: ?>
+                                        <span style="color: #51cf66;">✓ Active</span>
+                                    <?php endif; ?>
+                                </td>
+                                <?php endif; ?>
                                 <td><?php echo htmlspecialchars($u['last_login']); ?></td>
                                 <td>
-                                    <button onclick="openModal(<?php echo $u['id']; ?>, '<?php echo htmlspecialchars(addslashes($u['steam_name'])); ?>')" 
-                                            class="btn btn-primary btn-small">
-                                        Manage Roles
-                                    </button>
+                                    <?php if ($canManageRoles): ?>
+                                        <button onclick="openModal(<?php echo $u['id']; ?>, '<?php echo htmlspecialchars(addslashes($u['steam_name'])); ?>')" 
+                                                class="btn btn-primary btn-small">
+                                            Manage Roles
+                                        </button>
+                                    <?php endif; ?>
+                                    <?php if ($hasAllFlag && !$u['role_all']): // Can't ban users with ALL flag ?>
+                                        <?php if ($u['is_banned']): ?>
+                                            <button onclick="openUnbanModal(<?php echo $u['id']; ?>, '<?php echo htmlspecialchars(addslashes($u['steam_name'])); ?>')" 
+                                                    class="btn btn-success btn-small" style="background: #51cf66; margin-top: 0.5rem;">
+                                                Unban
+                                            </button>
+                                        <?php else: ?>
+                                            <button onclick="openBanModal(<?php echo $u['id']; ?>, '<?php echo htmlspecialchars(addslashes($u['steam_name'])); ?>')" 
+                                                    class="btn btn-danger btn-small" style="background: #ff6b6b; margin-top: 0.5rem;">
+                                                Ban
+                                            </button>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -762,6 +872,81 @@ foreach ($users as &$user) {
                 <!-- Populated by JavaScript -->
             </div>
             <button onclick="closeModal()" class="btn btn-secondary" style="width: 100%;">Close</button>
+        </div>
+    </div>
+    
+    <!-- Ban Modal -->
+    <div id="banModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Ban User: <span id="banModalUserName"></span></h3>
+            </div>
+            <form id="banForm">
+                <input type="hidden" id="banUserId" name="user_id">
+                <input type="hidden" name="action" value="ban_user">
+                
+                <div style="margin-bottom: 1rem;">
+                    <label style="color: #e4e6eb; display: block; margin-bottom: 0.5rem;">Ban Duration:</label>
+                    <select name="ban_duration" style="width: 100%; padding: 0.75rem; background: #2a3142; border: 1px solid #3a4152; border-radius: 5px; color: #e4e6eb;">
+                        <option value="24">24 Hours</option>
+                        <option value="48">48 Hours</option>
+                        <option value="72">72 Hours (3 Days)</option>
+                        <option value="168">1 Week</option>
+                        <option value="336">2 Weeks</option>
+                        <option value="720">30 Days</option>
+                        <option value="indefinite" selected>Indefinite</option>
+                    </select>
+                </div>
+                
+                <div style="margin-bottom: 1rem;">
+                    <label style="color: #e4e6eb; display: block; margin-bottom: 0.5rem;">Ban Reason:</label>
+                    <textarea name="ban_reason" rows="3" style="width: 100%; padding: 0.75rem; background: #2a3142; border: 1px solid #3a4152; border-radius: 5px; color: #e4e6eb; resize: vertical;" placeholder="Enter reason for ban..."></textarea>
+                </div>
+                
+                <div style="color: #ff6b6b; margin-bottom: 1rem; padding: 0.75rem; background: rgba(255, 107, 107, 0.1); border-radius: 5px; border: 1px solid rgba(255, 107, 107, 0.3);">
+                    <strong>⚠️ Warning:</strong> This will remove S3 and CAS roles and prevent the user from using "Whitelist Me!" button until the ban expires.
+                </div>
+                
+                <div style="display: flex; gap: 0.5rem;">
+                    <button type="submit" class="btn btn-danger" style="flex: 1; background: #ff6b6b;">
+                        Issue Ban
+                    </button>
+                    <button type="button" onclick="closeBanModal()" class="btn btn-secondary" style="flex: 1;">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Unban Modal -->
+    <div id="unbanModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Unban User: <span id="unbanModalUserName"></span></h3>
+            </div>
+            <form id="unbanForm">
+                <input type="hidden" id="unbanUserId" name="user_id">
+                <input type="hidden" name="action" value="unban_user">
+                
+                <div style="margin-bottom: 1rem;">
+                    <label style="color: #e4e6eb; display: block; margin-bottom: 0.5rem;">Unban Reason (Optional):</label>
+                    <textarea name="unban_reason" rows="3" style="width: 100%; padding: 0.75rem; background: #2a3142; border: 1px solid #3a4152; border-radius: 5px; color: #e4e6eb; resize: vertical;" placeholder="Enter reason for unban..."></textarea>
+                </div>
+                
+                <div style="color: #51cf66; margin-bottom: 1rem; padding: 0.75rem; background: rgba(81, 207, 102, 0.1); border-radius: 5px; border: 1px solid rgba(81, 207, 102, 0.3);">
+                    <strong>✓ Note:</strong> This will allow the user to whitelist themselves again using the "Whitelist Me!" button.
+                </div>
+                
+                <div style="display: flex; gap: 0.5rem;">
+                    <button type="submit" class="btn btn-success" style="flex: 1; background: #51cf66;">
+                        Remove Ban
+                    </button>
+                    <button type="button" onclick="closeUnbanModal()" class="btn btn-secondary" style="flex: 1;">
+                        Cancel
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
     
@@ -896,6 +1081,87 @@ foreach ($users as &$user) {
         document.getElementById('roleModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeModal();
+            }
+        });
+        
+        // Ban/Unban Modal Functions
+        function openBanModal(userId, userName) {
+            document.getElementById('banModalUserName').textContent = userName;
+            document.getElementById('banUserId').value = userId;
+            document.getElementById('banModal').classList.add('active');
+        }
+        
+        function closeBanModal() {
+            document.getElementById('banModal').classList.remove('active');
+            document.getElementById('banForm').reset();
+        }
+        
+        function openUnbanModal(userId, userName) {
+            document.getElementById('unbanModalUserName').textContent = userName;
+            document.getElementById('unbanUserId').value = userId;
+            document.getElementById('unbanModal').classList.add('active');
+        }
+        
+        function closeUnbanModal() {
+            document.getElementById('unbanModal').classList.remove('active');
+            document.getElementById('unbanForm').reset();
+        }
+        
+        // Handle ban form submission
+        document.getElementById('banForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            try {
+                const response = await fetch('users.php', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(data.message);
+                    location.reload(); // Reload to show updated ban status
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to ban user'));
+                }
+            } catch (error) {
+                console.error('Error banning user:', error);
+                alert('Error: Failed to ban user');
+            }
+        });
+        
+        // Handle unban form submission
+        document.getElementById('unbanForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            try {
+                const response = await fetch('users.php', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(data.message);
+                    location.reload(); // Reload to show updated ban status
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to unban user'));
+                }
+            } catch (error) {
+                console.error('Error unbanning user:', error);
+                alert('Error: Failed to unban user');
             }
         });
         
