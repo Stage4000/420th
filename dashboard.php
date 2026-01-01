@@ -174,6 +174,10 @@ $isWhitelisted = $hasS3 && $hasCAS;
             text-align: center;
             font-weight: 500;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 3rem;
         }
         
         .role-badge.staff {
