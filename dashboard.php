@@ -314,7 +314,7 @@ $isWhitelisted = $hasS3 && $hasCAS;
         }
         
         /* Firefox Scrollbar */
-        * {
+        html, body {
             scrollbar-width: thin;
             scrollbar-color: #667eea #0f1318;
         }

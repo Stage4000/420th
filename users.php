@@ -460,7 +460,7 @@ foreach ($users as &$user) {
         }
         
         /* Firefox Scrollbar */
-        * {
+        html, body, .modal-content, .users-table {
             scrollbar-width: thin;
             scrollbar-color: #667eea #0f1318;
         }
@@ -514,11 +514,11 @@ foreach ($users as &$user) {
                 font-size: 0.875rem;
                 display: block;
                 overflow-x: auto;
-                white-space: nowrap;
             }
             
             th, td {
                 padding: 0.5rem;
+                white-space: nowrap;
             }
             
             /* Make tables horizontally scrollable on mobile */

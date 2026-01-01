@@ -411,7 +411,7 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
         }
         
         /* Firefox Scrollbar */
-        * {
+        html, body, .modal-content, .users-table {
             scrollbar-width: thin;
             scrollbar-color: #667eea #0f1318;
         }
