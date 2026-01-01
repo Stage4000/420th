@@ -100,44 +100,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Get all available roles and cache them for alias lookups
 $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
-
-// Create a map of role names to their aliases/display names for efficient lookup
-$roleMetadata = [];
-foreach ($allRoles as $role) {
-    $roleMetadata[$role['name']] = $role['alias'] ?: $role['display_name'];
-}
-
-// Get all users with their roles (using boolean columns, no subqueries needed)
-$users = $db->fetchAll("
-    SELECT u.*
-    FROM users u
-    ORDER BY u.last_login DESC
-");
-
-// Add formatted roles to each user
-foreach ($users as &$user) {
-    $roleNames = [];
-    $roleColumnMap = [
-        'role_s3' => 'S3',
-        'role_cas' => 'CAS',
-        'role_s1' => 'S1',
-        'role_opfor' => 'OPFOR',
-        'role_all' => 'ALL',
-        'role_admin' => 'ADMIN',
-        'role_moderator' => 'MODERATOR',
-        'role_trusted' => 'TRUSTED',
-        'role_media' => 'MEDIA',
-        'role_curator' => 'CURATOR',
-        'role_developer' => 'DEVELOPER',
-        'role_panel' => 'PANEL',
-    ];
-    foreach ($roleColumnMap as $column => $roleName) {
-        if (!empty($user[$column])) {
-            $roleNames[] = $roleMetadata[$roleName];
-        }
-    }
-    $user['roles'] = implode(', ', $roleNames);
-}
 ?>
 
 <!DOCTYPE html>
@@ -440,6 +402,7 @@ foreach ($users as &$user) {
         </div>
         <div class="navbar-links">
             <a href="dashboard.php">Dashboard</a>
+            <a href="users.php">Users</a>
             <a href="logout.php">Logout</a>
         </div>
     </nav>
@@ -465,20 +428,6 @@ foreach ($users as &$user) {
                     🔄 Sync Staff Roles (Fix Existing Users)
                 </button>
             </form>
-        </div>
-        
-        <!--User Management Link -->
-        <div class="users-table" style="margin-bottom: 2rem;">
-            <div class="table-header">
-                <h2>User Management</h2>
-                <p style="margin-top: 0.5rem; color: #8b92a8; font-weight: normal;">Manage whitelist roles for all users</p>
-            </div>
-            <div style="padding: 2rem; text-align: center;">
-                <a href="users.php" class="btn btn-primary" style="display: inline-block; padding: 1rem 2rem; font-size: 1.1rem; text-decoration: none;">
-                    👥 Manage Users & Roles
-                </a>
-                <p style="color: #8b92a8; margin-top: 1rem;">View, search, and manage roles for all users with pagination</p>
-            </div>
         </div>
         
         <!-- Role Aliases Management -->
@@ -511,239 +460,9 @@ foreach ($users as &$user) {
                 </button>
             </form>
         </div>
-        
-        <div class="users-table">
-            <div class="table-header">
-                <h2>All Users</h2>
-            </div>
-            
-            <?php if (empty($users)): ?>
-                <div class="empty-state">
-                    <p><strong>No users yet</strong></p>
-                    <p>Users will appear here after they log in for the first time.</p>
-                </div>
-            <?php else: ?>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>User</th>
-                            <th>Steam ID</th>
-                            <th>Roles</th>
-                            <th>Last Login</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($users as $u): 
-                            // Build a list of role names from boolean columns
-                            $userRoleNames = [];
-                            $roleColumnMap = [
-                                'role_s3' => 'S3',
-                                'role_cas' => 'CAS',
-                                'role_s1' => 'S1',
-                                'role_opfor' => 'OPFOR',
-                                'role_all' => 'ALL',
-                                'role_admin' => 'ADMIN',
-                                'role_moderator' => 'MODERATOR',
-                                'role_trusted' => 'TRUSTED',
-                                'role_media' => 'MEDIA',
-                                'role_curator' => 'CURATOR',
-                                'role_developer' => 'DEVELOPER',
-                                'role_panel' => 'PANEL',
-                            ];
-                            foreach ($roleColumnMap as $column => $roleName) {
-                                if (!empty($u[$column])) {
-                                    $userRoleNames[] = $roleName;
-                                }
-                            }
-                            $userRolesData = implode(',', $userRoleNames);
-                        ?>
-                            <tr data-user-id="<?php echo $u['id']; ?>" data-user-roles="<?php echo htmlspecialchars($userRolesData); ?>">
-                                <td>
-                                    <div class="user-info">
-                                        <img src="<?php echo htmlspecialchars($u['avatar_url']); ?>" alt="Avatar" class="user-avatar">
-                                        <span><?php echo htmlspecialchars($u['steam_name']); ?></span>
-                                    </div>
-                                </td>
-                                <td><?php echo htmlspecialchars($u['steam_id']); ?></td>
-                                <td>
-                                    <?php if ($u['roles']): ?>
-                                        <div class="roles-list">
-                                            <?php
-                                            $roles = array_filter(explode(', ', $u['roles']));
-                                            foreach ($roles as $role):
-                                            ?>
-                                                <span class="role-tag"><?php echo htmlspecialchars($role); ?></span>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    <?php else: ?>
-                                        <span style="color: #999;">No roles</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td><?php echo date('M j, Y g:i A', strtotime($u['last_login'])); ?></td>
-                                <td>
-                                    <button class="btn btn-primary" onclick="openRoleModal(<?php echo $u['id']; ?>, '<?php echo htmlspecialchars($u['steam_name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($userRolesData, ENT_QUOTES); ?>')">
-                                        Manage Roles
-                                    </button>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php endif; ?>
-        </div>
-    </div>
-    
-    <!-- Manage Roles Modal -->
-    <div id="manageRolesModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Manage Roles</h2>
-                <p id="modalUserName"></p>
-            </div>
-            
-            <div id="rolesContainer">
-                <?php foreach ($allRoles as $role): ?>
-                    <label class="role-checkbox">
-                        <input 
-                            type="checkbox" 
-                            class="role-check" 
-                            data-role-id="<?php echo $role['id']; ?>"
-                            data-role-name="<?php echo htmlspecialchars($role['name']); ?>"
-                        >
-                        <div>
-                            <strong><?php echo htmlspecialchars($role['display_name']); ?></strong>
-                            <?php if ($role['description']): ?>
-                                <br><small style="color: #8b92a8;"><?php echo htmlspecialchars($role['description']); ?></small>
-                            <?php endif; ?>
-                        </div>
-                    </label>
-                <?php endforeach; ?>
-            </div>
-            
-            <div class="modal-actions">
-                <button class="btn btn-primary" onclick="saveRoles()">Save Changes</button>
-                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-            </div>
-        </div>
     </div>
     
     <script>
-        let currentUserId = null;
-        let originalRoles = new Set();
-        
-        function openManageRoles(userId, userName, roleDetails) {
-            currentUserId = userId;
-            document.getElementById('modalUserName').textContent = userName;
-            
-            // Parse current roles
-            originalRoles = new Set();
-            if (roleDetails) {
-                const roles = roleDetails.split('||');
-                roles.forEach(role => {
-                    const [roleId, roleName] = role.split(':');
-                    if (roleId) {
-                        originalRoles.add(roleId);
-                    }
-                });
-            }
-            
-            // Update checkboxes
-            document.querySelectorAll('.role-check').forEach(checkbox => {
-                const roleId = checkbox.getAttribute('data-role-id');
-                checkbox.checked = originalRoles.has(roleId);
-            });
-            
-            document.getElementById('manageRolesModal').classList.add('active');
-        }
-        
-        function closeModal() {
-            document.getElementById('manageRolesModal').classList.remove('active');
-        }
-        
-        function saveRoles() {
-            const checkboxes = document.querySelectorAll('.role-check');
-            const currentRoles = new Set();
-            
-            checkboxes.forEach(checkbox => {
-                if (checkbox.checked) {
-                    currentRoles.add(checkbox.getAttribute('data-role-name'));
-                }
-            });
-            
-            // Find roles to add and remove
-            const toAdd = [...currentRoles].filter(r => !originalRoles.has(r));
-            const toRemove = [...originalRoles].filter(r => !currentRoles.has(r));
-            
-            // Submit each change
-            let completed = 0;
-            const total = toAdd.length + toRemove.length;
-            
-            if (total === 0) {
-                closeModal();
-                return;
-            }
-            
-            // Add roles
-            toAdd.forEach(roleName => {
-                submitRoleChange('add_role', currentUserId, roleName, () => {
-                    completed++;
-                    if (completed === total) {
-                        location.reload();
-                    }
-                });
-            });
-            
-            // Remove roles
-            toRemove.forEach(roleName => {
-                submitRoleChange('remove_role', currentUserId, roleName, () => {
-                    completed++;
-                    if (completed === total) {
-                        location.reload();
-                    }
-                });
-            });
-        }
-        
-        function submitRoleChange(action, userId, roleName, callback) {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.style.display = 'none';
-            
-            const actionInput = document.createElement('input');
-            actionInput.name = 'action';
-            actionInput.value = action;
-            form.appendChild(actionInput);
-            
-            const userInput = document.createElement('input');
-            userInput.name = 'user_id';
-            userInput.value = userId;
-            form.appendChild(userInput);
-            
-            const roleInput = document.createElement('input');
-            roleInput.name = 'role_name';
-            roleInput.value = roleName;
-            form.appendChild(roleInput);
-            
-            document.body.appendChild(form);
-            
-            const formData = new FormData(form);
-            fetch(window.location.href, {
-                method: 'POST',
-                body: formData
-            }).then(() => {
-                document.body.removeChild(form);
-                callback();
-            });
-        }
-        
-        // Close modal on outside click
-        document.getElementById('manageRolesModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeModal();
-            }
-        });
-        
         // AJAX form submission for aliases to reduce page refresh
         document.getElementById('aliasForm').addEventListener('submit', function(e) {
             e.preventDefault();

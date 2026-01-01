@@ -328,6 +328,12 @@ foreach ($users as &$user) {
             color: white;
         }
         
+        .roles-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
         .actions {
             display: flex;
             gap: 0.5rem;
@@ -444,8 +450,8 @@ foreach ($users as &$user) {
             <span>User Management</span>
         </div>
         <div class="navbar-links">
-            <a href="admin.php">Admin Home</a>
             <a href="dashboard.php">Dashboard</a>
+            <a href="admin.php">Admin Panel</a>
             <a href="logout.php">Logout</a>
         </div>
     </nav>
@@ -512,17 +518,18 @@ foreach ($users as &$user) {
                                 </td>
                                 <td><?php echo htmlspecialchars($u['steam_id']); ?></td>
                                 <td>
-                                    <?php 
-                                    if (!empty($u['role_details'])) {
-                                        $roleDetails = explode('||', $u['role_details']);
-                                        foreach ($roleDetails as $detail) {
-                                            list($roleId, $roleName) = explode(':', $detail);
-                                            echo '<span class="role-badge">' . htmlspecialchars($roleName) . '</span>';
-                                        }
-                                    } else {
-                                        echo '<span style="color: #8b92a8;">No roles</span>';
-                                    }
-                                    ?>
+                                    <?php if ($u['roles']): ?>
+                                        <div class="roles-list">
+                                            <?php
+                                            $roles = array_filter(explode(', ', $u['roles']));
+                                            foreach ($roles as $role):
+                                            ?>
+                                                <span class="role-badge"><?php echo htmlspecialchars($role); ?></span>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <span style="color: #8b92a8;">No roles</span>
+                                    <?php endif; ?>
                                 </td>
                                 <td><?php echo htmlspecialchars($u['last_login']); ?></td>
                                 <td>
@@ -626,7 +633,6 @@ foreach ($users as &$user) {
             });
             
             document.getElementById('roleModal').classList.add('active');
-        }
         }
         
         function closeModal() {
