@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS `whitelist_bans` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `user_id` INT NOT NULL,
     `banned_by_user_id` INT NOT NULL,
+    `ban_type` ENUM('S3', 'CAS', 'BOTH') DEFAULT 'BOTH',
     `ban_reason` TEXT,
     `ban_date` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `ban_expires` DATETIME NULL DEFAULT NULL,

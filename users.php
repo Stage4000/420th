@@ -84,7 +84,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $banReason = isset($_POST['ban_reason']) ? trim($_POST['ban_reason']) : '';
                 $banDuration = isset($_POST['ban_duration']) ? trim($_POST['ban_duration']) : 'indefinite';
+                $banType = isset($_POST['ban_type']) ? trim($_POST['ban_type']) : 'BOTH';
                 $banExpires = null;
+                
+                // Validate ban type
+                if (!in_array($banType, ['S3', 'CAS', 'BOTH'])) {
+                    throw new Exception("Invalid ban type");
+                }
                 
                 if ($banDuration !== 'indefinite') {
                     $hours = intval($banDuration);
@@ -93,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
                 
-                $banManager->banUser($userId, $user['id'], $banReason, $banExpires);
+                $banManager->banUser($userId, $user['id'], $banType, $banReason, $banExpires);
                 
                 if ($isAjax) {
                     header('Content-Type: application/json');
@@ -887,6 +893,15 @@ foreach ($users as &$user) {
                 <input type="hidden" name="action" value="ban_user">
                 
                 <div style="margin-bottom: 1rem;">
+                    <label style="color: #e4e6eb; display: block; margin-bottom: 0.5rem;">Ban Type:</label>
+                    <select name="ban_type" id="banTypeSelect" style="width: 100%; padding: 0.75rem; background: #2a3142; border: 1px solid #3a4152; border-radius: 5px; color: #e4e6eb;">
+                        <option value="BOTH">Both <?php echo htmlspecialchars($roleMetadata['S3'] ?? 'S3'); ?> and <?php echo htmlspecialchars($roleMetadata['CAS'] ?? 'CAS'); ?></option>
+                        <option value="S3"><?php echo htmlspecialchars($roleMetadata['S3'] ?? 'S3'); ?> Only</option>
+                        <option value="CAS"><?php echo htmlspecialchars($roleMetadata['CAS'] ?? 'CAS'); ?> Only</option>
+                    </select>
+                </div>
+                
+                <div style="margin-bottom: 1rem;">
                     <label style="color: #e4e6eb; display: block; margin-bottom: 0.5rem;">Ban Duration:</label>
                     <select name="ban_duration" style="width: 100%; padding: 0.75rem; background: #2a3142; border: 1px solid #3a4152; border-radius: 5px; color: #e4e6eb;">
                         <option value="24">24 Hours</option>
@@ -904,8 +919,8 @@ foreach ($users as &$user) {
                     <textarea name="ban_reason" rows="3" style="width: 100%; padding: 0.75rem; background: #2a3142; border: 1px solid #3a4152; border-radius: 5px; color: #e4e6eb; resize: vertical;" placeholder="Enter reason for ban..."></textarea>
                 </div>
                 
-                <div style="color: #ff6b6b; margin-bottom: 1rem; padding: 0.75rem; background: rgba(255, 107, 107, 0.1); border-radius: 5px; border: 1px solid rgba(255, 107, 107, 0.3);">
-                    <strong>⚠️ Warning:</strong> This will remove S3 and CAS roles and prevent the user from using "Whitelist Me!" button until the ban expires.
+                <div id="banWarningMessage" style="color: #ff6b6b; margin-bottom: 1rem; padding: 0.75rem; background: rgba(255, 107, 107, 0.1); border-radius: 5px; border: 1px solid rgba(255, 107, 107, 0.3);">
+                    <strong>⚠️ Warning:</strong> <span id="banWarningText">This will remove <?php echo htmlspecialchars($roleMetadata['S3'] ?? 'S3'); ?> and <?php echo htmlspecialchars($roleMetadata['CAS'] ?? 'CAS'); ?> roles and prevent the user from using "Whitelist Me!" button until the ban expires.</span>
                 </div>
                 
                 <div style="display: flex; gap: 0.5rem;">
@@ -1090,12 +1105,35 @@ foreach ($users as &$user) {
             document.getElementById('banModalUserName').textContent = userName;
             document.getElementById('banUserId').value = userId;
             document.getElementById('banModal').classList.add('active');
+            updateBanWarning(); // Update warning on open
         }
         
         function closeBanModal() {
             document.getElementById('banModal').classList.remove('active');
             document.getElementById('banForm').reset();
         }
+        
+        // Update ban warning message based on selected ban type
+        function updateBanWarning() {
+            const banType = document.getElementById('banTypeSelect').value;
+            const warningText = document.getElementById('banWarningText');
+            const s3Alias = <?php echo json_encode($roleMetadata['S3'] ?? 'S3'); ?>;
+            const casAlias = <?php echo json_encode($roleMetadata['CAS'] ?? 'CAS'); ?>;
+            
+            let message = '';
+            if (banType === 'BOTH') {
+                message = `This will remove ${s3Alias} and ${casAlias} roles and prevent the user from using "Whitelist Me!" button until the ban expires.`;
+            } else if (banType === 'S3') {
+                message = `This will remove the ${s3Alias} role and prevent the user from requesting ${s3Alias} whitelist until the ban expires.`;
+            } else if (banType === 'CAS') {
+                message = `This will remove the ${casAlias} role and prevent the user from requesting ${casAlias} whitelist until the ban expires.`;
+            }
+            
+            warningText.textContent = message;
+        }
+        
+        // Listen for ban type changes
+        document.getElementById('banTypeSelect').addEventListener('change', updateBanWarning);
         
         function openUnbanModal(userId, userName) {
             document.getElementById('unbanModalUserName').textContent = userName;

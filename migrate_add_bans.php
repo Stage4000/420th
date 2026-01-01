@@ -160,33 +160,52 @@ try {
                     $columns = $pdo->query("SHOW COLUMNS FROM whitelist_bans")->fetchAll(PDO::FETCH_ASSOC);
                     $columnNames = array_column($columns, 'Field');
                     
+                    // Check if columns need to be added or fixed
                     $needsFix = false;
+                    $needsBanType = false;
+                    
                     if (in_array('banned_by', $columnNames) && !in_array('banned_by_user_id', $columnNames)) {
                         $needsFix = true;
                     }
                     
-                    if ($needsFix) {
-                        echo '<div class="status warning">Found incorrect column names. Fixing...</div>';
-                        
-                        // Rename columns
-                        $pdo->exec("ALTER TABLE whitelist_bans CHANGE COLUMN `banned_by` `banned_by_user_id` int(11) NOT NULL");
-                        if (in_array('unbanned_by', $columnNames)) {
-                            $pdo->exec("ALTER TABLE whitelist_bans CHANGE COLUMN `unbanned_by` `unbanned_by_user_id` int(11) DEFAULT NULL");
+                    if (!in_array('ban_type', $columnNames)) {
+                        $needsBanType = true;
+                    }
+                    
+                    if ($needsFix || $needsBanType) {
+                        if ($needsFix) {
+                            echo '<div class="status warning">Found incorrect column names. Fixing...</div>';
+                            
+                            // Rename columns
+                            $pdo->exec("ALTER TABLE whitelist_bans CHANGE COLUMN `banned_by` `banned_by_user_id` int(11) NOT NULL");
+                            if (in_array('unbanned_by', $columnNames)) {
+                                $pdo->exec("ALTER TABLE whitelist_bans CHANGE COLUMN `unbanned_by` `unbanned_by_user_id` int(11) DEFAULT NULL");
+                            }
+                            
+                            // Reorder columns if needed
+                            $pdo->exec("ALTER TABLE whitelist_bans MODIFY COLUMN `unban_date` datetime DEFAULT NULL AFTER `unbanned_by_user_id`");
+                            $pdo->exec("ALTER TABLE whitelist_bans MODIFY COLUMN `unban_reason` text DEFAULT NULL AFTER `unban_date`");
+                            
+                            echo '<div class="status success">✅ Table structure fixed successfully</div>';
                         }
                         
-                        // Reorder columns if needed
-                        $pdo->exec("ALTER TABLE whitelist_bans MODIFY COLUMN `unban_date` datetime DEFAULT NULL AFTER `unbanned_by_user_id`");
-                        $pdo->exec("ALTER TABLE whitelist_bans MODIFY COLUMN `unban_reason` text DEFAULT NULL AFTER `unban_date`");
+                        if ($needsBanType) {
+                            echo '<div class="status warning">Adding ban_type column...</div>';
+                            
+                            // Add ban_type column after banned_by_user_id
+                            $pdo->exec("ALTER TABLE whitelist_bans ADD COLUMN `ban_type` ENUM('S3', 'CAS', 'BOTH') DEFAULT 'BOTH' AFTER `banned_by_user_id`");
+                            
+                            echo '<div class="status success">✅ ban_type column added successfully</div>';
+                        }
                         
-                        echo '<div class="status success">✅ Table structure fixed successfully</div>';
                         echo '</div>';
                         
                         echo '<div class="status success">';
                         echo '<strong>✅ Migration Complete!</strong><br>';
-                        echo 'The whitelist_bans table has been fixed and is now compatible.<br><br>';
+                        echo 'The whitelist_bans table has been updated with the latest structure.<br><br>';
                         echo '<strong>Next Steps:</strong><br>';
                         echo '1. Delete this migration script (migrate_add_bans.php) for security<br>';
-                        echo '2. Your panel now supports whitelist bans!<br>';
+                        echo '2. Your panel now supports whitelist bans with 3 types (S3, CAS, or Both)!<br>';
                         echo '3. Users with the ALL flag can now manage bans from the Users page';
                         echo '</div>';
                     } else {
@@ -205,6 +224,7 @@ try {
                         `id` int(11) NOT NULL AUTO_INCREMENT,
                         `user_id` int(11) NOT NULL,
                         `banned_by_user_id` int(11) NOT NULL,
+                        `ban_type` ENUM('S3', 'CAS', 'BOTH') DEFAULT 'BOTH',
                         `ban_reason` text DEFAULT NULL,
                         `ban_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
                         `ban_expires` datetime DEFAULT NULL,

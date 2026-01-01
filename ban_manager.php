@@ -15,16 +15,22 @@ class BanManager {
     
     /**
      * Issue a whitelist ban to a user
-     * Automatically removes S3 and CAS roles
+     * Removes S3 and/or CAS roles based on ban type
      * 
      * @param int $userId User ID to ban
      * @param int $bannedByUserId User ID issuing the ban
+     * @param string $banType Ban type: 'S3', 'CAS', or 'BOTH'
      * @param string $reason Ban reason
      * @param string|null $expiresAt Ban expiration (null for indefinite)
      * @return bool
      */
-    public function banUser($userId, $bannedByUserId, $reason = '', $expiresAt = null) {
+    public function banUser($userId, $bannedByUserId, $banType = 'BOTH', $reason = '', $expiresAt = null) {
         try {
+            // Validate ban type
+            if (!in_array($banType, ['S3', 'CAS', 'BOTH'])) {
+                throw new Exception("Invalid ban type");
+            }
+            
             // Start transaction
             $this->db->beginTransaction();
             
@@ -47,16 +53,28 @@ class BanManager {
             
             // Create new ban record
             $this->db->query(
-                "INSERT INTO whitelist_bans (user_id, banned_by_user_id, ban_reason, ban_date, ban_expires) 
-                 VALUES (?, ?, ?, NOW(), ?)",
-                [$userId, $bannedByUserId, $reason, $expiresAt]
+                "INSERT INTO whitelist_bans (user_id, banned_by_user_id, ban_type, ban_reason, ban_date, ban_expires) 
+                 VALUES (?, ?, ?, ?, NOW(), ?)",
+                [$userId, $bannedByUserId, $banType, $reason, $expiresAt]
             );
             
-            // Remove S3 and CAS roles directly (don't use RoleManager to avoid nested transactions)
-            $this->db->query(
-                "UPDATE users SET role_s3 = 0, role_cas = 0 WHERE id = ?",
-                [$userId]
-            );
+            // Remove roles based on ban type (don't use RoleManager to avoid nested transactions)
+            if ($banType === 'BOTH') {
+                $this->db->query(
+                    "UPDATE users SET role_s3 = 0, role_cas = 0 WHERE id = ?",
+                    [$userId]
+                );
+            } elseif ($banType === 'S3') {
+                $this->db->query(
+                    "UPDATE users SET role_s3 = 0 WHERE id = ?",
+                    [$userId]
+                );
+            } elseif ($banType === 'CAS') {
+                $this->db->query(
+                    "UPDATE users SET role_cas = 0 WHERE id = ?",
+                    [$userId]
+                );
+            }
             
             $this->db->commit();
             return true;
