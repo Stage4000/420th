@@ -353,6 +353,11 @@ $isWhitelisted = $hasS3 && $hasCAS;
                 text-align: center;
             }
             
+            /* Hide user avatar in navbar on mobile */
+            .navbar-links .user-avatar {
+                display: none;
+            }
+            
             .container {
                 padding: 0 1rem;
                 margin: 1rem auto;
