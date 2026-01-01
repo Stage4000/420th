@@ -590,33 +590,35 @@ foreach ($users as &$user) {
         const allRoles = <?php echo json_encode($allRoles); ?>;
         const usersData = <?php echo json_encode($users); ?>;
         
+        // Centralized role column mapping to avoid duplication
+        const ROLE_COLUMN_MAP = {
+            'S3': 'role_s3',
+            'CAS': 'role_cas',
+            'S1': 'role_s1',
+            'OPFOR': 'role_opfor',
+            'ALL': 'role_all',
+            'ADMIN': 'role_admin',
+            'MODERATOR': 'role_moderator',
+            'TRUSTED': 'role_trusted',
+            'MEDIA': 'role_media',
+            'CURATOR': 'role_curator',
+            'DEVELOPER': 'role_developer',
+            'PANEL': 'role_panel',
+        };
+        
+        const STAFF_ROLES = ['ADMIN', 'MODERATOR', 'DEVELOPER'];
+        
         function openModal(userId, userName) {
             currentUserId = userId;
             document.getElementById('modalUserName').textContent = userName;
             
             const user = usersData.find(u => u.id == userId);
             
-            // Map role names to boolean columns
-            const roleColumnMap = {
-                'S3': 'role_s3',
-                'CAS': 'role_cas',
-                'S1': 'role_s1',
-                'OPFOR': 'role_opfor',
-                'ALL': 'role_all',
-                'ADMIN': 'role_admin',
-                'MODERATOR': 'role_moderator',
-                'TRUSTED': 'role_trusted',
-                'MEDIA': 'role_media',
-                'CURATOR': 'role_curator',
-                'DEVELOPER': 'role_developer',
-                'PANEL': 'role_panel',
-            };
-            
             const roleList = document.getElementById('modalRoleList');
             roleList.innerHTML = '';
             
             allRoles.forEach(role => {
-                const column = roleColumnMap[role.name];
+                const column = ROLE_COLUMN_MAP[role.name];
                 const hasRole = user && column && user[column] == 1;
                 const roleItem = document.createElement('div');
                 roleItem.className = 'role-item';
@@ -650,6 +652,7 @@ foreach ($users as &$user) {
             
             // Disable the button while processing
             const button = event.target;
+            const originalText = button.textContent;
             button.disabled = true;
             button.textContent = '...';
             
@@ -657,40 +660,38 @@ foreach ($users as &$user) {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.text())
-            .then(() => {
-                // Update the user data in memory
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Server error: ' + response.status);
+                }
+                return response.text();
+            })
+            .then(html => {
+                // Check if response contains error message
+                if (html.includes('Error')) {
+                    throw new Error('Server returned an error');
+                }
+                
+                // Update the user data in memory to match server state
                 const user = usersData.find(u => u.id == userId);
-                const roleColumnMap = {
-                    'S3': 'role_s3',
-                    'CAS': 'role_cas',
-                    'S1': 'role_s1',
-                    'OPFOR': 'role_opfor',
-                    'ALL': 'role_all',
-                    'ADMIN': 'role_admin',
-                    'MODERATOR': 'role_moderator',
-                    'TRUSTED': 'role_trusted',
-                    'MEDIA': 'role_media',
-                    'CURATOR': 'role_curator',
-                    'DEVELOPER': 'role_developer',
-                    'PANEL': 'role_panel',
-                };
-                const column = roleColumnMap[roleName];
+                const column = ROLE_COLUMN_MAP[roleName];
                 if (user && column) {
+                    // Toggle the requested role
                     user[column] = hasRole ? 0 : 1;
                     
-                    // Handle automatic role linking for staff roles
-                    if (['ADMIN', 'MODERATOR', 'DEVELOPER'].includes(roleName) && !hasRole) {
-                        user.role_all = 1; // Staff roles automatically get ALL
+                    // Server handles automatic linking, but we need to sync our local state
+                    // Staff roles (ADMIN, MOD, DEV) automatically get ALL role
+                    if (STAFF_ROLES.includes(roleName) && !hasRole) {
+                        user.role_all = 1;
                     } else if (roleName === 'ALL' && hasRole) {
                         // Removing ALL removes all staff roles
                         user.role_admin = 0;
                         user.role_moderator = 0;
                         user.role_developer = 0;
-                    } else if (['ADMIN', 'MODERATOR', 'DEVELOPER'].includes(roleName) && hasRole) {
+                    } else if (STAFF_ROLES.includes(roleName) && hasRole) {
                         // Check if user still has other staff roles
                         if (!user.role_admin && !user.role_moderator && !user.role_developer) {
-                            user.role_all = 0; // Remove ALL if no staff roles remain
+                            user.role_all = 0;
                         }
                     }
                 }
@@ -703,7 +704,7 @@ foreach ($users as &$user) {
                 console.error('Error toggling role:', error);
                 alert('Error updating role. Please try again.');
                 button.disabled = false;
-                button.textContent = hasRole ? 'Remove' : 'Add';
+                button.textContent = originalText;
             });
         }
         
