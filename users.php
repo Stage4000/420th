@@ -175,13 +175,16 @@ foreach ($users as &$user) {
             display: flex;
             align-items: center;
             gap: 1rem;
-            font-size: 1.5rem;
-            font-weight: bold;
         }
         
         .navbar-logo {
             height: 40px;
             width: auto;
+        }
+        
+        .navbar-title {
+            font-size: 1.5rem;
+            font-weight: bold;
         }
         
         .navbar-links {
@@ -195,11 +198,34 @@ foreach ($users as &$user) {
             text-decoration: none;
             padding: 0.5rem 1rem;
             border-radius: 5px;
-            transition: background 0.2s;
+            transition: all 0.3s;
+            border: 1px solid transparent;
         }
         
         .navbar-links a:hover {
-            background: #2a3142;
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #4a5568;
+        }
+        
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
         }
         
         .container {
@@ -569,6 +595,10 @@ foreach ($users as &$user) {
                 height: 30px;
             }
             
+            .user-avatar {
+                display: none;
+            }
+            
             .header-card h1 {
                 font-size: 1.5rem;
             }
@@ -591,16 +621,18 @@ foreach ($users as &$user) {
     <nav class="navbar">
         <div class="navbar-brand">
             <img src="https://www.420thdelta.net/uploads/monthly_2025_11/banner.png.2aa9557dda39e6c5ba0e3c740df490ee.png" 
-                 alt="Logo" 
+                 alt="420th Delta" 
                  class="navbar-logo"
                  onerror="this.style.display='none';">
-            <span>User Management</span>
+            <span class="navbar-title">User Management</span>
         </div>
         <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
         <div class="navbar-links" id="navbarLinks">
             <a href="dashboard.php">Dashboard</a>
             <a href="admin.php">Admin Panel</a>
-            <a href="logout.php">Logout</a>
+            <img src="<?php echo htmlspecialchars($user['avatar_url']); ?>" alt="Avatar" class="user-avatar">
+            <span><?php echo htmlspecialchars($user['steam_name']); ?></span>
+            <a href="logout.php" class="logout-btn">Logout</a>
         </div>
     </nav>
     
