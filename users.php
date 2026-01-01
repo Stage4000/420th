@@ -22,9 +22,9 @@ $roleManager = new RoleManager();
 $banManager = new BanManager();
 $user = SteamAuth::getCurrentUser();
 
-// Check if current user has ALL flag (can manage bans but not roles)
-$hasAllFlag = $user['role_all'] ? true : false;
-$canManageRoles = $user['role_panel'] ? true : false;
+// Check if current user has ALL flag (can manage bans) and PANEL flag (can manage roles)
+$hasAllFlag = SteamAuth::hasRole('ALL');
+$canManageRoles = SteamAuth::hasRole('PANEL');
 
 // Handle role assignment/removal and ban management
 $message = '';
