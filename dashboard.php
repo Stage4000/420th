@@ -292,6 +292,84 @@ $isWhitelisted = $hasS3 && $hasCAS;
             border: 1px solid #5a2d2d;
             color: #fc8181;
         }
+        
+        /* Custom Scrollbar Styles */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #0f1318;
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #5568d3;
+        }
+        
+        /* Firefox Scrollbar */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #667eea #0f1318;
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 1rem;
+            }
+            
+            .navbar-brand {
+                justify-content: center;
+                margin-bottom: 0.5rem;
+            }
+            
+            .navbar-user {
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+            
+            .container {
+                padding: 0 1rem;
+                margin: 1rem auto;
+            }
+            
+            .roles-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)) !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .navbar-logo {
+                height: 30px;
+            }
+            
+            .navbar-title {
+                font-size: 1.25rem;
+            }
+            
+            .user-avatar {
+                width: 30px;
+                height: 30px;
+            }
+            
+            .welcome-card h1 {
+                font-size: 1.5rem;
+            }
+            
+            .roles-grid {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)) !important;
+            }
+        }
     </style>
 </head>
 <body>

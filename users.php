@@ -438,6 +438,128 @@ foreach ($users as &$user) {
             background: #0f1318;
             border-radius: 5px;
         }
+        
+        /* Custom Scrollbar Styles */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #0f1318;
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #5568d3;
+        }
+        
+        /* Firefox Scrollbar */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #667eea #0f1318;
+        }
+        
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-wrap: wrap;
+                padding: 1rem;
+            }
+            
+            .mobile-menu-toggle {
+                display: block;
+            }
+            
+            .navbar-links {
+                display: none;
+                width: 100%;
+                flex-direction: column;
+                margin-top: 1rem;
+                padding-top: 1rem;
+                border-top: 1px solid #2a3142;
+            }
+            
+            .navbar-links.active {
+                display: flex;
+            }
+            
+            .navbar-links a {
+                width: 100%;
+                text-align: center;
+            }
+            
+            .container {
+                padding: 0 1rem;
+                margin: 1rem auto;
+            }
+            
+            table {
+                font-size: 0.875rem;
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+            
+            th, td {
+                padding: 0.5rem;
+            }
+            
+            /* Make tables horizontally scrollable on mobile */
+            .users-table {
+                overflow-x: auto;
+            }
+            
+            .search-box {
+                flex-direction: column;
+            }
+            
+            .search-box input {
+                width: 100% !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .navbar-brand {
+                font-size: 1.25rem;
+            }
+            
+            .navbar-logo {
+                height: 30px;
+            }
+            
+            .header-card h1 {
+                font-size: 1.5rem;
+            }
+            
+            /* Adjust modal for small screens */
+            .modal-content {
+                width: 95%;
+                max-height: 90vh;
+            }
+            
+            /* Hide actions column on very small screens */
+            table th:last-child,
+            table td:last-child {
+                min-width: 100px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -449,7 +571,8 @@ foreach ($users as &$user) {
                  onerror="this.style.display='none';">
             <span>User Management</span>
         </div>
-        <div class="navbar-links">
+        <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+        <div class="navbar-links" id="navbarLinks">
             <a href="dashboard.php">Dashboard</a>
             <a href="admin.php">Admin Panel</a>
             <a href="logout.php">Logout</a>
@@ -714,6 +837,12 @@ foreach ($users as &$user) {
                 closeModal();
             }
         });
+        
+        // Mobile menu toggle function
+        function toggleMobileMenu() {
+            const navbarLinks = document.getElementById('navbarLinks');
+            navbarLinks.classList.toggle('active');
+        }
     </script>
 </body>
 </html>

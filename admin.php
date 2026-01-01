@@ -389,6 +389,116 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
             padding: 3rem;
             color: #999;
         }
+        
+        /* Custom Scrollbar Styles */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #0f1318;
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #5568d3;
+        }
+        
+        /* Firefox Scrollbar */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #667eea #0f1318;
+        }
+        
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-wrap: wrap;
+                padding: 1rem;
+            }
+            
+            .mobile-menu-toggle {
+                display: block;
+            }
+            
+            .navbar-links {
+                display: none;
+                width: 100%;
+                flex-direction: column;
+                margin-top: 1rem;
+                padding-top: 1rem;
+                border-top: 1px solid #2a3142;
+            }
+            
+            .navbar-links.active {
+                display: flex;
+            }
+            
+            .navbar-links a {
+                width: 100%;
+                text-align: center;
+            }
+            
+            .container {
+                padding: 0 1rem;
+                margin: 1rem auto;
+            }
+            
+            table {
+                font-size: 0.875rem;
+            }
+            
+            th, td {
+                padding: 0.5rem;
+            }
+            
+            /* Make tables horizontally scrollable on mobile */
+            .users-table {
+                overflow-x: auto;
+            }
+            
+            /* Stack form fields vertically on mobile */
+            form > div[style*="grid"] {
+                grid-template-columns: 1fr !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .navbar-brand {
+                font-size: 1.25rem;
+            }
+            
+            .navbar-logo {
+                height: 30px;
+            }
+            
+            .header-card h1 {
+                font-size: 1.5rem;
+            }
+            
+            /* Hide less important table columns on very small screens */
+            table th:nth-child(3),
+            table td:nth-child(3) {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -400,7 +510,8 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
                  onerror="this.style.display='none';">
             <span>Admin Panel</span>
         </div>
-        <div class="navbar-links">
+        <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+        <div class="navbar-links" id="navbarLinks">
             <a href="dashboard.php">Dashboard</a>
             <a href="users.php">Users</a>
             <a href="logout.php">Logout</a>
@@ -409,8 +520,8 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
     
     <div class="container">
         <div class="header-card">
-            <h1>User Management</h1>
-            <p>Manage whitelist roles for all users</p>
+            <h1>Settings</h1>
+            <p>Configure role aliases and automatic role linking</p>
         </div>
         
         <?php if (isset($message)): ?>
@@ -502,6 +613,12 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
                 }, 2000);
             });
         });
+        
+        // Mobile menu toggle function
+        function toggleMobileMenu() {
+            const navbarLinks = document.getElementById('navbarLinks');
+            navbarLinks.classList.toggle('active');
+        }
     </script>
 </body>
 </html>
