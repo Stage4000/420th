@@ -52,13 +52,11 @@ class BanManager {
                 [$userId, $bannedByUserId, $reason, $expiresAt]
             );
             
-            // Remove S3 and CAS roles
-            if ($user['role_s3']) {
-                $this->roleManager->removeRole($userId, 'role_s3');
-            }
-            if ($user['role_cas']) {
-                $this->roleManager->removeRole($userId, 'role_cas');
-            }
+            // Remove S3 and CAS roles directly (don't use RoleManager to avoid nested transactions)
+            $this->db->query(
+                "UPDATE users SET role_s3 = 0, role_cas = 0 WHERE id = ?",
+                [$userId]
+            );
             
             $this->db->commit();
             return true;
