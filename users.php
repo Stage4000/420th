@@ -29,21 +29,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $userId = isset($_POST['user_id']) ? intval($_POST['user_id']) : 0;
         $roleName = isset($_POST['role_name']) ? trim($_POST['role_name']) : '';
         
+        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+                  strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+        
         if ($_POST['action'] === 'add_role' && $userId && $roleName) {
             try {
                 $roleManager->addRole($userId, $roleName);
+                if ($isAjax) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => true, 'message' => 'Role added successfully']);
+                    exit;
+                }
                 $message = "Role added successfully!";
                 $messageType = "success";
             } catch (Exception $e) {
+                if ($isAjax) {
+                    header('Content-Type: application/json');
+                    http_response_code(400);
+                    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+                    exit;
+                }
                 $message = "Error adding role: " . $e->getMessage();
                 $messageType = "error";
             }
         } elseif ($_POST['action'] === 'remove_role' && $userId && $roleName) {
             try {
                 $roleManager->removeRole($userId, $roleName);
+                if ($isAjax) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => true, 'message' => 'Role removed successfully']);
+                    exit;
+                }
                 $message = "Role removed successfully!";
                 $messageType = "success";
             } catch (Exception $e) {
+                if ($isAjax) {
+                    header('Content-Type: application/json');
+                    http_response_code(400);
+                    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+                    exit;
+                }
                 $message = "Error removing role: " . $e->getMessage();
                 $messageType = "error";
             }
@@ -781,18 +806,20 @@ foreach ($users as &$user) {
             
             fetch('users.php', {
                 method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
                 body: formData
             })
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Server error: ' + response.status);
                 }
-                return response.text();
+                return response.json();
             })
-            .then(html => {
-                // Check if response contains error message
-                if (html.includes('Error')) {
-                    throw new Error('Server returned an error');
+            .then(data => {
+                if (!data.success) {
+                    throw new Error(data.error || 'Unknown error');
                 }
                 
                 // Update the user data in memory to match server state
@@ -825,7 +852,7 @@ foreach ($users as &$user) {
             })
             .catch(error => {
                 console.error('Error toggling role:', error);
-                alert('Error updating role. Please try again.');
+                alert('Error updating role: ' + error.message + '. Please try again.');
                 button.disabled = false;
                 button.textContent = originalText;
             });
