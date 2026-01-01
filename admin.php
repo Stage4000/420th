@@ -20,6 +20,9 @@ $db = Database::getInstance();
 $roleManager = new RoleManager();
 $user = SteamAuth::getCurrentUser();
 
+// Get all available roles and cache them for alias lookups
+$allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
+
 // Handle role assignment/removal and alias updates
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
@@ -97,9 +100,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
-
-// Get all available roles and cache them for alias lookups
-$allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
 ?>
 
 <!DOCTYPE html>
