@@ -304,6 +304,10 @@ $isWhitelisted = $hasS3 && $hasCAS;
             <span class="navbar-title">Dashboard</span>
         </div>
         <div class="navbar-user">
+            <?php if ($isPanelAdmin): ?>
+                <a href="admin.php" style="color: #e4e6eb; margin-right: 1rem; text-decoration: none;">Admin Panel</a>
+                <a href="users.php" style="color: #e4e6eb; margin-right: 1rem; text-decoration: none;">Users</a>
+            <?php endif; ?>
             <img src="<?php echo htmlspecialchars($user['avatar_url']); ?>" alt="Avatar" class="user-avatar">
             <span><?php echo htmlspecialchars($user['steam_name']); ?></span>
             <a href="logout.php" class="logout-btn">Logout</a>

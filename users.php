@@ -620,8 +620,10 @@ foreach ($users as &$user) {
                 const hasRole = user && column && user[column] == 1;
                 const roleItem = document.createElement('div');
                 roleItem.className = 'role-item';
+                // Use alias if available, otherwise fall back to display_name
+                const displayName = role.alias || role.display_name;
                 roleItem.innerHTML = `
-                    <span style="color: #e4e6eb;">${role.display_name}</span>
+                    <span style="color: #e4e6eb;">${displayName}</span>
                     <button 
                         class="btn btn-${hasRole ? 'secondary' : 'primary'} btn-small"
                         onclick="toggleRole(${userId}, '${role.name}', ${hasRole})"
@@ -640,15 +642,69 @@ foreach ($users as &$user) {
         }
         
         function toggleRole(userId, roleName, hasRole) {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.innerHTML = `
-                <input type="hidden" name="action" value="${hasRole ? 'remove_role' : 'add_role'}">
-                <input type="hidden" name="user_id" value="${userId}">
-                <input type="hidden" name="role_name" value="${roleName}">
-            `;
-            document.body.appendChild(form);
-            form.submit();
+            // Use AJAX to avoid page refresh and keep modal open
+            const formData = new FormData();
+            formData.append('action', hasRole ? 'remove_role' : 'add_role');
+            formData.append('user_id', userId);
+            formData.append('role_name', roleName);
+            
+            // Disable the button while processing
+            const button = event.target;
+            button.disabled = true;
+            button.textContent = '...';
+            
+            fetch('users.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(() => {
+                // Update the user data in memory
+                const user = usersData.find(u => u.id == userId);
+                const roleColumnMap = {
+                    'S3': 'role_s3',
+                    'CAS': 'role_cas',
+                    'S1': 'role_s1',
+                    'OPFOR': 'role_opfor',
+                    'ALL': 'role_all',
+                    'ADMIN': 'role_admin',
+                    'MODERATOR': 'role_moderator',
+                    'TRUSTED': 'role_trusted',
+                    'MEDIA': 'role_media',
+                    'CURATOR': 'role_curator',
+                    'DEVELOPER': 'role_developer',
+                    'PANEL': 'role_panel',
+                };
+                const column = roleColumnMap[roleName];
+                if (user && column) {
+                    user[column] = hasRole ? 0 : 1;
+                    
+                    // Handle automatic role linking for staff roles
+                    if (['ADMIN', 'MODERATOR', 'DEVELOPER'].includes(roleName) && !hasRole) {
+                        user.role_all = 1; // Staff roles automatically get ALL
+                    } else if (roleName === 'ALL' && hasRole) {
+                        // Removing ALL removes all staff roles
+                        user.role_admin = 0;
+                        user.role_moderator = 0;
+                        user.role_developer = 0;
+                    } else if (['ADMIN', 'MODERATOR', 'DEVELOPER'].includes(roleName) && hasRole) {
+                        // Check if user still has other staff roles
+                        if (!user.role_admin && !user.role_moderator && !user.role_developer) {
+                            user.role_all = 0; // Remove ALL if no staff roles remain
+                        }
+                    }
+                }
+                
+                // Refresh the modal to show updated roles
+                const userName = document.getElementById('modalUserName').textContent;
+                openModal(userId, userName);
+            })
+            .catch(error => {
+                console.error('Error toggling role:', error);
+                alert('Error updating role. Please try again.');
+                button.disabled = false;
+                button.textContent = hasRole ? 'Remove' : 'Add';
+            });
         }
         
         // Close modal on outside click
