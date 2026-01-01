@@ -626,7 +626,7 @@ foreach ($users as &$user) {
                     <span style="color: #e4e6eb;">${displayName}</span>
                     <button 
                         class="btn btn-${hasRole ? 'secondary' : 'primary'} btn-small"
-                        onclick="toggleRole(${userId}, '${role.name}', ${hasRole})"
+                        onclick="toggleRole(event, ${userId}, '${role.name}', ${hasRole})"
                     >
                         ${hasRole ? 'Remove' : 'Add'}
                     </button>
@@ -641,7 +641,7 @@ foreach ($users as &$user) {
             document.getElementById('roleModal').classList.remove('active');
         }
         
-        function toggleRole(userId, roleName, hasRole) {
+        function toggleRole(event, userId, roleName, hasRole) {
             // Use AJAX to avoid page refresh and keep modal open
             const formData = new FormData();
             formData.append('action', hasRole ? 'remove_role' : 'add_role');
