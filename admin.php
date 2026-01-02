@@ -441,6 +441,81 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             scrollbar-color: #667eea #0f1318;
         }
         
+        /* Tooltip Styles */
+        .info-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            background: rgba(102, 126, 234, 0.2);
+            border-radius: 50%;
+            cursor: help;
+            font-size: 0.875rem;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .info-icon:hover {
+            background: rgba(102, 126, 234, 0.4);
+            transform: scale(1.1);
+        }
+        
+        .info-icon::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-8px);
+            background: #1a1f2e;
+            color: #e4e6eb;
+            padding: 0.75rem 1rem;
+            border-radius: 5px;
+            font-size: 0.875rem;
+            line-height: 1.4;
+            white-space: normal;
+            width: max-content;
+            max-width: 300px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            border: 1px solid #2a3142;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            z-index: 1000;
+            font-weight: normal;
+        }
+        
+        .info-icon:hover::after,
+        .info-icon:active::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-12px);
+        }
+        
+        /* Tooltip arrow */
+        .info-icon::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(4px);
+            border: 6px solid transparent;
+            border-top-color: #1a1f2e;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            z-index: 1001;
+        }
+        
+        .info-icon:hover::before,
+        .info-icon:active::before {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+        
         /* Mobile Menu Toggle */
         .mobile-menu-toggle {
             display: none;
@@ -583,15 +658,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
                     <?php foreach ($allRoles as $role): ?>
                         <div style="border: 1px solid #2a3142; padding: 1rem; border-radius: 5px;">
-                            <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #e4e6eb;">
-                                <?php echo htmlspecialchars($role['name']); ?>
-                                <small style="font-weight: normal; color: #8b92a8;">(<?php echo htmlspecialchars($role['display_name']); ?>)</small>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600; margin-bottom: 0.5rem; color: #e4e6eb;">
+                                <span>
+                                    <?php echo htmlspecialchars($role['name']); ?>
+                                    <small style="font-weight: normal; color: #8b92a8;">(<?php echo htmlspecialchars($role['display_name']); ?>)</small>
+                                </span>
+                                <?php if (!empty($role['description'])): ?>
+                                    <span class="info-icon" data-tooltip="<?php echo htmlspecialchars($role['description']); ?>">
+                                        ℹ️
+                                    </span>
+                                <?php endif; ?>
                             </label>
-                            <?php if (!empty($role['description'])): ?>
-                                <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #8b92a8; line-height: 1.4;">
-                                    <?php echo htmlspecialchars($role['description']); ?>
-                                </p>
-                            <?php endif; ?>
                             <input 
                                 type="text" 
                                 name="alias_<?php echo $role['id']; ?>" 
