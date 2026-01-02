@@ -597,6 +597,55 @@ foreach ($users as &$user) {
             scrollbar-color: #667eea #0f1318;
         }
         
+        /* Tooltip Styles for Role Modal */
+        .info-icon {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .info-icon .tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-8px);
+            background: #1a1f2e;
+            color: #e4e6eb;
+            padding: 0.75rem 1rem;
+            border-radius: 5px;
+            font-size: 0.875rem;
+            line-height: 1.4;
+            white-space: normal;
+            width: max-content;
+            max-width: 300px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            border: 1px solid #2a3142;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            z-index: 10000;
+            font-weight: normal;
+        }
+        
+        .info-icon:hover .tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-12px);
+        }
+        
+        /* Tooltip arrow */
+        .info-icon .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: #1a1f2e;
+        }
+        
         /* Mobile Menu Toggle */
         .mobile-menu-toggle {
             display: none;
@@ -1068,8 +1117,14 @@ foreach ($users as &$user) {
                 roleItem.className = 'role-item';
                 // Use alias if available, otherwise fall back to display_name
                 const displayName = role.alias || role.display_name;
+                const description = role.description || 'No description available';
                 roleItem.innerHTML = `
-                    <span style="color: #e4e6eb;">${displayName}</span>
+                    <span style="color: #e4e6eb; display: flex; align-items: center; gap: 0.5rem;">
+                        ${displayName}
+                        <span class="info-icon" style="cursor: help; color: #667eea; font-size: 1rem;">ℹ️
+                            <span class="tooltip">${description}</span>
+                        </span>
+                    </span>
                     <button 
                         class="btn btn-${hasRole ? 'secondary' : 'primary'} btn-small"
                         onclick="toggleRole(event, ${userId}, '${role.name}', ${hasRole})"
