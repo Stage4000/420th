@@ -987,7 +987,7 @@ foreach ($users as &$user) {
             'PANEL': 'role_panel',
         };
         
-        const STAFF_ROLES = ['ADMIN', 'MODERATOR', 'DEVELOPER'];
+        const STAFF_ROLES = ['ADMIN', 'MODERATOR', 'DEVELOPER', 'CURATOR'];
         
         function openModal(userId, userName) {
             currentUserId = userId;

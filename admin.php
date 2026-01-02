@@ -587,6 +587,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <?php echo htmlspecialchars($role['name']); ?>
                                 <small style="font-weight: normal; color: #8b92a8;">(<?php echo htmlspecialchars($role['display_name']); ?>)</small>
                             </label>
+                            <?php if (!empty($role['description'])): ?>
+                                <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #8b92a8; line-height: 1.4;">
+                                    <?php echo htmlspecialchars($role['description']); ?>
+                                </p>
+                            <?php endif; ?>
                             <input 
                                 type="text" 
                                 name="alias_<?php echo $role['id']; ?>" 

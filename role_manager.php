@@ -7,7 +7,7 @@ class RoleManager {
     private $db;
     
     // Define staff roles that require the ALL role
-    private static $staffRoles = ['ADMIN', 'MODERATOR', 'DEVELOPER'];
+    private static $staffRoles = ['ADMIN', 'MODERATOR', 'DEVELOPER', 'CURATOR'];
     
     // Role name to column mapping
     private static $roleColumnMap = [
@@ -109,7 +109,7 @@ class RoleManager {
             // Check if this is the ALL role being removed - remove all staff roles too
             if ($roleName === 'ALL') {
                 $this->db->execute(
-                    "UPDATE users SET role_admin = 0, role_moderator = 0, role_developer = 0 WHERE id = ?",
+                    "UPDATE users SET role_admin = 0, role_moderator = 0, role_developer = 0, role_curator = 0 WHERE id = ?",
                     [$userId]
                 );
             }
@@ -138,7 +138,7 @@ class RoleManager {
             $result = $this->db->execute("
                 UPDATE users 
                 SET role_all = 1 
-                WHERE (role_admin = 1 OR role_moderator = 1 OR role_developer = 1) 
+                WHERE (role_admin = 1 OR role_moderator = 1 OR role_developer = 1 OR role_curator = 1) 
                 AND role_all = 0
             ");
             
@@ -157,7 +157,7 @@ class RoleManager {
      */
     public function hasStaffRole($userId) {
         $result = $this->db->fetchOne("
-            SELECT (role_admin + role_moderator + role_developer) as staff_count
+            SELECT (role_admin + role_moderator + role_developer + role_curator) as staff_count
             FROM users 
             WHERE id = ?
         ", [$userId]);
