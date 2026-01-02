@@ -99,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
                 
-                $banManager->banUser($userId, $user['id'], $banType, $banReason, $banExpires);
+                $banManager->banUser($userId, $currentUser['id'], $banType, $banReason, $banExpires);
                 
                 if ($isAjax) {
                     header('Content-Type: application/json');
@@ -122,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Handle unban action
             try {
                 $unbanReason = isset($_POST['unban_reason']) ? trim($_POST['unban_reason']) : '';
-                $banManager->unbanUser($userId, $user['id'], $unbanReason);
+                $banManager->unbanUser($userId, $currentUser['id'], $unbanReason);
                 
                 if ($isAjax) {
                     header('Content-Type: application/json');
