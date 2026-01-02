@@ -482,7 +482,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             visibility: hidden;
             transition: all 0.3s ease;
             pointer-events: none;
-            z-index: 1000;
+            z-index: 9999;
             font-weight: normal;
         }
         
@@ -506,7 +506,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             visibility: hidden;
             transition: all 0.3s ease;
             pointer-events: none;
-            z-index: 1001;
+            z-index: 10000;
         }
         
         .info-icon:hover::before,
