@@ -993,6 +993,7 @@ foreach ($users as &$user) {
         let currentUserId = null;
         const allRoles = <?php echo json_encode($allRoles); ?>;
         const usersData = <?php echo json_encode($users); ?>;
+        const roleAliases = <?php echo json_encode($roleMetadata); ?>;
         
         // Centralized role column mapping to avoid duplication
         const ROLE_COLUMN_MAP = {
@@ -1058,7 +1059,6 @@ foreach ($users as &$user) {
                 const otherRoleColumn = ROLE_COLUMN_MAP[otherRole];
                 
                 if (user && user[otherRoleColumn] == 1) {
-                    const roleAliases = <?php echo json_encode($roleAliases); ?>;
                     const otherRoleAlias = roleAliases[otherRole] || otherRole;
                     
                     // Prepare message to show after successful update
