@@ -252,6 +252,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             overflow: hidden;
         }
         
+        /* Allow tooltips to show in role alias section */
+        .users-table:has(#aliasForm) {
+            overflow: visible;
+        }
+        
         .table-header {
             padding: 1.5rem;
             border-bottom: 2px solid #2a3142;
