@@ -995,6 +995,45 @@ foreach ($users as &$user) {
         const usersData = <?php echo json_encode($users); ?>;
         const roleAliases = <?php echo json_encode($roleMetadata); ?>;
         
+        // Reusable toast notification function
+        function showToast(message, type = 'info') {
+            const colors = {
+                'info': '#3a7ca5',
+                'success': '#51cf66',
+                'error': '#ff6b6b',
+                'warning': '#ffa94d'
+            };
+            const icons = {
+                'info': 'ℹ️',
+                'success': '✓',
+                'error': '✗',
+                'warning': '⚠️'
+            };
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${colors[type] || colors.info};
+                color: #e4e6eb;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+                z-index: 10000;
+                max-width: 400px;
+                animation: slideIn 0.3s ease-out;
+            `;
+            messageDiv.innerHTML = `<strong>${icons[type] || icons.info} ${type.charAt(0).toUpperCase() + type.slice(1)}:</strong> ${message}`;
+            document.body.appendChild(messageDiv);
+            
+            // Remove message after 5 seconds
+            setTimeout(() => {
+                messageDiv.style.animation = 'slideOut 0.3s ease-in';
+                setTimeout(() => messageDiv.remove(), 300);
+            }, 5000);
+        }
+        
         // Centralized role column mapping to avoid duplication
         const ROLE_COLUMN_MAP = {
             'S3': 'role_s3',
@@ -1060,9 +1099,11 @@ foreach ($users as &$user) {
                 
                 if (user && user[otherRoleColumn] == 1) {
                     const otherRoleAlias = roleAliases[otherRole] || otherRole;
+                    const adminAlias = roleAliases['ADMIN'] || 'admin';
+                    const modAlias = roleAliases['MODERATOR'] || 'mod';
                     
                     // Prepare message to show after successful update
-                    mutualExclusivityMessage = `A user may only be admin or mod. ${otherRoleAlias} was removed.`;
+                    mutualExclusivityMessage = `A user may only be ${adminAlias.toLowerCase()} or ${modAlias.toLowerCase()}. ${otherRoleAlias} was removed.`;
                 }
             }
             
@@ -1134,34 +1175,12 @@ foreach ($users as &$user) {
                 
                 // Show mutual exclusivity message if applicable
                 if (mutualExclusivityMessage) {
-                    // Create and show a temporary info message
-                    const messageDiv = document.createElement('div');
-                    messageDiv.style.cssText = `
-                        position: fixed;
-                        top: 20px;
-                        right: 20px;
-                        background: #3a7ca5;
-                        color: #e4e6eb;
-                        padding: 1rem 1.5rem;
-                        border-radius: 8px;
-                        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-                        z-index: 10000;
-                        max-width: 400px;
-                        animation: slideIn 0.3s ease-out;
-                    `;
-                    messageDiv.innerHTML = `<strong>ℹ️ Info:</strong> ${mutualExclusivityMessage}`;
-                    document.body.appendChild(messageDiv);
-                    
-                    // Remove message after 5 seconds
-                    setTimeout(() => {
-                        messageDiv.style.animation = 'slideOut 0.3s ease-in';
-                        setTimeout(() => messageDiv.remove(), 300);
-                    }, 5000);
+                    showToast(mutualExclusivityMessage, 'info');
                 }
             })
             .catch(error => {
                 console.error('Error toggling role:', error);
-                alert('Error updating role: ' + error.message + '. Please try again.');
+                showToast('Error updating role: ' + error.message + '. Please try again.', 'error');
                 button.disabled = false;
                 button.textContent = originalText;
             });
@@ -1238,14 +1257,14 @@ foreach ($users as &$user) {
                 const data = await response.json();
                 
                 if (data.success) {
-                    alert(data.message);
-                    location.reload(); // Reload to show updated ban status
+                    showToast(data.message, 'success');
+                    setTimeout(() => location.reload(), 1500); // Reload after showing message
                 } else {
-                    alert('Error: ' + (data.error || 'Failed to ban user'));
+                    showToast(data.error || 'Failed to ban user', 'error');
                 }
             } catch (error) {
                 console.error('Error banning user:', error);
-                alert('Error: Failed to ban user');
+                showToast('Failed to ban user', 'error');
             }
         });
         
@@ -1267,14 +1286,14 @@ foreach ($users as &$user) {
                 const data = await response.json();
                 
                 if (data.success) {
-                    alert(data.message);
-                    location.reload(); // Reload to show updated ban status
+                    showToast(data.message, 'success');
+                    setTimeout(() => location.reload(), 1500); // Reload after showing message
                 } else {
-                    alert('Error: ' + (data.error || 'Failed to unban user'));
+                    showToast(data.error || 'Failed to unban user', 'error');
                 }
             } catch (error) {
                 console.error('Error unbanning user:', error);
-                alert('Error: Failed to unban user');
+                showToast('Failed to unban user', 'error');
             }
         });
         
