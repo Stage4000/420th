@@ -696,6 +696,29 @@ foreach ($users as &$user) {
                 min-width: 100px;
             }
         }
+        
+        /* Animation keyframes for info messages */
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1027,7 +1050,8 @@ foreach ($users as &$user) {
         }
         
         function toggleRole(event, userId, roleName, hasRole) {
-            // Check for ADMIN/MODERATOR mutual exclusivity
+            // Check for ADMIN/MODERATOR mutual exclusivity and show info message
+            let mutualExclusivityMessage = null;
             if (!hasRole && (roleName === 'ADMIN' || roleName === 'MODERATOR')) {
                 const user = usersData.find(u => u.id == userId);
                 const otherRole = roleName === 'ADMIN' ? 'MODERATOR' : 'ADMIN';
@@ -1036,11 +1060,9 @@ foreach ($users as &$user) {
                 if (user && user[otherRoleColumn] == 1) {
                     const roleAliases = <?php echo json_encode($roleAliases); ?>;
                     const otherRoleAlias = roleAliases[otherRole] || otherRole;
-                    const currentRoleAlias = roleAliases[roleName] || roleName;
                     
-                    if (!confirm(`This user currently has the ${otherRoleAlias} role. Adding ${currentRoleAlias} will automatically remove ${otherRoleAlias}. Continue?`)) {
-                        return;
-                    }
+                    // Prepare message to show after successful update
+                    mutualExclusivityMessage = `A user may only be admin or mod. ${otherRoleAlias} was removed.`;
                 }
             }
             
@@ -1109,6 +1131,33 @@ foreach ($users as &$user) {
                 // Refresh the modal to show updated roles
                 const userName = document.getElementById('modalUserName').textContent;
                 openModal(userId, userName);
+                
+                // Show mutual exclusivity message if applicable
+                if (mutualExclusivityMessage) {
+                    // Create and show a temporary info message
+                    const messageDiv = document.createElement('div');
+                    messageDiv.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        background: #3a7ca5;
+                        color: #e4e6eb;
+                        padding: 1rem 1.5rem;
+                        border-radius: 8px;
+                        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+                        z-index: 10000;
+                        max-width: 400px;
+                        animation: slideIn 0.3s ease-out;
+                    `;
+                    messageDiv.innerHTML = `<strong>ℹ️ Info:</strong> ${mutualExclusivityMessage}`;
+                    document.body.appendChild(messageDiv);
+                    
+                    // Remove message after 5 seconds
+                    setTimeout(() => {
+                        messageDiv.style.animation = 'slideOut 0.3s ease-in';
+                        setTimeout(() => messageDiv.remove(), 300);
+                    }, 5000);
+                }
             })
             .catch(error => {
                 console.error('Error toggling role:', error);
