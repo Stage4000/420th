@@ -46,6 +46,21 @@ class RoleManager {
             // Start transaction
             $this->db->getConnection()->beginTransaction();
             
+            // ADMIN and MODERATOR are mutually exclusive
+            if ($roleName === 'ADMIN') {
+                // Remove MODERATOR if adding ADMIN
+                $this->db->execute(
+                    "UPDATE users SET role_moderator = 0 WHERE id = ?",
+                    [$userId]
+                );
+            } elseif ($roleName === 'MODERATOR') {
+                // Remove ADMIN if adding MODERATOR
+                $this->db->execute(
+                    "UPDATE users SET role_admin = 0 WHERE id = ?",
+                    [$userId]
+                );
+            }
+            
             // Add the requested role
             $this->db->execute(
                 "UPDATE users SET $column = 1 WHERE id = ?",

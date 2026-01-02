@@ -1027,6 +1027,23 @@ foreach ($users as &$user) {
         }
         
         function toggleRole(event, userId, roleName, hasRole) {
+            // Check for ADMIN/MODERATOR mutual exclusivity
+            if (!hasRole && (roleName === 'ADMIN' || roleName === 'MODERATOR')) {
+                const user = usersData.find(u => u.id == userId);
+                const otherRole = roleName === 'ADMIN' ? 'MODERATOR' : 'ADMIN';
+                const otherRoleColumn = ROLE_COLUMN_MAP[otherRole];
+                
+                if (user && user[otherRoleColumn] == 1) {
+                    const roleAliases = <?php echo json_encode($roleAliases); ?>;
+                    const otherRoleAlias = roleAliases[otherRole] || otherRole;
+                    const currentRoleAlias = roleAliases[roleName] || roleName;
+                    
+                    if (!confirm(`This user currently has the ${otherRoleAlias} role. Adding ${currentRoleAlias} will automatically remove ${otherRoleAlias}. Continue?`)) {
+                        return;
+                    }
+                }
+            }
+            
             // Use AJAX to avoid page refresh and keep modal open
             const formData = new FormData();
             formData.append('action', hasRole ? 'remove_role' : 'add_role');
@@ -1064,8 +1081,15 @@ foreach ($users as &$user) {
                     // Toggle the requested role
                     user[column] = hasRole ? 0 : 1;
                     
+                    // Handle ADMIN/MODERATOR mutual exclusivity
+                    if (roleName === 'ADMIN' && !hasRole) {
+                        user.role_moderator = 0;  // Remove MODERATOR when adding ADMIN
+                    } else if (roleName === 'MODERATOR' && !hasRole) {
+                        user.role_admin = 0;  // Remove ADMIN when adding MODERATOR
+                    }
+                    
                     // Server handles automatic linking, but we need to sync our local state
-                    // Staff roles (ADMIN, MOD, DEV) automatically get ALL role
+                    // Staff roles (ADMIN, MOD, DEV, CURATOR) automatically get ALL role
                     if (STAFF_ROLES.includes(roleName) && !hasRole) {
                         user.role_all = 1;
                     } else if (roleName === 'ALL' && hasRole) {
@@ -1073,9 +1097,10 @@ foreach ($users as &$user) {
                         user.role_admin = 0;
                         user.role_moderator = 0;
                         user.role_developer = 0;
+                        user.role_curator = 0;
                     } else if (STAFF_ROLES.includes(roleName) && hasRole) {
                         // Check if user still has other staff roles
-                        if (!user.role_admin && !user.role_moderator && !user.role_developer) {
+                        if (!user.role_admin && !user.role_moderator && !user.role_developer && !user.role_curator) {
                             user.role_all = 0;
                         }
                     }
