@@ -545,6 +545,7 @@ foreach ($users as &$user) {
             width: 90%;
             max-height: 80vh;
             overflow-y: auto;
+            overflow-x: visible;
         }
         
         .modal-header {
@@ -560,6 +561,7 @@ foreach ($users as &$user) {
             flex-direction: column;
             gap: 0.5rem;
             margin-bottom: 1rem;
+            overflow: visible;
         }
         
         .role-item {
@@ -569,6 +571,8 @@ foreach ($users as &$user) {
             padding: 0.75rem;
             background: #0f1318;
             border-radius: 5px;
+            overflow: visible;
+            position: relative;
         }
         
         /* Custom Scrollbar Styles */
