@@ -545,7 +545,7 @@ foreach ($users as &$user) {
             width: 90%;
             max-height: 80vh;
             overflow-y: auto;
-            overflow-x: visible;
+            overflow-x: hidden;
         }
         
         .modal-header {
@@ -561,7 +561,6 @@ foreach ($users as &$user) {
             flex-direction: column;
             gap: 0.5rem;
             margin-bottom: 1rem;
-            overflow: visible;
         }
         
         .role-item {
@@ -571,7 +570,6 @@ foreach ($users as &$user) {
             padding: 0.75rem;
             background: #0f1318;
             border-radius: 5px;
-            overflow: visible;
             position: relative;
         }
         
@@ -610,10 +608,7 @@ foreach ($users as &$user) {
         }
         
         .info-icon .tooltip {
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%) translateY(-8px);
+            position: fixed;
             background: #1a1f2e;
             color: #e4e6eb;
             padding: 0.75rem 1rem;
@@ -622,32 +617,20 @@ foreach ($users as &$user) {
             line-height: 1.4;
             white-space: normal;
             width: max-content;
-            max-width: 300px;
+            max-width: 250px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             border: 1px solid #2a3142;
             opacity: 0;
             visibility: hidden;
             transition: all 0.3s ease;
             pointer-events: none;
-            z-index: 10000;
+            z-index: 10001;
             font-weight: normal;
         }
         
         .info-icon:hover .tooltip {
             opacity: 1;
             visibility: visible;
-            transform: translateX(-50%) translateY(-12px);
-        }
-        
-        /* Tooltip arrow */
-        .info-icon .tooltip::after {
-            content: '';
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            border: 6px solid transparent;
-            border-top-color: #1a1f2e;
         }
         
         /* Mobile Menu Toggle */
@@ -1137,6 +1120,19 @@ foreach ($users as &$user) {
                     </button>
                 `;
                 roleList.appendChild(roleItem);
+            });
+            
+            // Add event listeners for dynamic tooltip positioning
+            document.querySelectorAll('.info-icon').forEach(icon => {
+                icon.addEventListener('mouseenter', function(e) {
+                    const tooltip = this.querySelector('.tooltip');
+                    if (tooltip) {
+                        const rect = this.getBoundingClientRect();
+                        tooltip.style.left = (rect.left + rect.width / 2) + 'px';
+                        tooltip.style.top = (rect.top - 10) + 'px';
+                        tooltip.style.transform = 'translate(-50%, -100%)';
+                    }
+                });
             });
             
             document.getElementById('roleModal').classList.add('active');
