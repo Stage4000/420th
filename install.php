@@ -333,7 +333,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             align-items: center;
             border-top: 1px solid #2a3142;
             font-size: 0.9rem;
-            border-radius: 0 0 10px 10px;
         }
         
         footer a {
