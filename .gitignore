@@ -8,6 +8,7 @@
 
 # Configuration files with sensitive data
 config.local.php
+config.php
 
 # Dependency directories
 vendor/
