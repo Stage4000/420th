@@ -132,14 +132,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Handle unban action
             try {
                 $unbanReason = isset($_POST['unban_reason']) ? trim($_POST['unban_reason']) : '';
-                $banManager->unbanUser($userId, $currentUser['id'], $unbanReason);
+                $result = $banManager->unbanUser($userId, $currentUser['id'], $unbanReason);
                 
                 if ($isAjax) {
                     header('Content-Type: application/json');
-                    echo json_encode(['success' => true, 'message' => 'User unbanned successfully']);
+                    echo json_encode([
+                        'success' => true, 
+                        'message' => implode('. ', $result['messages'])
+                    ]);
                     exit;
                 }
-                $message = "User unbanned successfully!";
+                $message = implode('. ', $result['messages']);
                 $messageType = "success";
             } catch (Exception $e) {
                 if ($isAjax) {

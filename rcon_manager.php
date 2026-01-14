@@ -254,6 +254,25 @@ class RconManager {
     }
     
     /**
+     * Unban a player from the server
+     * @param string $steamId Player's Steam ID (GUID) to unban
+     * @return bool
+     */
+    public function unbanPlayer($steamId) {
+        try {
+            $this->connect();
+            
+            // BattlEye unban command uses the GUID (Steam ID)
+            // Command format: removeBan <GUID>
+            $result = $this->rcon->sendCommand("removeBan {$steamId}");
+            
+            return true;
+        } catch (Exception $e) {
+            throw new Exception("Failed to unban player: " . $e->getMessage());
+        }
+    }
+    
+    /**
      * Send a global message to all players
      * @param string $message Message to send
      * @return bool

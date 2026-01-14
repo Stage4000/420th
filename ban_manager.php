@@ -120,15 +120,28 @@ class BanManager {
     
     /**
      * Unban a user
+     * Removes whitelist ban and optionally removes server ban via RCON
      * 
      * @param int $userId User ID to unban
      * @param int $unbannedByUserId User ID removing the ban
      * @param string $reason Unban reason
-     * @return bool
+     * @return array Result with success status and messages
      */
     public function unbanUser($userId, $unbannedByUserId, $reason = '') {
+        $messages = [];
+        
         try {
             $this->db->beginTransaction();
+            
+            // Get the active ban info to check if server ban was issued
+            $activeBan = $this->db->fetchOne(
+                "SELECT wb.*, u.steam_id 
+                 FROM whitelist_bans wb
+                 JOIN users u ON wb.user_id = u.id
+                 WHERE wb.user_id = ? AND wb.is_active = 1
+                 LIMIT 1",
+                [$userId]
+            );
             
             // Update active ban
             $result = $this->db->query(
@@ -139,7 +152,26 @@ class BanManager {
             );
             
             $this->db->commit();
-            return true;
+            $messages[] = "Whitelist unban successful";
+            
+            // If the ban included a server ban, remove it via RCON
+            if ($activeBan && $activeBan['server_ban'] && $this->rconManager->isEnabled()) {
+                $steamId = $activeBan['steam_id'];
+                
+                try {
+                    $this->rconManager->unbanPlayer($steamId);
+                    $messages[] = "Player unbanned from game server";
+                } catch (Exception $e) {
+                    $messages[] = "Warning: Server unban failed - " . $e->getMessage();
+                }
+            } elseif ($activeBan && $activeBan['server_ban'] && !$this->rconManager->isEnabled()) {
+                $messages[] = "Warning: RCON is not enabled, server unban skipped";
+            }
+            
+            return [
+                'success' => true,
+                'messages' => $messages
+            ];
         } catch (Exception $e) {
             $this->db->rollback();
             throw $e;
