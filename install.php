@@ -322,6 +322,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .steam-login-btn:hover {
             background: #333;
         }
+        
+        footer {
+            background: #1a1f2e;
+            color: #8b92a8;
+            padding: 1.5rem 2rem;
+            margin-top: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #2a3142;
+            font-size: 0.9rem;
+        }
+        
+        footer a {
+            color: #667eea;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        footer a:hover {
+            color: #8b9cff;
+        }
+        
+        @media (max-width: 768px) {
+            footer {
+                flex-direction: column;
+                gap: 0.5rem;
+                text-align: center;
+                padding: 1rem;
+                font-size: 0.8rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -405,5 +437,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         <?php endif; ?>
     </div>
+    
+    <footer>
+        <div>© 2026 <a href="https://420thdelta.net" target="_blank">420th Delta Gaming Community</a></div>
+        <div>Made with ❤️ by <a href="https://sitecritter.com" target="_blank">SiteCritter</a></div>
+    </footer>
 </body>
 </html>

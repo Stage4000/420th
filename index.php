@@ -80,6 +80,41 @@
             color: #8b92a8;
             font-size: 0.9rem;
         }
+        
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #1a1f2e;
+            color: #8b92a8;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #2a3142;
+            font-size: 0.9rem;
+        }
+        
+        footer a {
+            color: #667eea;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        footer a:hover {
+            color: #8b9cff;
+        }
+        
+        @media (max-width: 768px) {
+            footer {
+                flex-direction: column;
+                gap: 0.5rem;
+                text-align: center;
+                padding: 1rem;
+                font-size: 0.8rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -121,5 +156,10 @@
             Sign in with your Steam account to view your whitelist roles and access the dashboard.
         </div>
     </div>
+    
+    <footer>
+        <div>© 2026 <a href="https://420thdelta.net" target="_blank">420th Delta Gaming Community</a></div>
+        <div>Made with ❤️ by <a href="https://sitecritter.com" target="_blank">SiteCritter</a></div>
+    </footer>
 </body>
 </html>
