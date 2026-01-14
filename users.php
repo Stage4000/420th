@@ -5,6 +5,7 @@ require_once 'steam_auth.php';
 require_once 'db.php';
 require_once 'role_manager.php';
 require_once 'ban_manager.php';
+require_once 'rcon_manager.php';
 
 // Check if user is logged in and is a panel admin
 if (!SteamAuth::isLoggedIn()) {
@@ -20,11 +21,15 @@ if (!SteamAuth::isPanelAdmin()) {
 $db = Database::getInstance();
 $roleManager = new RoleManager();
 $banManager = new BanManager();
+$rconManager = new RconManager();
 $currentUser = SteamAuth::getCurrentUser();
 
 // Check if current user has ALL flag (can manage bans) and PANEL flag (can manage roles)
 $hasAllFlag = SteamAuth::hasRole('ALL');
 $canManageRoles = SteamAuth::hasRole('PANEL');
+
+// Check if RCON is enabled for server actions
+$rconEnabled = $rconManager->isEnabled();
 
 // Handle role assignment/removal and ban management
 $message = '';
@@ -85,6 +90,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $banReason = isset($_POST['ban_reason']) ? trim($_POST['ban_reason']) : '';
                 $banDuration = isset($_POST['ban_duration']) ? trim($_POST['ban_duration']) : 'indefinite';
                 $banType = isset($_POST['ban_type']) ? trim($_POST['ban_type']) : 'BOTH';
+                $serverKick = isset($_POST['server_kick']) && $_POST['server_kick'] === '1';
+                $serverBan = isset($_POST['server_ban']) && $_POST['server_ban'] === '1';
                 $banExpires = null;
                 
                 // Validate ban type
@@ -99,14 +106,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
                 
-                $banManager->banUser($userId, $currentUser['id'], $banType, $banReason, $banExpires);
+                $result = $banManager->banUser($userId, $currentUser['id'], $banType, $banReason, $banExpires, $serverKick, $serverBan);
                 
                 if ($isAjax) {
                     header('Content-Type: application/json');
-                    echo json_encode(['success' => true, 'message' => 'User banned successfully']);
+                    echo json_encode([
+                        'success' => true, 
+                        'message' => implode('. ', $result['messages'])
+                    ]);
                     exit;
                 }
-                $message = "User banned successfully!";
+                $message = implode('. ', $result['messages']);
                 $messageType = "success";
             } catch (Exception $e) {
                 if ($isAjax) {
@@ -1010,6 +1020,27 @@ foreach ($users as &$user) {
                     <textarea name="ban_reason" rows="3" style="width: 100%; padding: 0.75rem; background: #2a3142; border: 1px solid #3a4152; border-radius: 5px; color: #e4e6eb; resize: vertical;" placeholder="Enter reason for ban..."></textarea>
                 </div>
                 
+                <?php if ($rconEnabled): ?>
+                <div style="margin-bottom: 1rem; border: 1px solid #3a4152; padding: 1rem; border-radius: 5px; background: rgba(102, 126, 234, 0.05);">
+                    <label style="color: #e4e6eb; display: block; margin-bottom: 0.75rem; font-weight: 600;">
+                        🎮 Server Actions (RCON Enabled):
+                    </label>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: #e4e6eb;">
+                            <input type="checkbox" name="server_kick" value="1" id="serverKickCheckbox" style="width: 18px; height: 18px; cursor: pointer;">
+                            <span>Kick player from game server (temporary)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: #e4e6eb;">
+                            <input type="checkbox" name="server_ban" value="1" id="serverBanCheckbox" style="width: 18px; height: 18px; cursor: pointer;">
+                            <span>Ban player from game server (permanent)</span>
+                        </label>
+                    </div>
+                    <small style="color: #8b92a8; display: block; margin-top: 0.5rem;">
+                        Server ban adds player to BattlEye ban list and also kicks them.
+                    </small>
+                </div>
+                <?php endif; ?>
+                
                 <div id="banWarningMessage" style="color: #ff6b6b; margin-bottom: 1rem; padding: 0.75rem; background: rgba(255, 107, 107, 0.1); border-radius: 5px; border: 1px solid rgba(255, 107, 107, 0.3);">
                     <strong>⚠️ Warning:</strong> <span id="banWarningText">This will remove <?php echo htmlspecialchars($roleMetadata['S3'] ?? 'S3'); ?> and <?php echo htmlspecialchars($roleMetadata['CAS'] ?? 'CAS'); ?> roles and prevent the user from using "Whitelist Me!" button until the ban expires.</span>
                 </div>
@@ -1314,6 +1345,26 @@ foreach ($users as &$user) {
         
         // Listen for ban type changes
         document.getElementById('banTypeSelect').addEventListener('change', updateBanWarning);
+        
+        // Handle server kick/ban checkbox logic
+        <?php if ($rconEnabled): ?>
+        document.addEventListener('DOMContentLoaded', function() {
+            const serverKickCheckbox = document.getElementById('serverKickCheckbox');
+            const serverBanCheckbox = document.getElementById('serverBanCheckbox');
+            
+            if (serverKickCheckbox && serverBanCheckbox) {
+                // When server ban is checked, uncheck kick (ban includes kick)
+                serverBanCheckbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        serverKickCheckbox.checked = false;
+                        serverKickCheckbox.disabled = true;
+                    } else {
+                        serverKickCheckbox.disabled = false;
+                    }
+                });
+            }
+        });
+        <?php endif; ?>
         
         function openUnbanModal(userId, userName) {
             document.getElementById('unbanModalUserName').textContent = userName;
