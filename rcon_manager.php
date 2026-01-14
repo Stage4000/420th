@@ -7,6 +7,9 @@ require_once 'db.php';
 use Nizarii\ARC;
 
 class RconManager {
+    // Steam ID64 is always 17 digits
+    const STEAM_ID64_LENGTH = 17;
+    
     private $db;
     private $rcon;
     private $enabled;
@@ -179,7 +182,7 @@ class RconManager {
             $this->connect();
             
             // Try to find player by Steam ID if 17-digit number
-            if (preg_match('/^\d{17}$/', $identifier)) {
+            if (preg_match('/^\d{' . self::STEAM_ID64_LENGTH . '}$/', $identifier)) {
                 $players = $this->rcon->getPlayersArray();
                 foreach ($players as $player) {
                     if (isset($player['guid']) && $player['guid'] === $identifier) {
@@ -212,7 +215,7 @@ class RconManager {
             
             // For BattlEye, we need the GUID (Steam ID)
             // If identifier looks like a Steam ID, use it directly
-            if (preg_match('/^\d{17}$/', $identifier)) {
+            if (preg_match('/^\d{' . self::STEAM_ID64_LENGTH . '}$/', $identifier)) {
                 $guid = $identifier;
             } else {
                 // Try to find player's GUID from player list

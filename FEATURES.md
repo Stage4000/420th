@@ -78,22 +78,6 @@ Features available to users with ALL role:
   - Combined whitelist and server bans
   - Automatic BattlEye ban list updates
 
-### 5. Ban Management System
-Features available to users with ALL role:
-
-- **Whitelist Bans**
-  - Ban users from whitelist roles (S3, CAS, or both)
-  - Set temporary or permanent bans
-  - Add ban reasons and expiration dates
-  - View active and expired bans
-  - Unban users with reason tracking
-
-- **Server Actions** (New!)
-  - Kick players from game server (requires RCON)
-  - Ban players from game server (requires RCON)
-  - Combined whitelist and server bans
-  - Automatic BattlEye ban list updates
-
 ### 6. Database Architecture
 
 #### Tables
