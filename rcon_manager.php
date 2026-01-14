@@ -3,11 +3,8 @@
 
 // Check if Composer autoloader exists before requiring it
 // This allows the application to function without RCON support if vendor dependencies aren't installed
-$vendorAutoloadPath = __DIR__ . '/vendor/autoload.php';
-$rconAvailable = file_exists($vendorAutoloadPath);
-
-if ($rconAvailable) {
-    require_once $vendorAutoloadPath;
+if (file_exists(__DIR__ . '/vendor/autoload.php')) {
+    require_once __DIR__ . '/vendor/autoload.php';
 }
 
 require_once 'db.php';
@@ -25,8 +22,8 @@ class RconManager {
     private $libraryAvailable;
     
     public function __construct() {
-        global $rconAvailable;
-        $this->libraryAvailable = $rconAvailable;
+        // Check if RCON library is available
+        $this->libraryAvailable = class_exists('Nizarii\\ARC');
         $this->db = Database::getInstance();
         $this->loadSettings();
     }
@@ -139,11 +136,8 @@ class RconManager {
         
         if (!$this->rcon) {
             try {
-                // Use fully qualified class name since we can't use 'use' statement conditionally
+                // Use fully qualified class name
                 $arcClass = 'Nizarii\\ARC';
-                if (!class_exists($arcClass)) {
-                    throw new Exception("RCON library class not found");
-                }
                 $this->rcon = new $arcClass($this->host, $this->password, $this->port);
             } catch (Exception $e) {
                 throw new Exception("Failed to connect to RCON server: " . $e->getMessage());
