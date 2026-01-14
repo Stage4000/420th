@@ -1,10 +1,13 @@
 <?php
 // RCON Manager for Arma 3 server control
 
-require_once __DIR__ . '/vendor/autoload.php';
-require_once 'db.php';
+// Check if Composer autoloader exists before requiring it
+// This allows the application to function without RCON support if vendor dependencies aren't installed
+if (file_exists(__DIR__ . '/vendor/autoload.php')) {
+    require_once __DIR__ . '/vendor/autoload.php';
+}
 
-use Nizarii\ARC;
+require_once 'db.php';
 
 class RconManager {
     // Steam ID64 is always 17 digits
@@ -16,8 +19,11 @@ class RconManager {
     private $host;
     private $port;
     private $password;
+    private $libraryAvailable;
     
     public function __construct() {
+        // Check if RCON library is available
+        $this->libraryAvailable = class_exists('Nizarii\\ARC');
         $this->db = Database::getInstance();
         $this->loadSettings();
     }
@@ -59,7 +65,8 @@ class RconManager {
      * @return bool
      */
     public function isEnabled() {
-        return $this->enabled && 
+        return $this->libraryAvailable &&
+               $this->enabled && 
                !empty($this->host) && 
                !empty($this->password) && 
                $this->port > 0;
@@ -119,13 +126,17 @@ class RconManager {
      * @throws Exception
      */
     private function connect() {
+        if (!$this->libraryAvailable) {
+            throw new Exception("RCON library not installed. Run 'composer install' to enable RCON features.");
+        }
+        
         if (!$this->isEnabled()) {
             throw new Exception("RCON is not enabled or not configured");
         }
         
         if (!$this->rcon) {
             try {
-                $this->rcon = new ARC($this->host, $this->password, $this->port);
+                $this->rcon = new \Nizarii\ARC($this->host, $this->password, $this->port);
             } catch (Exception $e) {
                 throw new Exception("Failed to connect to RCON server: " . $e->getMessage());
             }
