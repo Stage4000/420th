@@ -3,28 +3,36 @@
 
 require_once 'db.php';
 require_once 'role_manager.php';
+require_once 'rcon_manager.php';
 
 class BanManager {
     private $db;
     private $roleManager;
+    private $rconManager;
     
     public function __construct() {
         $this->db = Database::getInstance();
         $this->roleManager = new RoleManager();
+        $this->rconManager = new RconManager();
     }
     
     /**
      * Issue a whitelist ban to a user
      * Removes S3 and/or CAS roles based on ban type
+     * Optionally kicks or bans from game server via RCON
      * 
      * @param int $userId User ID to ban
      * @param int $bannedByUserId User ID issuing the ban
      * @param string $banType Ban type: 'S3', 'CAS', or 'BOTH'
      * @param string $reason Ban reason
      * @param string|null $expiresAt Ban expiration (null for indefinite)
-     * @return bool
+     * @param bool $serverKick Whether to kick from game server
+     * @param bool $serverBan Whether to ban from game server
+     * @return array Result with success status and messages
      */
-    public function banUser($userId, $bannedByUserId, $banType = 'BOTH', $reason = '', $expiresAt = null) {
+    public function banUser($userId, $bannedByUserId, $banType = 'BOTH', $reason = '', $expiresAt = null, $serverKick = false, $serverBan = false) {
+        $messages = [];
+        
         try {
             // Validate ban type
             if (!in_array($banType, ['S3', 'CAS', 'BOTH'])) {
@@ -51,11 +59,11 @@ class BanManager {
                 [$userId]
             );
             
-            // Create new ban record
+            // Create new ban record with server action flags
             $this->db->query(
-                "INSERT INTO whitelist_bans (user_id, banned_by_user_id, ban_type, ban_reason, ban_date, ban_expires) 
-                 VALUES (?, ?, ?, ?, NOW(), ?)",
-                [$userId, $bannedByUserId, $banType, $reason, $expiresAt]
+                "INSERT INTO whitelist_bans (user_id, banned_by_user_id, ban_type, server_kick, server_ban, ban_reason, ban_date, ban_expires) 
+                 VALUES (?, ?, ?, ?, ?, ?, NOW(), ?)",
+                [$userId, $bannedByUserId, $banType, $serverKick ? 1 : 0, $serverBan ? 1 : 0, $reason, $expiresAt]
             );
             
             // Remove roles based on ban type (don't use RoleManager to avoid nested transactions)
@@ -77,7 +85,33 @@ class BanManager {
             }
             
             $this->db->commit();
-            return true;
+            $messages[] = "Whitelist ban issued successfully";
+            
+            // Handle server actions via RCON
+            if (($serverKick || $serverBan) && $this->rconManager->isEnabled()) {
+                $steamId = $user['steam_id'];
+                
+                try {
+                    if ($serverBan) {
+                        // Ban from server (also kicks)
+                        $this->rconManager->banPlayer($steamId, $reason);
+                        $messages[] = "Player banned from game server";
+                    } elseif ($serverKick) {
+                        // Just kick from server
+                        $this->rconManager->kickPlayer($steamId, $reason);
+                        $messages[] = "Player kicked from game server";
+                    }
+                } catch (Exception $e) {
+                    $messages[] = "Warning: Server action failed - " . $e->getMessage();
+                }
+            } elseif (($serverKick || $serverBan) && !$this->rconManager->isEnabled()) {
+                $messages[] = "Warning: RCON is not enabled, server action skipped";
+            }
+            
+            return [
+                'success' => true,
+                'messages' => $messages
+            ];
         } catch (Exception $e) {
             $this->db->rollback();
             throw $e;
@@ -86,15 +120,28 @@ class BanManager {
     
     /**
      * Unban a user
+     * Removes whitelist ban and optionally removes server ban via RCON
      * 
      * @param int $userId User ID to unban
      * @param int $unbannedByUserId User ID removing the ban
      * @param string $reason Unban reason
-     * @return bool
+     * @return array Result with success status and messages
      */
     public function unbanUser($userId, $unbannedByUserId, $reason = '') {
+        $messages = [];
+        
         try {
             $this->db->beginTransaction();
+            
+            // Get the active ban info to check if server ban was issued
+            $activeBan = $this->db->fetchOne(
+                "SELECT wb.*, u.steam_id 
+                 FROM whitelist_bans wb
+                 JOIN users u ON wb.user_id = u.id
+                 WHERE wb.user_id = ? AND wb.is_active = 1
+                 LIMIT 1",
+                [$userId]
+            );
             
             // Update active ban
             $result = $this->db->query(
@@ -105,7 +152,26 @@ class BanManager {
             );
             
             $this->db->commit();
-            return true;
+            $messages[] = "Whitelist unban successful";
+            
+            // If the ban included a server ban, remove it via RCON
+            if ($activeBan && $activeBan['server_ban'] && $this->rconManager->isEnabled()) {
+                $steamId = $activeBan['steam_id'];
+                
+                try {
+                    $this->rconManager->unbanPlayer($steamId);
+                    $messages[] = "Player unbanned from game server";
+                } catch (Exception $e) {
+                    $messages[] = "Warning: Server unban failed - " . $e->getMessage();
+                }
+            } elseif ($activeBan && $activeBan['server_ban'] && !$this->rconManager->isEnabled()) {
+                $messages[] = "Warning: RCON is not enabled, server unban skipped";
+            }
+            
+            return [
+                'success' => true,
+                'messages' => $messages
+            ];
         } catch (Exception $e) {
             $this->db->rollback();
             throw $e;

@@ -4,6 +4,7 @@
 require_once 'steam_auth.php';
 require_once 'db.php';
 require_once 'role_manager.php';
+require_once 'rcon_manager.php';
 
 // Check if user is logged in and is a panel admin
 if (!SteamAuth::isLoggedIn()) {
@@ -18,10 +19,14 @@ if (!SteamAuth::isPanelAdmin()) {
 
 $db = Database::getInstance();
 $roleManager = new RoleManager();
+$rconManager = new RconManager();
 $user = SteamAuth::getCurrentUser();
 
 // Get all available roles and cache them for alias lookups
 $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
+
+// Get current RCON settings
+$rconSettings = $rconManager->getSettings();
 
 // Handle role assignment/removal and alias updates
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -84,6 +89,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $messageType = "success";
             } catch (Exception $e) {
                 $message = "Error syncing staff roles: " . $e->getMessage();
+                $messageType = "error";
+            }
+        } elseif ($_POST['action'] === 'update_rcon_settings') {
+            // Update RCON settings
+            try {
+                $settings = [
+                    'rcon_enabled' => isset($_POST['rcon_enabled']) ? '1' : '0',
+                    'rcon_host' => trim($_POST['rcon_host']),
+                    'rcon_port' => intval($_POST['rcon_port']),
+                ];
+                
+                // Only update password if provided
+                if (!empty($_POST['rcon_password'])) {
+                    $settings['rcon_password'] = trim($_POST['rcon_password']);
+                }
+                
+                $rconManager->updateSettings($settings, $user['id']);
+                
+                // Reload settings
+                $rconSettings = $rconManager->getSettings();
+                
+                $message = "RCON settings updated successfully!";
+                $messageType = "success";
+            } catch (Exception $e) {
+                $message = "Error updating RCON settings: " . $e->getMessage();
+                $messageType = "error";
+            }
+        } elseif ($_POST['action'] === 'test_rcon_connection') {
+            // Test RCON connection
+            try {
+                $result = $rconManager->testConnection();
+                if ($result['success']) {
+                    $message = "RCON connection successful! Player count: " . $result['player_count'];
+                    $messageType = "success";
+                } else {
+                    $message = "RCON connection failed: " . $result['message'];
+                    $messageType = "error";
+                }
+            } catch (Exception $e) {
+                $message = "Error testing RCON connection: " . $e->getMessage();
                 $messageType = "error";
             }
         } elseif ($_POST['action'] === 'search_steam_id') {
@@ -682,6 +727,106 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     🔄 Sync Staff Roles (Fix Existing Users)
                 </button>
             </form>
+        </div>
+        
+        <!-- RCON Configuration -->
+        <div class="users-table" style="margin-bottom: 2rem;">
+            <div class="table-header">
+                <h2>🎮 Arma 3 Server RCON Configuration</h2>
+                <p style="margin-top: 0.5rem; color: #8b92a8; font-weight: normal;">Configure RCON to enable server kicks and bans from the admin panel</p>
+            </div>
+            <form method="POST" style="padding: 2rem;">
+                <input type="hidden" name="action" value="update_rcon_settings">
+                
+                <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                    <div style="border: 1px solid #2a3142; padding: 1.5rem; border-radius: 5px; background: #0f1318;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600; margin-bottom: 1rem; color: #e4e6eb;">
+                            <input 
+                                type="checkbox" 
+                                name="rcon_enabled" 
+                                value="1" 
+                                <?php echo $rconSettings['rcon_enabled'] ? 'checked' : ''; ?>
+                                style="width: 20px; height: 20px; cursor: pointer;"
+                            >
+                            <span>Enable RCON</span>
+                        </label>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #e4e6eb;">
+                                RCON Host/IP:
+                            </label>
+                            <input 
+                                type="text" 
+                                name="rcon_host" 
+                                value="<?php echo htmlspecialchars($rconSettings['rcon_host'] ?? ''); ?>" 
+                                placeholder="127.0.0.1 or server.example.com"
+                                style="width: 100%; padding: 0.75rem; border: 1px solid #2a3142; background: #1a1f2e; color: #e4e6eb; border-radius: 3px;"
+                            >
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #e4e6eb;">
+                                RCON Port:
+                            </label>
+                            <input 
+                                type="number" 
+                                name="rcon_port" 
+                                value="<?php echo htmlspecialchars($rconSettings['rcon_port'] ?? '2306'); ?>" 
+                                placeholder="2306"
+                                min="1"
+                                max="65535"
+                                style="width: 100%; padding: 0.75rem; border: 1px solid #2a3142; background: #1a1f2e; color: #e4e6eb; border-radius: 3px;"
+                            >
+                            <small style="color: #8b92a8; display: block; margin-top: 0.25rem;">Default BattlEye RCON port is usually game port + 4</small>
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #e4e6eb;">
+                                RCON Password:
+                            </label>
+                            <input 
+                                type="password" 
+                                name="rcon_password" 
+                                placeholder="<?php echo $rconSettings['rcon_password_set'] ? '••••••••••••••••' : 'Enter RCON password'; ?>"
+                                style="width: 100%; padding: 0.75rem; border: 1px solid #2a3142; background: #1a1f2e; color: #e4e6eb; border-radius: 3px;"
+                            >
+                            <small style="color: #8b92a8; display: block; margin-top: 0.25rem;">
+                                <?php if ($rconSettings['rcon_password_set']): ?>
+                                    Leave blank to keep current password
+                                <?php else: ?>
+                                    Enter the RConPassword from your beserver.cfg file
+                                <?php endif; ?>
+                            </small>
+                        </div>
+                        
+                        <div style="background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.3); padding: 1rem; border-radius: 5px; margin-bottom: 1rem;">
+                            <p style="color: #90cdf4; margin-bottom: 0.5rem;"><strong>ℹ️ Configuration Instructions:</strong></p>
+                            <ol style="color: #8b92a8; margin-left: 1.5rem; line-height: 1.6;">
+                                <li>Ensure BattlEye RCON is enabled in your beserver.cfg or beserver_x64.cfg</li>
+                                <li>Set RConPort (typically game port + 4, e.g., 2306 if game port is 2302)</li>
+                                <li>Set a strong RConPassword in the config file</li>
+                                <li>Restart your Arma 3 server after making changes</li>
+                            </ol>
+                        </div>
+                        
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button type="submit" class="btn btn-primary" style="flex: 1; padding: 0.75rem;">
+                                💾 Save RCON Settings
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            
+            <!-- Test Connection Button (separate form) -->
+            <?php if ($rconSettings['rcon_enabled']): ?>
+            <form method="POST" style="padding: 0 2rem 2rem 2rem;">
+                <input type="hidden" name="action" value="test_rcon_connection">
+                <button type="submit" class="btn btn-secondary" style="width: 100%; padding: 0.75rem;">
+                    🔌 Test RCON Connection
+                </button>
+            </form>
+            <?php endif; ?>
         </div>
         
         <!-- Role Aliases Management -->

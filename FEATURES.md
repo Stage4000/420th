@@ -54,12 +54,37 @@ Features available to users with PANEL role:
   - Real-time role assignment tracking
   - Audit trail showing who granted roles
 
-### 5. Database Architecture
+- **RCON Server Management** (New!)
+  - Configure Arma 3 server RCON connection
+  - Enable/disable RCON functionality
+  - Test RCON connection status
+  - Issue server kicks via BattlEye RCON
+  - Issue server bans via BattlEye RCON
+  - Secure password storage for RCON credentials
+
+### 5. Ban Management System
+Features available to users with ALL role:
+
+- **Whitelist Bans**
+  - Ban users from whitelist roles (S3, CAS, or both)
+  - Set temporary or permanent bans
+  - Add ban reasons and expiration dates
+  - View active and expired bans
+  - Unban users with reason tracking
+
+- **Server Actions** (New!)
+  - Kick players from game server (requires RCON)
+  - Ban players from game server (requires RCON)
+  - Combined whitelist and server bans
+  - Automatic BattlEye ban list updates
+
+### 6. Database Architecture
 
 #### Tables
 1. **users** - Stores user accounts and Steam profile data
 2. **roles** - Defines available whitelist roles
-3. **user_roles** - Maps users to their assigned roles
+3. **whitelist_bans** - Tracks whitelist and server bans
+4. **server_settings** - Stores RCON and other server configuration (New!)
 
 #### Features
 - Foreign key constraints for data integrity
@@ -67,7 +92,7 @@ Features available to users with PANEL role:
 - Indexed columns for fast queries
 - UTF-8 support for international characters
 
-### 6. Security Features
+### 7. Security Features
 
 - **Authentication**
   - Secure Steam OpenID validation
@@ -93,8 +118,9 @@ Features available to users with PANEL role:
   - HTTPS for all external API calls
   - Error handling for API failures
   - Secure Steam API key storage
+  - RCON password encryption in database (New!)
 
-### 7. Installation Tools
+### 8. Installation Tools
 
 - **verify.php** - Installation verification script
   - Checks PHP version and extensions
@@ -103,17 +129,23 @@ Features available to users with PANEL role:
   - Validates configuration
   - Provides setup guidance
 
+- **migrate_add_rcon_settings.php** - RCON migration script (New!)
+  - Creates server_settings table
+  - Adds RCON configuration options
+  - Updates ban table schema
+
 - **database.sql** - Database schema
   - Creates database and tables
   - Inserts default roles
   - Sets up foreign key relationships
+  - Includes RCON settings table
 
 - **config.example.php** - Configuration template
   - Shows all required settings
   - Documents configuration options
   - Includes setup instructions
 
-### 8. User Interface
+### 9. User Interface
 
 - **Modern Design**
   - Responsive layout
@@ -140,6 +172,8 @@ Features available to users with PANEL role:
 - MySQL 5.7+ or MariaDB 10.2+
 - Web server (Apache/Nginx)
 - Steam API key
+- Composer (for RCON library installation) (New!)
+- Arma 3 server with BattlEye RCON enabled (optional) (New!)
 
 ### PHP Extensions Required
 - PDO
@@ -166,6 +200,12 @@ Features available to users with PANEL role:
 - Validates user identity
 - Returns Steam ID after successful login
 
+### Arma 3 BattlEye RCON (New!)
+- **Remote console protocol** for server management
+- Player kick and ban commands
+- Real-time server status
+- Secure password-protected connection
+
 ## Configuration Options
 
 ### Database
@@ -182,6 +222,13 @@ Features available to users with PANEL role:
 - Session lifetime (default: 24 hours)
 - Cookie settings
 
+### RCON (New!)
+- RCON enabled/disabled flag
+- Server host/IP address
+- Server RCON port (typically game port + 4)
+- RCON password (encrypted in database)
+- All configurable via admin panel interface
+
 ## File Structure
 
 ```
@@ -195,12 +242,20 @@ Features available to users with PANEL role:
 ├── database.sql             # Database schema
 ├── db.php                   # Database connection class
 ├── steam_auth.php           # Steam authentication handler
+├── ban_manager.php          # Ban management class
+├── role_manager.php         # Role management class
+├── rcon_manager.php         # RCON management class (New!)
+├── composer.json            # PHP dependencies (New!)
+├── vendor/                  # Composer dependencies (New!)
 ├── index.php                # Login page
 ├── callback.php             # OAuth callback
 ├── dashboard.php            # User dashboard
-├── admin.php                # Admin panel
+├── admin.php                # Admin panel with RCON config
+├── users.php                # User management with ban/kick
 ├── logout.php               # Logout handler
-└── verify.php               # Installation verification
+├── verify.php               # Installation verification
+├── migrate_add_rcon_settings.php  # RCON migration script (New!)
+└── migrate_*.php            # Other migration scripts
 ```
 
 ## Future Enhancement Possibilities
@@ -208,15 +263,17 @@ Features available to users with PANEL role:
 While not currently implemented, the system could be extended with:
 
 - Role-based permissions for different admin levels
-- Audit log for all role changes
+- Audit log for all role changes and server actions
 - User search and filtering in admin panel
 - Role assignment expiration dates
-- Email notifications for role changes
+- Email notifications for role changes and bans
 - API endpoints for external integrations
 - Multi-language support
 - Dark mode theme option
 - Export user lists and reports
-- Integration with game servers
+- Advanced RCON commands and monitoring
+- Player session tracking and statistics
+- Scheduled ban expirations with automatic unbans
 
 ## Support
 

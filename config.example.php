@@ -35,6 +35,14 @@ define('ROLES', [
     'PANEL' => 'Panel Administrator'
 ]);
 
+// RCON Configuration (optional)
+// RCON settings are stored in database and can be configured via admin panel
+// These settings are for reference only - actual values are managed in admin interface
+// define('RCON_ENABLED', false);
+// define('RCON_HOST', '127.0.0.1');
+// define('RCON_PORT', 2306);
+// define('RCON_PASSWORD', 'your_rcon_password');
+
 // Start session
 session_name(SESSION_NAME);
 session_start();

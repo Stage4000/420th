@@ -1,0 +1,14 @@
+{
+    "name": "420th/delta-dashboard",
+    "description": "420th Delta Whitelist Management System with RCON support",
+    "type": "project",
+    "require": {
+        "php": ">=7.4",
+        "nizarii/arma-rcon-class": "^2.0"
+    },
+    "autoload": {
+        "classmap": [
+            "."
+        ]
+    }
+}

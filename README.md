@@ -32,6 +32,20 @@ Professional dark theme with 420th Delta logo integration across all pages.
 - Pagination for large user lists (20 per page)
 - Quick role assignment modal
 
+### 🚫 Ban Management System
+- Whitelist bans for S3, CAS, or both roles
+- Temporary or permanent bans with expiration dates
+- Ban history and audit trail
+- **New: Server kicks and bans via RCON**
+
+### 🎮 Arma 3 Server Integration (New!)
+- BattlEye RCON support for server control
+- Kick players from game server
+- Ban players from game server (permanent)
+- Combined whitelist and server bans
+- Configurable RCON settings in admin panel
+- Connection testing and status monitoring
+
 ### ⚡ Optimized Database
 Restructured database using **boolean columns** for roles instead of junction table:
 - Single query to fetch user roles (no JOINs needed)
@@ -44,6 +58,8 @@ Restructured database using **boolean columns** for roles instead of junction ta
 - **Role-Based Access Control**: Support for 12 whitelist roles
 - **User Dashboard**: View assigned whitelist roles with custom aliases
 - **Admin Panel**: Manage user roles and aliases (requires PANEL role)
+- **Ban Management**: Issue whitelist and server bans with RCON support
+- **Arma 3 RCON**: Kick and ban players from game server via BattlEye
 - **Optimized Database**: Boolean columns for fast role queries
 - **Database-Driven**: MySQL/MariaDB backend for persistent storage
 
@@ -92,8 +108,10 @@ The `roles` table is kept for managing aliases and display names.
 
 - PHP 7.4 or higher
 - MySQL 5.7+ or MariaDB 10.2+
+- Composer (for installing dependencies)
 - Web server (Apache, Nginx, etc.)
 - Steam API Key ([Get one here](https://steamcommunity.com/dev/apikey))
+- (Optional) Arma 3 server with BattlEye RCON enabled
 
 ### Setup Steps
 
@@ -105,15 +123,25 @@ The `roles` table is kept for managing aliases and display names.
    cd 420th
    ```
 
-2. **Upload to your web server**
+2. **Install dependencies**
+   ```bash
+   composer install
+   ```
+
+3. **Upload to your web server**
    - Upload all files to your web server's document root or subdirectory
 
-3. **Run the installer**
+4. **Run the installer**
    - Navigate to your installation URL (e.g., `http://yourdomain.com`)
    - The installer will automatically detect first run and guide you through setup
    - Provide database credentials and Steam API key
    - Log in with Steam to create your admin account
    - Done! The first user automatically gets PANEL administrator role
+
+5. **(Optional) Configure RCON**
+   - See the INSTALL.md file for detailed RCON setup instructions
+   - Configure BattlEye RCON on your Arma 3 server
+   - Add RCON credentials in the admin panel
 
 #### Option 2: Manual Installation
 
@@ -123,7 +151,12 @@ The `roles` table is kept for managing aliases and display names.
    cd 420th
    ```
 
-2. **Create the database**
+2. **Install dependencies**
+   ```bash
+   composer install
+   ```
+
+3. **Create the database**
    ```bash
    mysql -u root -p < database.sql
    ```
@@ -274,20 +307,32 @@ If you have an existing installation using the old `user_roles` junction table, 
 5. **Sync Staff Roles:**
    - Use the "🔄 Sync Staff Roles" button to fix any users missing the ALL role
    - This ensures all staff members have the ALL role assigned
+6. **Configure RCON (Optional):**
+   - Scroll to "Arma 3 Server RCON Configuration"
+   - Enable RCON and enter your server details
+   - Test the connection
+   - Now you can kick/ban players from the game server via the user management page
 
 ## File Structure
 
 ```
 420th/
+├── composer.json       # PHP dependencies
+├── vendor/             # Composer dependencies (RCON library)
 ├── config.php          # Configuration file
 ├── database.sql        # Database schema
 ├── db.php             # Database connection handler
 ├── steam_auth.php     # Steam OAuth authentication
+├── ban_manager.php    # Ban management class
+├── role_manager.php   # Role management class
+├── rcon_manager.php   # RCON management class (New!)
 ├── index.php          # Login page
 ├── callback.php       # OAuth callback handler
 ├── dashboard.php      # User dashboard
-├── admin.php          # Admin panel
+├── admin.php          # Admin panel with RCON config
+├── users.php          # User management with ban/kick
 ├── logout.php         # Logout handler
+├── migrate_add_rcon_settings.php  # RCON migration script
 └── README.md          # This file
 ```
 
@@ -299,6 +344,8 @@ If you have an existing installation using the old `user_roles` junction table, 
 - **Session Security**: Sessions are configured with secure settings
 - **Input Validation**: All user inputs are sanitized and validated
 - **Prepared Statements**: All database queries use prepared statements to prevent SQL injection
+- **RCON Security**: Keep RCON password secure and restrict port access via firewall
+- **Composer Dependencies**: Keep dependencies updated with `composer update`
 
 ## Troubleshooting
 
@@ -315,6 +362,16 @@ If you have an existing installation using the old `user_roles` junction table, 
 ### "No roles assigned"
 - Roles must be manually assigned by a PANEL admin
 - Check the database to ensure roles exist in the `roles` table
+
+### "RCON connection failed"
+- Verify BattlEye RCON is enabled on your Arma 3 server
+- Check RConPort and RConPassword in beserver.cfg
+- Ensure RCON port is not blocked by firewall
+- Test connectivity with `telnet server_ip rcon_port` from your web server
+
+### "Composer command not found"
+- Install Composer: https://getcomposer.org/download/
+- Or use `php composer.phar` instead of `composer`
 
 ## Contributing
 
