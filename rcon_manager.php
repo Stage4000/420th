@@ -136,9 +136,7 @@ class RconManager {
         
         if (!$this->rcon) {
             try {
-                // Use fully qualified class name
-                $arcClass = 'Nizarii\\ARC';
-                $this->rcon = new $arcClass($this->host, $this->password, $this->port);
+                $this->rcon = new \Nizarii\ARC($this->host, $this->password, $this->port);
             } catch (Exception $e) {
                 throw new Exception("Failed to connect to RCON server: " . $e->getMessage());
             }
