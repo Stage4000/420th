@@ -304,6 +304,113 @@ $isWhitelisted = $hasS3 && $hasCAS;
             color: #fc8181;
         }
         
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal:focus {
+            outline: none;
+        }
+        
+        .modal-content {
+            background: #1a1f2e;
+            padding: 2rem;
+            border-radius: 10px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid #2a3142;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-header {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #2a3142;
+        }
+        
+        .modal-header h2 {
+            color: #e4e6eb;
+            margin-bottom: 0.5rem;
+        }
+        
+        .modal-body {
+            color: #8b92a8;
+            line-height: 1.6;
+        }
+        
+        .modal-body p {
+            margin-bottom: 1rem;
+        }
+        
+        .modal-body ul {
+            list-style: none;
+            padding-left: 0;
+            margin: 1rem 0;
+        }
+        
+        .modal-body ul li {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: rgba(102, 126, 234, 0.1);
+            border-left: 3px solid #667eea;
+            border-radius: 3px;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid #2a3142;
+        }
+        
+        .modal-btn {
+            flex: 1;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .modal-btn-cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e4e6eb;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .modal-btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .modal-btn-accept {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .modal-btn-accept:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
         /* Custom Scrollbar Styles */
         ::-webkit-scrollbar {
             width: 10px;
@@ -544,9 +651,9 @@ $isWhitelisted = $hasS3 && $hasCAS;
                 ?> and 
                 <?php echo htmlspecialchars($casRole ? $casRole['name'] : 'CAS'); ?> whitelist roles.
             </p>
-            <form method="POST">
+            <form method="POST" id="whitelistForm">
                 <input type="hidden" name="action" value="whitelist_me">
-                <button type="submit" class="whitelist-btn">🎯 Whitelist Me!</button>
+                <button type="button" class="whitelist-btn" id="whitelistBtn">🎯 Whitelist Me!</button>
             </form>
         </div>
         <?php else: ?>
@@ -578,11 +685,108 @@ $isWhitelisted = $hasS3 && $hasCAS;
         <div>Made with ❤️ by <a href="https://sitecritter.com" target="_blank">SiteCritter</a></div>
     </footer>
     
+    <!-- Whitelist Agreement Modal -->
+    <div id="agreementModal" class="modal" role="dialog" aria-labelledby="modalTitle" aria-describedby="modalDescription" tabindex="-1">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Whitelist Rules Agreement</h2>
+                <p id="modalDescription" style="color: #8b92a8; margin: 0;">Please read and accept the following rules before proceeding</p>
+            </div>
+            <div class="modal-body">
+                <p><strong>By requesting whitelist, you agree to the following:</strong></p>
+                <ul>
+                    <li>
+                        <strong>Pilot Communication</strong> - All pilots are expected to communicate in-game via text or voice. You may be asked to switch role if unable to communicate.
+                    </li>
+                    <li>
+                        <strong>Waiting For Passengers</strong> - Transport Helicopters should wait in an orderly fashion on the side of the yellow barriers opposite from spawn, leaving the traffic lane clear for infantry and vehicles.
+                    </li>
+                    <li>
+                        <strong>No CAS on Kavala</strong> - All Close Air Support is forbidden to engage the Priority Mission Kavala. This mission is meant to be close-quarters combat. CAS can ruin the mission if they destroy buildings containing intel. Contact an in-game Zeus or use the vote-kick feature to enforce this rule as needed.
+                    </li>
+                </ul>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="modal-btn modal-btn-cancel" id="modalCancelBtn">
+                    Cancel
+                </button>
+                <button type="button" class="modal-btn modal-btn-accept" id="modalAcceptBtn">
+                    I Agree
+                </button>
+            </div>
+        </div>
+    </div>
+    
     <script>
         function toggleMobileMenu() {
             const navbarLinks = document.getElementById('navbarLinks');
             navbarLinks.classList.toggle('active');
         }
+        
+        function showAgreementModal() {
+            const modal = document.getElementById('agreementModal');
+            modal.classList.add('active');
+            // Focus the modal for accessibility
+            modal.focus();
+            // Add ESC key handler when modal opens
+            document.addEventListener('keydown', handleEscKey);
+        }
+        
+        function closeAgreementModal() {
+            const modal = document.getElementById('agreementModal');
+            modal.classList.remove('active');
+            // Remove ESC key handler when modal closes
+            document.removeEventListener('keydown', handleEscKey);
+            // Return focus to the whitelist button
+            const whitelistBtn = document.getElementById('whitelistBtn');
+            if (whitelistBtn) {
+                whitelistBtn.focus();
+            }
+        }
+        
+        function handleEscKey(event) {
+            if (event.key === 'Escape') {
+                closeAgreementModal();
+            }
+        }
+        
+        function acceptAgreement() {
+            // Close the modal
+            closeAgreementModal();
+            // Submit the form
+            document.getElementById('whitelistForm').submit();
+        }
+        
+        // Set up event listeners when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Whitelist button click handler
+            const whitelistBtn = document.getElementById('whitelistBtn');
+            if (whitelistBtn) {
+                whitelistBtn.addEventListener('click', showAgreementModal);
+            }
+            
+            // Modal cancel button
+            const modalCancelBtn = document.getElementById('modalCancelBtn');
+            if (modalCancelBtn) {
+                modalCancelBtn.addEventListener('click', closeAgreementModal);
+            }
+            
+            // Modal accept button
+            const modalAcceptBtn = document.getElementById('modalAcceptBtn');
+            if (modalAcceptBtn) {
+                modalAcceptBtn.addEventListener('click', acceptAgreement);
+            }
+            
+            // Close modal when clicking outside of it
+            const modal = document.getElementById('agreementModal');
+            if (modal) {
+                modal.addEventListener('click', function(event) {
+                    if (event.target === modal && modal.classList.contains('active')) {
+                        closeAgreementModal();
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>
