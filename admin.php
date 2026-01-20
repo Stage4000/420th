@@ -5,6 +5,7 @@ require_once 'steam_auth.php';
 require_once 'db.php';
 require_once 'role_manager.php';
 require_once 'rcon_manager.php';
+require_once 'html_sanitizer.php';
 
 // Check if user is logged in and is a panel admin
 if (!SteamAuth::isLoggedIn()) {
@@ -27,6 +28,10 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
 
 // Get current RCON settings
 $rconSettings = $rconManager->getSettings();
+
+// Get whitelist agreement setting
+$whitelistAgreementSetting = $db->fetchOne("SELECT setting_value FROM server_settings WHERE setting_key = 'whitelist_agreement'");
+$whitelistAgreement = $whitelistAgreementSetting ? $whitelistAgreementSetting['setting_value'] : '';
 
 // Handle role assignment/removal and alias updates
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -141,6 +146,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $message = "User not found. They will be added to the database on their first login.";
                     $messageType = "info";
                 }
+            }
+        } elseif ($_POST['action'] === 'update_whitelist_agreement') {
+            // Update whitelist agreement
+            try {
+                $agreementText = $_POST['whitelist_agreement'] ?? '';
+                
+                // Sanitize HTML to allow only safe formatting tags
+                $sanitizedAgreement = HtmlSanitizer::sanitize($agreementText);
+                
+                $db->execute(
+                    "INSERT INTO server_settings (setting_key, setting_value, updated_by_user_id) 
+                     VALUES (?, ?, ?)
+                     ON DUPLICATE KEY UPDATE 
+                     setting_value = VALUES(setting_value),
+                     updated_by_user_id = VALUES(updated_by_user_id)",
+                    ['whitelist_agreement', $sanitizedAgreement, $user['id']]
+                );
+                
+                // Reload the setting
+                $whitelistAgreementSetting = $db->fetchOne("SELECT setting_value FROM server_settings WHERE setting_key = 'whitelist_agreement'");
+                $whitelistAgreement = $whitelistAgreementSetting ? $whitelistAgreementSetting['setting_value'] : '';
+                
+                $message = "Whitelist agreement updated successfully!";
+                $messageType = "success";
+            } catch (Exception $e) {
+                $message = "Error updating whitelist agreement: " . $e->getMessage();
+                $messageType = "error";
             }
         }
     }
@@ -829,6 +861,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php endif; ?>
         </div>
         
+        <!-- Whitelist Agreement Management -->
+        <div class="users-table" style="margin-bottom: 2rem;">
+            <div class="table-header">
+                <h2>📋 Whitelist Agreement</h2>
+                <p style="margin-top: 0.5rem; color: #8b92a8; font-weight: normal;">Customize the agreement text shown to users when they request whitelist access. HTML is supported.</p>
+            </div>
+            <form method="POST" id="agreementForm" style="padding: 2rem;">
+                <input type="hidden" name="action" value="update_whitelist_agreement">
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #e4e6eb;">
+                        Agreement Content:
+                    </label>
+                    <textarea 
+                        name="whitelist_agreement" 
+                        rows="15" 
+                        style="width: 100%; padding: 1rem; border: 1px solid #2a3142; background: #0f1318; color: #e4e6eb; border-radius: 5px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; resize: vertical;"
+                        placeholder="Enter the whitelist agreement HTML content..."
+                    ><?php echo htmlspecialchars($whitelistAgreement); ?></textarea>
+                    <small style="color: #8b92a8; display: block; margin-top: 0.5rem;">
+                        💡 Tip: Allowed HTML tags: <?php echo HtmlSanitizer::getAllowedTagsList(); ?>. Script tags and event handlers are automatically removed for security.
+                    </small>
+                </div>
+                
+                <div style="background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.3); padding: 1rem; border-radius: 5px; margin-bottom: 1rem;">
+                    <p style="color: #90cdf4; margin-bottom: 0.5rem;"><strong>ℹ️ Preview:</strong></p>
+                    <div style="color: #e4e6eb; line-height: 1.6;" id="agreementPreview">
+                        <?php echo HtmlSanitizer::sanitize($whitelistAgreement); ?>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem; font-size: 1rem;">
+                    💾 Save Whitelist Agreement
+                </button>
+            </form>
+        </div>
+        
         <!-- Role Aliases Management -->
         <div class="users-table" style="margin-bottom: 2rem;">
             <div class="table-header">
@@ -869,6 +938,91 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
     
     <script>
+        // Simple HTML sanitizer for preview - allows only safe formatting tags
+        function sanitizeHtml(html) {
+            const allowedTags = ['p', 'strong', 'em', 'b', 'i', 'u', 'ul', 'ol', 'li', 'br', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
+            
+            // Use DOMParser to safely parse HTML without executing scripts
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // Remove script tags
+            const scripts = doc.querySelectorAll('script');
+            scripts.forEach(script => script.remove());
+            
+            // Process all elements (convert to array to avoid live NodeList issues)
+            const allElements = Array.from(doc.body.querySelectorAll('*'));
+            allElements.forEach(el => {
+                const tagName = el.tagName.toLowerCase();
+                if (!allowedTags.includes(tagName)) {
+                    // Replace disallowed tags with their text content
+                    const textNode = doc.createTextNode(el.textContent);
+                    el.parentNode.replaceChild(textNode, el);
+                } else {
+                    // Remove all event handler attributes from allowed tags
+                    Array.from(el.attributes).forEach(attr => {
+                        if (attr.name.startsWith('on')) {
+                            el.removeAttribute(attr.name);
+                        }
+                    });
+                }
+            });
+            
+            return doc.body.innerHTML;
+        }
+        
+        // Live preview for whitelist agreement
+        const agreementTextarea = document.querySelector('textarea[name="whitelist_agreement"]');
+        const agreementPreview = document.getElementById('agreementPreview');
+        
+        if (agreementTextarea && agreementPreview) {
+            agreementTextarea.addEventListener('input', function() {
+                // Sanitize first, then safely set innerHTML with sanitized content
+                const sanitized = sanitizeHtml(this.value);
+                agreementPreview.innerHTML = sanitized;
+            });
+        }
+        
+        // AJAX form submission for whitelist agreement
+        document.getElementById('agreementForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const form = this;
+            const button = form.querySelector('button[type="submit"]');
+            const originalText = button.textContent;
+            
+            button.disabled = true;
+            button.textContent = '⏳ Saving...';
+            
+            const formData = new FormData(form);
+            
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(() => {
+                button.textContent = '✅ Saved!';
+                button.style.background = '#48bb78';
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.background = '';
+                    button.disabled = false;
+                }, 2000);
+            })
+            .catch(error => {
+                button.textContent = '❌ Error';
+                button.style.background = '#f56565';
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.background = '';
+                    button.disabled = false;
+                }, 2000);
+            });
+        });
+        
         // AJAX form submission for aliases to reduce page refresh
         document.getElementById('aliasForm').addEventListener('submit', function(e) {
             e.preventDefault();

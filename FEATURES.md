@@ -62,6 +62,12 @@ Features available to users with PANEL role:
   - Issue server bans via BattlEye RCON
   - Secure password storage for RCON credentials
 
+- **Whitelist Agreement Management** (New!)
+  - Customize whitelist agreement text
+  - Support for HTML formatting
+  - Live preview of agreement changes
+  - Store agreement in database for easy updates
+
 ### 5. Ban Management System
 Features available to users with ALL role:
 
@@ -78,7 +84,16 @@ Features available to users with ALL role:
   - Combined whitelist and server bans
   - Automatic BattlEye ban list updates
 
-### 6. Database Architecture
+### 6. Quick Whitelist Feature
+
+- **One-Click Whitelist**
+  - Users can whitelist themselves with a single click
+  - Automatically assigns S3 and CAS roles
+  - Modal agreement users must accept before whitelisting
+  - Customizable agreement text via admin panel
+  - Prevents whitelisting while banned
+
+### 7. Database Architecture
 
 #### Tables
 1. **users** - Stores user accounts and Steam profile data
@@ -133,6 +148,11 @@ Features available to users with ALL role:
   - Creates server_settings table
   - Adds RCON configuration options
   - Updates ban table schema
+
+- **migrate_add_whitelist_agreement.php** - Whitelist agreement migration (New!)
+  - Adds whitelist_agreement setting to server_settings
+  - Inserts default agreement text
+  - Enables customizable agreement functionality
 
 - **database.sql** - Database schema
   - Creates database and tables
