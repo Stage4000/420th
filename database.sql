@@ -95,5 +95,17 @@ INSERT INTO `server_settings` (`setting_key`, `setting_value`) VALUES
     ('rcon_enabled', '0'),
     ('rcon_host', ''),
     ('rcon_port', '2306'),
-    ('rcon_password', '')
+    ('rcon_password', ''),
+    ('whitelist_agreement', '<p><strong>By requesting whitelist, you agree to the following:</strong></p>
+<ul>
+    <li>
+        <strong>Pilot Communication</strong> - All pilots are expected to communicate in-game via text or voice. You may be asked to switch role if unable to communicate.
+    </li>
+    <li>
+        <strong>Waiting For Passengers</strong> - Transport Helicopters should wait in an orderly fashion on the side of the yellow barriers opposite from spawn, leaving the traffic lane clear for infantry and vehicles.
+    </li>
+    <li>
+        <strong>No CAS on Kavala</strong> - All Close Air Support is forbidden to engage the Priority Mission Kavala. This mission is meant to be close-quarters combat. CAS can ruin the mission if they destroy buildings containing intel. Contact an in-game Zeus or use the vote-kick feature to enforce this rule as needed.
+    </li>
+</ul>')
 ON DUPLICATE KEY UPDATE `setting_key` = `setting_key`;

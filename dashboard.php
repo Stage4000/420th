@@ -27,6 +27,10 @@ $freshRoles = SteamAuth::getUserRoles($user['id']);
 $_SESSION['roles'] = $freshRoles;
 $user['roles'] = $freshRoles;
 
+// Get whitelist agreement from database
+$whitelistAgreementSetting = $db->fetchOne("SELECT setting_value FROM server_settings WHERE setting_key = 'whitelist_agreement'");
+$whitelistAgreement = $whitelistAgreementSetting ? $whitelistAgreementSetting['setting_value'] : '<p><strong>By requesting whitelist, you agree to the server rules.</strong></p>';
+
 // Handle whitelist request
 $message = '';
 $messageType = '';
@@ -693,18 +697,7 @@ $isWhitelisted = $hasS3 && $hasCAS;
                 <p id="modalDescription" style="color: #8b92a8; margin: 0;">Please read and accept the following rules before proceeding</p>
             </div>
             <div class="modal-body">
-                <p><strong>By requesting whitelist, you agree to the following:</strong></p>
-                <ul>
-                    <li>
-                        <strong>Pilot Communication</strong> - All pilots are expected to communicate in-game via text or voice. You may be asked to switch role if unable to communicate.
-                    </li>
-                    <li>
-                        <strong>Waiting For Passengers</strong> - Transport Helicopters should wait in an orderly fashion on the side of the yellow barriers opposite from spawn, leaving the traffic lane clear for infantry and vehicles.
-                    </li>
-                    <li>
-                        <strong>No CAS on Kavala</strong> - All Close Air Support is forbidden to engage the Priority Mission Kavala. This mission is meant to be close-quarters combat. CAS can ruin the mission if they destroy buildings containing intel. Contact an in-game Zeus or use the vote-kick feature to enforce this rule as needed.
-                    </li>
-                </ul>
+                <?php echo $whitelistAgreement; ?>
             </div>
             <div class="modal-actions">
                 <button type="button" class="modal-btn modal-btn-cancel" id="modalCancelBtn">
