@@ -941,30 +941,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Simple HTML sanitizer for preview - allows only safe formatting tags
         function sanitizeHtml(html) {
             const allowedTags = ['p', 'strong', 'em', 'b', 'i', 'u', 'ul', 'ol', 'li', 'br', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = html;
             
-            // Remove script tags and event handlers
-            const scripts = tempDiv.querySelectorAll('script');
+            // Use DOMParser to safely parse HTML without executing scripts
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // Remove script tags
+            const scripts = doc.querySelectorAll('script');
             scripts.forEach(script => script.remove());
             
-            // Remove all elements not in allowed list
-            const allElements = tempDiv.querySelectorAll('*');
+            // Process all elements
+            const allElements = doc.body.querySelectorAll('*');
             allElements.forEach(el => {
                 const tagName = el.tagName.toLowerCase();
                 if (!allowedTags.includes(tagName)) {
-                    // Replace with text content
-                    el.replaceWith(document.createTextNode(el.textContent));
+                    // Replace disallowed tags with their text content
+                    const textNode = doc.createTextNode(el.textContent);
+                    el.parentNode.replaceChild(textNode, el);
+                } else {
+                    // Remove all event handler attributes from allowed tags
+                    Array.from(el.attributes).forEach(attr => {
+                        if (attr.name.startsWith('on')) {
+                            el.removeAttribute(attr.name);
+                        }
+                    });
                 }
-                // Remove all event handler attributes
-                Array.from(el.attributes).forEach(attr => {
-                    if (attr.name.startsWith('on')) {
-                        el.removeAttribute(attr.name);
-                    }
-                });
             });
             
-            return tempDiv.innerHTML;
+            return doc.body.innerHTML;
         }
         
         // Live preview for whitelist agreement
@@ -973,7 +977,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if (agreementTextarea && agreementPreview) {
             agreementTextarea.addEventListener('input', function() {
-                agreementPreview.innerHTML = sanitizeHtml(this.value);
+                // Sanitize first, then safely set innerHTML with sanitized content
+                const sanitized = sanitizeHtml(this.value);
+                agreementPreview.innerHTML = sanitized;
             });
         }
         

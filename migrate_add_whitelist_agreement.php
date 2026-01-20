@@ -23,6 +23,8 @@ try {
 </ul>';
     
     // Insert or update the whitelist_agreement setting
+    // Note: The IF condition preserves any existing non-empty agreement text that admins may have manually added,
+    // only setting the default if the setting doesn't exist or is empty
     $db->execute(
         "INSERT INTO server_settings (setting_key, setting_value, updated_by_user_id) VALUES (?, ?, NULL) 
          ON DUPLICATE KEY UPDATE setting_value = IF(setting_value IS NULL OR setting_value = '', VALUES(setting_value), setting_value)",
