@@ -26,10 +26,20 @@ class HtmlSanitizer {
         // Strip all tags except allowed ones
         $sanitized = strip_tags($html, $allowedTagsStr);
         
-        // Additional security: remove any javascript: or data: protocols
-        $sanitized = preg_replace('/javascript:/i', '', $sanitized);
-        $sanitized = preg_replace('/data:/i', '', $sanitized);
-        $sanitized = preg_replace('/on\w+\s*=/i', '', $sanitized); // Remove event handlers
+        // Additional security: remove any dangerous content
+        // Remove javascript: protocol (including variations with whitespace/encoding)
+        $sanitized = preg_replace('/\bjavascript\s*:/i', '', $sanitized);
+        $sanitized = preg_replace('/\bdata\s*:/i', '', $sanitized);
+        $sanitized = preg_replace('/\bvbscript\s*:/i', '', $sanitized);
+        
+        // Remove event handlers (on* attributes) more thoroughly
+        $sanitized = preg_replace('/\s*on[a-z]+\s*=/i', ' ', $sanitized);
+        
+        // Remove any remaining script-like content
+        $sanitized = preg_replace('/<script[^>]*>.*?<\/script>/is', '', $sanitized);
+        $sanitized = preg_replace('/<iframe[^>]*>.*?<\/iframe>/is', '', $sanitized);
+        $sanitized = preg_replace('/<object[^>]*>.*?<\/object>/is', '', $sanitized);
+        $sanitized = preg_replace('/<embed[^>]*>/i', '', $sanitized);
         
         return $sanitized;
     }

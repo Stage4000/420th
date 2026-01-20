@@ -888,7 +888,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div style="background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.3); padding: 1rem; border-radius: 5px; margin-bottom: 1rem;">
                     <p style="color: #90cdf4; margin-bottom: 0.5rem;"><strong>ℹ️ Preview:</strong></p>
                     <div style="color: #e4e6eb; line-height: 1.6;" id="agreementPreview">
-                        <?php echo $whitelistAgreement; ?>
+                        <?php echo HtmlSanitizer::sanitize($whitelistAgreement); ?>
                     </div>
                 </div>
                 
@@ -950,8 +950,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const scripts = doc.querySelectorAll('script');
             scripts.forEach(script => script.remove());
             
-            // Process all elements
-            const allElements = doc.body.querySelectorAll('*');
+            // Process all elements (convert to array to avoid live NodeList issues)
+            const allElements = Array.from(doc.body.querySelectorAll('*'));
             allElements.forEach(el => {
                 const tagName = el.tagName.toLowerCase();
                 if (!allowedTags.includes(tagName)) {
