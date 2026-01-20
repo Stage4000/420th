@@ -30,8 +30,13 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
 $rconSettings = $rconManager->getSettings();
 
 // Get whitelist agreement setting
-$whitelistAgreementSetting = $db->fetchOne("SELECT setting_value FROM server_settings WHERE setting_key = 'whitelist_agreement'");
-$whitelistAgreement = $whitelistAgreementSetting ? $whitelistAgreementSetting['setting_value'] : '';
+try {
+    $whitelistAgreementSetting = $db->fetchOne("SELECT setting_value FROM server_settings WHERE setting_key = 'whitelist_agreement'");
+    $whitelistAgreement = $whitelistAgreementSetting ? $whitelistAgreementSetting['setting_value'] : '';
+} catch (PDOException $e) {
+    // server_settings table might not exist yet
+    $whitelistAgreement = '';
+}
 
 // Handle role assignment/removal and alias updates
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
