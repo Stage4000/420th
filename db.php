@@ -71,4 +71,13 @@ class Database {
     public function rollback() {
         return $this->connection->rollback();
     }
+
+    /**
+     * Check if a PDOException is due to a missing table (SQLSTATE 42S02)
+     * @param PDOException $e The exception to check
+     * @return bool True if the error is due to a missing table
+     */
+    public static function isTableNotFoundError($e) {
+        return $e->getCode() === '42S02' || strpos($e->getMessage(), '42S02') !== false;
+    }
 }

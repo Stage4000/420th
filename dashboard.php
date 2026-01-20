@@ -36,7 +36,7 @@ try {
 } catch (PDOException $e) {
     // If server_settings table doesn't exist (SQLSTATE 42S02), use default agreement
     // This handles cases where the migration hasn't been run yet
-    if ($e->getCode() === '42S02' || strpos($e->getMessage(), '42S02') !== false) {
+    if (Database::isTableNotFoundError($e)) {
         $whitelistAgreement = DEFAULT_WHITELIST_AGREEMENT;
     } else {
         // Re-throw other database errors
