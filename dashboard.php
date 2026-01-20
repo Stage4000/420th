@@ -5,6 +5,7 @@ require_once 'steam_auth.php';
 require_once 'db.php';
 require_once 'role_manager.php';
 require_once 'ban_manager.php';
+require_once 'html_sanitizer.php';
 
 // Check if user is logged in
 if (!SteamAuth::isLoggedIn()) {
@@ -30,6 +31,8 @@ $user['roles'] = $freshRoles;
 // Get whitelist agreement from database
 $whitelistAgreementSetting = $db->fetchOne("SELECT setting_value FROM server_settings WHERE setting_key = 'whitelist_agreement'");
 $whitelistAgreement = $whitelistAgreementSetting ? $whitelistAgreementSetting['setting_value'] : '<p><strong>By requesting whitelist, you agree to the server rules.</strong></p>';
+// Sanitize agreement content for safe display (already sanitized when saved, but double-check)
+$whitelistAgreement = HtmlSanitizer::sanitize($whitelistAgreement);
 
 // Handle whitelist request
 $message = '';

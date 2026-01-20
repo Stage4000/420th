@@ -5,6 +5,7 @@ require_once 'steam_auth.php';
 require_once 'db.php';
 require_once 'role_manager.php';
 require_once 'rcon_manager.php';
+require_once 'html_sanitizer.php';
 
 // Check if user is logged in and is a panel admin
 if (!SteamAuth::isLoggedIn()) {
@@ -151,13 +152,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $agreementText = $_POST['whitelist_agreement'] ?? '';
                 
+                // Sanitize HTML to allow only safe formatting tags
+                $sanitizedAgreement = HtmlSanitizer::sanitize($agreementText);
+                
                 $db->execute(
                     "INSERT INTO server_settings (setting_key, setting_value, updated_by_user_id) 
                      VALUES (?, ?, ?)
                      ON DUPLICATE KEY UPDATE 
                      setting_value = VALUES(setting_value),
                      updated_by_user_id = VALUES(updated_by_user_id)",
-                    ['whitelist_agreement', $agreementText, $user['id']]
+                    ['whitelist_agreement', $sanitizedAgreement, $user['id']]
                 );
                 
                 // Reload the setting
@@ -877,7 +881,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         placeholder="Enter the whitelist agreement HTML content..."
                     ><?php echo htmlspecialchars($whitelistAgreement); ?></textarea>
                     <small style="color: #8b92a8; display: block; margin-top: 0.5rem;">
-                        💡 Tip: You can use HTML tags like &lt;p&gt;, &lt;strong&gt;, &lt;ul&gt;, &lt;li&gt;, etc. to format the agreement text.
+                        💡 Tip: Allowed HTML tags: <?php echo HtmlSanitizer::getAllowedTagsList(); ?>. Script tags and event handlers are automatically removed for security.
                     </small>
                 </div>
                 
@@ -934,15 +938,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
     
     <script>
+        // Simple HTML sanitizer for preview - allows only safe formatting tags
+        function sanitizeHtml(html) {
+            const allowedTags = ['p', 'strong', 'em', 'b', 'i', 'u', 'ul', 'ol', 'li', 'br', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            
+            // Remove script tags and event handlers
+            const scripts = tempDiv.querySelectorAll('script');
+            scripts.forEach(script => script.remove());
+            
+            // Remove all elements not in allowed list
+            const allElements = tempDiv.querySelectorAll('*');
+            allElements.forEach(el => {
+                const tagName = el.tagName.toLowerCase();
+                if (!allowedTags.includes(tagName)) {
+                    // Replace with text content
+                    el.replaceWith(document.createTextNode(el.textContent));
+                }
+                // Remove all event handler attributes
+                Array.from(el.attributes).forEach(attr => {
+                    if (attr.name.startsWith('on')) {
+                        el.removeAttribute(attr.name);
+                    }
+                });
+            });
+            
+            return tempDiv.innerHTML;
+        }
+        
         // Live preview for whitelist agreement
-        // Note: Preview intentionally renders HTML to show what users will see.
-        // This is admin-only functionality and admins are trusted users.
         const agreementTextarea = document.querySelector('textarea[name="whitelist_agreement"]');
         const agreementPreview = document.getElementById('agreementPreview');
         
         if (agreementTextarea && agreementPreview) {
             agreementTextarea.addEventListener('input', function() {
-                agreementPreview.innerHTML = this.value;
+                agreementPreview.innerHTML = sanitizeHtml(this.value);
             });
         }
         
