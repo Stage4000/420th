@@ -728,15 +728,25 @@ $isWhitelisted = $hasS3 && $hasCAS;
             modal.classList.add('active');
             // Focus the modal for accessibility
             modal.focus();
+            // Add ESC key handler when modal opens
+            document.addEventListener('keydown', handleEscKey);
         }
         
         function closeAgreementModal() {
             const modal = document.getElementById('agreementModal');
             modal.classList.remove('active');
+            // Remove ESC key handler when modal closes
+            document.removeEventListener('keydown', handleEscKey);
             // Return focus to the whitelist button
             const whitelistBtn = document.getElementById('whitelistBtn');
             if (whitelistBtn) {
                 whitelistBtn.focus();
+            }
+        }
+        
+        function handleEscKey(event) {
+            if (event.key === 'Escape') {
+                closeAgreementModal();
             }
         }
         
@@ -771,14 +781,7 @@ $isWhitelisted = $hasS3 && $hasCAS;
             const modal = document.getElementById('agreementModal');
             if (modal) {
                 modal.addEventListener('click', function(event) {
-                    if (event.target === modal) {
-                        closeAgreementModal();
-                    }
-                });
-                
-                // Handle ESC key to close modal
-                document.addEventListener('keydown', function(event) {
-                    if (event.key === 'Escape' && modal.classList.contains('active')) {
+                    if (event.target === modal && modal.classList.contains('active')) {
                         closeAgreementModal();
                     }
                 });
