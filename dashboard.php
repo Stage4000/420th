@@ -29,15 +29,17 @@ $_SESSION['roles'] = $freshRoles;
 $user['roles'] = $freshRoles;
 
 // Get whitelist agreement from database
-// Use default fallback if server_settings table doesn't exist or setting is not found
+// Create server_settings table if it doesn't exist
 try {
     $whitelistAgreementSetting = $db->fetchOne("SELECT setting_value FROM server_settings WHERE setting_key = 'whitelist_agreement'");
     $whitelistAgreement = $whitelistAgreementSetting ? $whitelistAgreementSetting['setting_value'] : DEFAULT_WHITELIST_AGREEMENT;
 } catch (PDOException $e) {
-    // If server_settings table doesn't exist (SQLSTATE 42S02), use default agreement
-    // This handles cases where the migration hasn't been run yet
+    // If server_settings table doesn't exist (SQLSTATE 42S02), create it
     if (Database::isTableNotFoundError($e)) {
-        $whitelistAgreement = DEFAULT_WHITELIST_AGREEMENT;
+        $db->createServerSettingsTable();
+        // Retry fetching the setting after creating the table
+        $whitelistAgreementSetting = $db->fetchOne("SELECT setting_value FROM server_settings WHERE setting_key = 'whitelist_agreement'");
+        $whitelistAgreement = $whitelistAgreementSetting ? $whitelistAgreementSetting['setting_value'] : DEFAULT_WHITELIST_AGREEMENT;
     } else {
         // Re-throw other database errors
         throw $e;

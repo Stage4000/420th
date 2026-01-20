@@ -30,14 +30,17 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
 $rconSettings = $rconManager->getSettings();
 
 // Get whitelist agreement setting
+// Create server_settings table if it doesn't exist
 try {
     $whitelistAgreementSetting = $db->fetchOne("SELECT setting_value FROM server_settings WHERE setting_key = 'whitelist_agreement'");
     $whitelistAgreement = $whitelistAgreementSetting ? $whitelistAgreementSetting['setting_value'] : '';
 } catch (PDOException $e) {
-    // If server_settings table doesn't exist (SQLSTATE 42S02), use empty string
-    // This handles cases where the migration hasn't been run yet
+    // If server_settings table doesn't exist (SQLSTATE 42S02), create it
     if (Database::isTableNotFoundError($e)) {
-        $whitelistAgreement = '';
+        $db->createServerSettingsTable();
+        // Retry fetching the setting after creating the table
+        $whitelistAgreementSetting = $db->fetchOne("SELECT setting_value FROM server_settings WHERE setting_key = 'whitelist_agreement'");
+        $whitelistAgreement = $whitelistAgreementSetting ? $whitelistAgreementSetting['setting_value'] : '';
     } else {
         // Re-throw other database errors
         throw $e;
