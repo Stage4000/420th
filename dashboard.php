@@ -322,6 +322,10 @@ $isWhitelisted = $hasS3 && $hasCAS;
             display: flex;
         }
         
+        .modal:focus {
+            outline: none;
+        }
+        
         .modal-content {
             background: #1a1f2e;
             padding: 2rem;
@@ -649,7 +653,7 @@ $isWhitelisted = $hasS3 && $hasCAS;
             </p>
             <form method="POST" id="whitelistForm">
                 <input type="hidden" name="action" value="whitelist_me">
-                <button type="button" class="whitelist-btn" onclick="showAgreementModal()">🎯 Whitelist Me!</button>
+                <button type="button" class="whitelist-btn" id="whitelistBtn">🎯 Whitelist Me!</button>
             </form>
         </div>
         <?php else: ?>
@@ -682,11 +686,11 @@ $isWhitelisted = $hasS3 && $hasCAS;
     </footer>
     
     <!-- Whitelist Agreement Modal -->
-    <div id="agreementModal" class="modal">
+    <div id="agreementModal" class="modal" role="dialog" aria-labelledby="modalTitle" aria-describedby="modalDescription" tabindex="-1">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Whitelist Rules Agreement</h2>
-                <p style="color: #8b92a8; margin: 0;">Please read and accept the following rules before proceeding</p>
+                <h2 id="modalTitle">Whitelist Rules Agreement</h2>
+                <p id="modalDescription" style="color: #8b92a8; margin: 0;">Please read and accept the following rules before proceeding</p>
             </div>
             <div class="modal-body">
                 <p><strong>By requesting whitelist, you agree to the following:</strong></p>
@@ -703,10 +707,10 @@ $isWhitelisted = $hasS3 && $hasCAS;
                 </ul>
             </div>
             <div class="modal-actions">
-                <button type="button" class="modal-btn modal-btn-cancel" onclick="closeAgreementModal()">
+                <button type="button" class="modal-btn modal-btn-cancel" id="modalCancelBtn">
                     Cancel
                 </button>
-                <button type="button" class="modal-btn modal-btn-accept" onclick="acceptAgreement()">
+                <button type="button" class="modal-btn modal-btn-accept" id="modalAcceptBtn">
                     I Agree
                 </button>
             </div>
@@ -720,11 +724,20 @@ $isWhitelisted = $hasS3 && $hasCAS;
         }
         
         function showAgreementModal() {
-            document.getElementById('agreementModal').classList.add('active');
+            const modal = document.getElementById('agreementModal');
+            modal.classList.add('active');
+            // Focus the modal for accessibility
+            modal.focus();
         }
         
         function closeAgreementModal() {
-            document.getElementById('agreementModal').classList.remove('active');
+            const modal = document.getElementById('agreementModal');
+            modal.classList.remove('active');
+            // Return focus to the whitelist button
+            const whitelistBtn = document.getElementById('whitelistBtn');
+            if (whitelistBtn) {
+                whitelistBtn.focus();
+            }
         }
         
         function acceptAgreement() {
@@ -734,13 +747,43 @@ $isWhitelisted = $hasS3 && $hasCAS;
             document.getElementById('whitelistForm').submit();
         }
         
-        // Close modal when clicking outside of it
-        window.onclick = function(event) {
-            const modal = document.getElementById('agreementModal');
-            if (event.target === modal) {
-                closeAgreementModal();
+        // Set up event listeners when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Whitelist button click handler
+            const whitelistBtn = document.getElementById('whitelistBtn');
+            if (whitelistBtn) {
+                whitelistBtn.addEventListener('click', showAgreementModal);
             }
-        }
+            
+            // Modal cancel button
+            const modalCancelBtn = document.getElementById('modalCancelBtn');
+            if (modalCancelBtn) {
+                modalCancelBtn.addEventListener('click', closeAgreementModal);
+            }
+            
+            // Modal accept button
+            const modalAcceptBtn = document.getElementById('modalAcceptBtn');
+            if (modalAcceptBtn) {
+                modalAcceptBtn.addEventListener('click', acceptAgreement);
+            }
+            
+            // Close modal when clicking outside of it
+            const modal = document.getElementById('agreementModal');
+            if (modal) {
+                modal.addEventListener('click', function(event) {
+                    if (event.target === modal) {
+                        closeAgreementModal();
+                    }
+                });
+                
+                // Handle ESC key to close modal
+                document.addEventListener('keydown', function(event) {
+                    if (event.key === 'Escape' && modal.classList.contains('active')) {
+                        closeAgreementModal();
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>
