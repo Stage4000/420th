@@ -32,6 +32,20 @@ define('ROLES', [
     'PANEL' => 'Panel Administrator'
 ]);
 
+// Default Whitelist Agreement
+define('DEFAULT_WHITELIST_AGREEMENT', '<p><strong>By requesting whitelist, you agree to the following:</strong></p>
+<ul>
+    <li>
+        <strong>Pilot Communication</strong> - All pilots are expected to communicate in-game via text or voice. You may be asked to switch role if unable to communicate.
+    </li>
+    <li>
+        <strong>Waiting For Passengers</strong> - Transport Helicopters should wait in an orderly fashion on the side of the yellow barriers opposite from spawn, leaving the traffic lane clear for infantry and vehicles.
+    </li>
+    <li>
+        <strong>No CAS on Kavala</strong> - All Close Air Support is forbidden to engage the Priority Mission Kavala. This mission is meant to be close-quarters combat. CAS can ruin the mission if they destroy buildings containing intel. Contact an in-game Zeus or use the vote-kick feature to enforce this rule as needed.
+    </li>
+</ul>');
+
 // Start session
 session_name(SESSION_NAME);
 session_start();

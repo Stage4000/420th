@@ -34,8 +34,14 @@ try {
     $whitelistAgreementSetting = $db->fetchOne("SELECT setting_value FROM server_settings WHERE setting_key = 'whitelist_agreement'");
     $whitelistAgreement = $whitelistAgreementSetting ? $whitelistAgreementSetting['setting_value'] : '';
 } catch (PDOException $e) {
-    // server_settings table might not exist yet
-    $whitelistAgreement = '';
+    // If server_settings table doesn't exist (SQLSTATE 42S02), use empty string
+    // This handles cases where the migration hasn't been run yet
+    if ($e->getCode() === '42S02' || strpos($e->getMessage(), '42S02') !== false) {
+        $whitelistAgreement = '';
+    } else {
+        // Re-throw other database errors
+        throw $e;
+    }
 }
 
 // Handle role assignment/removal and alias updates

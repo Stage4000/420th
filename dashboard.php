@@ -30,25 +30,18 @@ $user['roles'] = $freshRoles;
 
 // Get whitelist agreement from database
 // Use default fallback if server_settings table doesn't exist or setting is not found
-$defaultAgreement = '<p><strong>By requesting whitelist, you agree to the following:</strong></p>
-<ul>
-    <li>
-        <strong>Pilot Communication</strong> - All pilots are expected to communicate in-game via text or voice. You may be asked to switch role if unable to communicate.
-    </li>
-    <li>
-        <strong>Waiting For Passengers</strong> - Transport Helicopters should wait in an orderly fashion on the side of the yellow barriers opposite from spawn, leaving the traffic lane clear for infantry and vehicles.
-    </li>
-    <li>
-        <strong>No CAS on Kavala</strong> - All Close Air Support is forbidden to engage the Priority Mission Kavala. This mission is meant to be close-quarters combat. CAS can ruin the mission if they destroy buildings containing intel. Contact an in-game Zeus or use the vote-kick feature to enforce this rule as needed.
-    </li>
-</ul>';
-
 try {
     $whitelistAgreementSetting = $db->fetchOne("SELECT setting_value FROM server_settings WHERE setting_key = 'whitelist_agreement'");
-    $whitelistAgreement = $whitelistAgreementSetting ? $whitelistAgreementSetting['setting_value'] : $defaultAgreement;
+    $whitelistAgreement = $whitelistAgreementSetting ? $whitelistAgreementSetting['setting_value'] : DEFAULT_WHITELIST_AGREEMENT;
 } catch (PDOException $e) {
-    // If server_settings table doesn't exist, use default agreement
-    $whitelistAgreement = $defaultAgreement;
+    // If server_settings table doesn't exist (SQLSTATE 42S02), use default agreement
+    // This handles cases where the migration hasn't been run yet
+    if ($e->getCode() === '42S02' || strpos($e->getMessage(), '42S02') !== false) {
+        $whitelistAgreement = DEFAULT_WHITELIST_AGREEMENT;
+    } else {
+        // Re-throw other database errors
+        throw $e;
+    }
 }
 
 // Sanitize agreement content for safe display (already sanitized when saved, but double-check)
