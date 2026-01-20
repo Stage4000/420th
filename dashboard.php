@@ -681,7 +681,7 @@ $isWhitelisted = $hasS3 && $hasCAS;
                 ?> roles assigned.
             </p>
             <div class="info-card" style="margin-top: 1.5rem;">
-                <p style="margin: 0;">ℹ️ You may need to reconnect to the game server for whitelist changes to take effect.</p>
+                <p style="margin: 0;">ℹ️ It may take up to an hour for whitelist changes to take effect on the server.</p>
             </div>
         </div>
         <?php endif; ?>
