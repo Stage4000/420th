@@ -24,7 +24,7 @@ try {
     
     // Insert or update the whitelist_agreement setting
     $db->execute(
-        "INSERT INTO server_settings (setting_key, setting_value) VALUES (?, ?) 
+        "INSERT INTO server_settings (setting_key, setting_value, updated_by_user_id) VALUES (?, ?, NULL) 
          ON DUPLICATE KEY UPDATE setting_value = IF(setting_value IS NULL OR setting_value = '', VALUES(setting_value), setting_value)",
         ['whitelist_agreement', $defaultAgreement]
     );

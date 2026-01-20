@@ -935,6 +935,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     <script>
         // Live preview for whitelist agreement
+        // Note: Preview intentionally renders HTML to show what users will see.
+        // This is admin-only functionality and admins are trusted users.
         const agreementTextarea = document.querySelector('textarea[name="whitelist_agreement"]');
         const agreementPreview = document.getElementById('agreementPreview');
         
