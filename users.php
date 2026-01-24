@@ -56,11 +56,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     throw new Exception("Only the owner can modify the owner's roles");
                 }
                 
-                // If modifying PANEL role and user is not the owner, prevent granting PANEL to owner
-                if ($isOwner && $roleName === 'PANEL' && $currentUser['steam_id'] !== OWNER_STEAM_ID) {
-                    throw new Exception("Only the owner can grant the PANEL role to themselves");
-                }
-                
                 $roleManager->addRole($userId, $roleName);
                 if ($isAjax) {
                     header('Content-Type: application/json');
@@ -89,11 +84,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // If target is owner, only the owner themselves can modify their roles
                 if ($isOwner && $currentUser['steam_id'] !== OWNER_STEAM_ID) {
                     throw new Exception("Only the owner can modify the owner's roles");
-                }
-                
-                // If modifying PANEL role and user is not the owner, prevent revoking PANEL from owner
-                if ($isOwner && $roleName === 'PANEL' && $currentUser['steam_id'] !== OWNER_STEAM_ID) {
-                    throw new Exception("Only the owner can revoke the PANEL role from themselves");
                 }
                 
                 $roleManager->removeRole($userId, $roleName);
