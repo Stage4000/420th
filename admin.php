@@ -56,6 +56,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($_POST['action'] === 'add_role' && $userId && $roleName) {
             // Add role to user using RoleManager (handles automatic ALL role)
             try {
+                // Check if target user is the owner
+                $targetUser = $db->fetchOne("SELECT steam_id FROM users WHERE id = ?", [$userId]);
+                $isOwner = defined('OWNER_STEAM_ID') && !empty(OWNER_STEAM_ID) && 
+                          $targetUser && $targetUser['steam_id'] === OWNER_STEAM_ID;
+                
+                // If target is owner, only the owner themselves can modify their roles
+                if ($isOwner && $user['steam_id'] !== OWNER_STEAM_ID) {
+                    throw new Exception("Only the owner can modify the owner's roles");
+                }
+                
+                // If modifying PANEL role and user is not the owner, prevent granting PANEL to owner
+                if ($isOwner && $roleName === 'PANEL' && $user['steam_id'] !== OWNER_STEAM_ID) {
+                    throw new Exception("Only the owner can grant the PANEL role to themselves");
+                }
+                
                 $roleManager->addRole($userId, $roleName);
                 $message = "Role added successfully! (Staff roles automatically get ALL role)";
                 $messageType = "success";
@@ -66,6 +81,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($_POST['action'] === 'remove_role' && $userId && $roleName) {
             // Remove role from user using RoleManager
             try {
+                // Check if target user is the owner
+                $targetUser = $db->fetchOne("SELECT steam_id FROM users WHERE id = ?", [$userId]);
+                $isOwner = defined('OWNER_STEAM_ID') && !empty(OWNER_STEAM_ID) && 
+                          $targetUser && $targetUser['steam_id'] === OWNER_STEAM_ID;
+                
+                // If target is owner, only the owner themselves can modify their roles
+                if ($isOwner && $user['steam_id'] !== OWNER_STEAM_ID) {
+                    throw new Exception("Only the owner can modify the owner's roles");
+                }
+                
+                // If modifying PANEL role and user is not the owner, prevent revoking PANEL from owner
+                if ($isOwner && $roleName === 'PANEL' && $user['steam_id'] !== OWNER_STEAM_ID) {
+                    throw new Exception("Only the owner can revoke the PANEL role from themselves");
+                }
+                
                 $roleManager->removeRole($userId, $roleName);
                 $message = "Role removed successfully!";
                 $messageType = "success";
