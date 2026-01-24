@@ -179,7 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Pagination and search
-$perPage = 20;
+$perPage = 50;
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $offset = ($page - 1) * $perPage;
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
@@ -788,6 +788,10 @@ foreach ($users as &$user) {
             /* Make tables horizontally scrollable on mobile */
             .users-table {
                 overflow-x: auto;
+            }
+            
+            .search-form {
+                flex-wrap: wrap;
             }
             
             .search-box {
