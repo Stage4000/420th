@@ -46,6 +46,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Only PANEL admins can manage roles
         if ($_POST['action'] === 'add_role' && $userId && $roleName && $canManageRoles) {
             try {
+                // Check if target user is the owner
+                $targetUser = $db->fetchOne("SELECT steam_id FROM users WHERE id = ?", [$userId]);
+                $isOwner = defined('OWNER_STEAM_ID') && !empty(OWNER_STEAM_ID) && 
+                          $targetUser && $targetUser['steam_id'] === OWNER_STEAM_ID;
+                
+                // If target is owner, only the owner themselves can modify their roles
+                if ($isOwner && $currentUser['steam_id'] !== OWNER_STEAM_ID) {
+                    throw new Exception("Only the owner can modify the owner's roles");
+                }
+                
+                // If modifying PANEL role and user is not the owner, prevent granting PANEL to owner
+                if ($isOwner && $roleName === 'PANEL' && $currentUser['steam_id'] !== OWNER_STEAM_ID) {
+                    throw new Exception("Only the owner can grant the PANEL role to themselves");
+                }
+                
                 $roleManager->addRole($userId, $roleName);
                 if ($isAjax) {
                     header('Content-Type: application/json');
@@ -66,6 +81,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         } elseif ($_POST['action'] === 'remove_role' && $userId && $roleName && $canManageRoles) {
             try {
+                // Check if target user is the owner
+                $targetUser = $db->fetchOne("SELECT steam_id FROM users WHERE id = ?", [$userId]);
+                $isOwner = defined('OWNER_STEAM_ID') && !empty(OWNER_STEAM_ID) && 
+                          $targetUser && $targetUser['steam_id'] === OWNER_STEAM_ID;
+                
+                // If target is owner, only the owner themselves can modify their roles
+                if ($isOwner && $currentUser['steam_id'] !== OWNER_STEAM_ID) {
+                    throw new Exception("Only the owner can modify the owner's roles");
+                }
+                
+                // If modifying PANEL role and user is not the owner, prevent revoking PANEL from owner
+                if ($isOwner && $roleName === 'PANEL' && $currentUser['steam_id'] !== OWNER_STEAM_ID) {
+                    throw new Exception("Only the owner can revoke the PANEL role from themselves");
+                }
+                
                 $roleManager->removeRole($userId, $roleName);
                 if ($isAjax) {
                     header('Content-Type: application/json');
@@ -163,13 +193,43 @@ $perPage = 20;
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $offset = ($page - 1) * $perPage;
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$roleFilter = isset($_GET['role_filter']) ? trim($_GET['role_filter']) : '';
 
 // Build query
 $whereClause = '';
 $params = [];
+$whereClauses = [];
+
 if (!empty($search)) {
-    $whereClause = " WHERE u.steam_name LIKE ? OR u.steam_id LIKE ?";
-    $params = ["%$search%", "%$search%"];
+    $whereClauses[] = "(u.steam_name LIKE ? OR u.steam_id LIKE ?)";
+    $params[] = "%$search%";
+    $params[] = "%$search%";
+}
+
+// Add role filter (only for panel admins)
+if (!empty($roleFilter) && $canManageRoles) {
+    $roleColumnMap = [
+        'S3' => 'role_s3',
+        'CAS' => 'role_cas',
+        'S1' => 'role_s1',
+        'OPFOR' => 'role_opfor',
+        'ALL' => 'role_all',
+        'ADMIN' => 'role_admin',
+        'MODERATOR' => 'role_moderator',
+        'TRUSTED' => 'role_trusted',
+        'MEDIA' => 'role_media',
+        'CURATOR' => 'role_curator',
+        'DEVELOPER' => 'role_developer',
+        'PANEL' => 'role_panel',
+    ];
+    
+    if (isset($roleColumnMap[$roleFilter])) {
+        $whereClauses[] = "u." . $roleColumnMap[$roleFilter] . " = 1";
+    }
+}
+
+if (!empty($whereClauses)) {
+    $whereClause = " WHERE " . implode(" AND ", $whereClauses);
 }
 
 // Get total count
@@ -375,6 +435,27 @@ foreach ($users as &$user) {
             border-color: #667eea;
         }
         
+        .role-filter-select {
+            padding: 0.75rem;
+            border: 1px solid #2a3142;
+            background: #0f1318;
+            color: #e4e6eb;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            min-width: 200px;
+        }
+        
+        .role-filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .role-filter-select option {
+            background: #1a1f2e;
+            color: #e4e6eb;
+        }
+        
         .btn {
             padding: 0.75rem 1.5rem;
             border: none;
@@ -471,6 +552,18 @@ foreach ($users as &$user) {
             margin-right: 0.5rem;
             background: #667eea;
             color: white;
+        }
+        
+        .owner-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-left: 0.5rem;
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #1a1f2e;
+            font-weight: 700;
+            box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
         }
         
         .roles-list {
@@ -838,8 +931,22 @@ foreach ($users as &$user) {
                     placeholder="Search by Steam name or Steam ID..." 
                     value="<?php echo htmlspecialchars($search); ?>"
                 >
+                <?php if ($canManageRoles): ?>
+                    <select name="role_filter" class="role-filter-select">
+                        <option value="">All Roles</option>
+                        <?php
+                        $filterableRoles = ['S3', 'CAS', 'S1', 'OPFOR', 'ALL', 'ADMIN', 'MODERATOR', 'TRUSTED', 'MEDIA', 'CURATOR', 'DEVELOPER', 'PANEL'];
+                        foreach ($filterableRoles as $role):
+                            $selected = ($roleFilter === $role) ? 'selected' : '';
+                        ?>
+                            <option value="<?php echo $role; ?>" <?php echo $selected; ?>>
+                                <?php echo isset($roleMetadata[$role]) ? htmlspecialchars($roleMetadata[$role]) : htmlspecialchars($role); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                <?php endif; ?>
                 <button type="submit" class="btn btn-primary">🔍 Search</button>
-                <?php if (!empty($search)): ?>
+                <?php if (!empty($search) || !empty($roleFilter)): ?>
                     <a href="users.php" class="btn btn-secondary">Clear</a>
                 <?php endif; ?>
             </form>
@@ -882,6 +989,9 @@ foreach ($users as &$user) {
                                     <div class="user-info">
                                         <img src="<?php echo htmlspecialchars($u['avatar_url']); ?>" alt="Avatar" class="user-avatar">
                                         <strong style="color: #e4e6eb;"><?php echo htmlspecialchars($u['steam_name']); ?></strong>
+                                        <?php if (defined('OWNER_STEAM_ID') && !empty(OWNER_STEAM_ID) && $u['steam_id'] === OWNER_STEAM_ID): ?>
+                                            <span class="owner-badge" title="System Owner">👑 Owner</span>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                                 <td><?php echo htmlspecialchars($u['steam_id']); ?></td>
@@ -1096,6 +1206,8 @@ foreach ($users as &$user) {
         const allRoles = <?php echo json_encode($allRoles); ?>;
         const usersData = <?php echo json_encode($users); ?>;
         const roleAliases = <?php echo json_encode($roleMetadata); ?>;
+        const OWNER_STEAM_ID = <?php echo json_encode(defined('OWNER_STEAM_ID') ? OWNER_STEAM_ID : ''); ?>;
+        const CURRENT_USER_STEAM_ID = <?php echo json_encode($currentUser['steam_id']); ?>;
         
         // Reusable toast notification function
         function showToast(message, type = 'info') {
@@ -1159,6 +1271,28 @@ foreach ($users as &$user) {
             document.getElementById('modalUserName').textContent = userName;
             
             const user = usersData.find(u => u.id == userId);
+            const isOwner = OWNER_STEAM_ID && user && user.steam_id === OWNER_STEAM_ID;
+            const canEditOwner = isOwner && CURRENT_USER_STEAM_ID === OWNER_STEAM_ID;
+            
+            // Show owner badge and warning if applicable
+            const modalUserName = document.getElementById('modalUserName');
+            if (isOwner) {
+                modalUserName.innerHTML = userName + ' <span class="owner-badge" title="System Owner">👑 Owner</span>';
+                if (!canEditOwner) {
+                    const warningDiv = document.createElement('div');
+                    warningDiv.style.cssText = `
+                        background: #ffa94d;
+                        color: #1a1f2e;
+                        padding: 0.75rem;
+                        border-radius: 5px;
+                        margin: 1rem 0;
+                        font-weight: 600;
+                    `;
+                    warningDiv.textContent = '⚠️ This is the system owner. Only the owner can modify their roles.';
+                    const roleList = document.getElementById('modalRoleList');
+                    roleList.parentElement.insertBefore(warningDiv, roleList);
+                }
+            }
             
             const roleList = document.getElementById('modalRoleList');
             roleList.innerHTML = '';
@@ -1171,6 +1305,10 @@ foreach ($users as &$user) {
                 // Use alias if available, otherwise fall back to display_name
                 const displayName = role.alias || role.display_name;
                 const description = role.description || 'No description available';
+                
+                // Disable button if editing owner's roles and user is not the owner
+                const isDisabled = isOwner && !canEditOwner;
+                
                 roleItem.innerHTML = `
                     <span style="color: #e4e6eb; display: flex; align-items: center; gap: 0.5rem;">
                         ${displayName}
@@ -1181,6 +1319,8 @@ foreach ($users as &$user) {
                     <button 
                         class="btn btn-${hasRole ? 'secondary' : 'primary'} btn-small"
                         onclick="toggleRole(event, ${userId}, '${role.name}', ${hasRole})"
+                        ${isDisabled ? 'disabled' : ''}
+                        ${isDisabled ? 'style="opacity: 0.5; cursor: not-allowed;"' : ''}
                     >
                         ${hasRole ? 'Remove' : 'Add'}
                     </button>

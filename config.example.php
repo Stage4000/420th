@@ -19,6 +19,12 @@ define('STEAM_RETURN_URL', getenv('STEAM_RETURN_URL') ?: 'http://localhost/callb
 define('SESSION_NAME', '420th_session');
 define('SESSION_LIFETIME', 3600 * 24); // 24 hours
 
+// Owner Configuration
+// The Steam ID of the system owner who has ultimate control
+// Owner cannot have their roles edited by other panel admins
+// Only the owner can grant or revoke the panel admin role to/from themselves
+define('OWNER_STEAM_ID', getenv('OWNER_STEAM_ID') ?: '');
+
 // Whitelist Roles
 define('ROLES', [
     'S3' => 'S3',
