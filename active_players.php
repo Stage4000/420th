@@ -726,6 +726,7 @@ if ($rconEnabled) {
             
             table {
                 min-width: 900px;
+                font-size: 12px;
             }
             
             footer {
@@ -734,10 +735,6 @@ if ($rconEnabled) {
                 text-align: center;
                 padding: 1rem;
                 font-size: 0.8rem;
-            }
-            
-            table {
-                font-size: 12px;
             }
             
             th, td {
