@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $steamId = trim($_POST['steam_id']);
                 $reason = isset($_POST['reason']) ? trim($_POST['reason']) : 'Banned by admin';
-                $banType = isset($_POST['ban_type']) ? trim($_POST['ban_type']) : 'BOTH';
+                $banType = isset($_POST['ban_type']) ? trim($_POST['ban_type']) : 'Whitelist';
                 $serverBan = isset($_POST['server_ban']) && $_POST['server_ban'] === '1';
                 $banDuration = isset($_POST['ban_duration']) ? trim($_POST['ban_duration']) : 'indefinite';
                 $banExpires = null;
@@ -196,6 +196,7 @@ if ($rconEnabled) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Active Players - 420th Delta</title>
+    <link rel="icon" type="image/png" href="favicon.png">
     <style>
         * {
             margin: 0;
@@ -204,100 +205,177 @@ if ($rconEnabled) {
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%);
-            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0e1a;
             min-height: 100vh;
-            padding: 20px;
+            color: #e4e6eb;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .navbar {
+            background: #1a1f2e;
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #2a3142;
+        }
+        
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .navbar-logo {
+            height: 40px;
+            width: auto;
+        }
+        
+        .navbar-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .navbar-links {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .navbar-links a {
+            color: #e4e6eb;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+        
+        .navbar-links a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .navbar-links a.active {
+            background: rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #4a5568;
+        }
+        
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
         }
         
         .container {
             max-width: 1400px;
-            margin: 0 auto;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            flex: 1;
         }
         
-        .header {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
-            padding: 20px 30px;
-            margin-bottom: 30px;
-            border: 1px solid rgba(138, 43, 226, 0.2);
+        .message {
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+        
+        .message.success {
+            background: #1e3a28;
+            border: 1px solid #2d5a3d;
+            color: #68d391;
+        }
+        
+        .message.error {
+            background: #3a1e1e;
+            border: 1px solid #5a2d2d;
+            color: #fc8181;
+        }
+        
+        .info-box {
+            background: #1e3a45;
+            border: 1px solid #3498db;
+            color: #90cdf4;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
         
-        .header h1 {
-            font-size: 28px;
-            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .nav-links {
-            display: flex;
-            gap: 15px;
-        }
-        
-        .nav-links a {
-            color: #9b59b6;
-            text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            transition: all 0.3s;
-            border: 1px solid rgba(138, 43, 226, 0.2);
-        }
-        
-        .nav-links a:hover {
-            background: rgba(138, 43, 226, 0.2);
-            border-color: #9b59b6;
-        }
-        
-        .message {
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid;
-        }
-        
-        .message.success {
-            background: rgba(46, 204, 113, 0.1);
-            border-color: #2ecc71;
-            color: #2ecc71;
-        }
-        
-        .message.error {
-            background: rgba(231, 76, 60, 0.1);
-            border-color: #e74c3c;
-            color: #e74c3c;
-        }
-        
-        .info-box {
-            background: rgba(52, 152, 219, 0.1);
-            border: 1px solid #3498db;
-            color: #3498db;
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        
         .warning-box {
-            background: rgba(241, 196, 15, 0.1);
+            background: #3a2e1e;
             border: 1px solid #f1c40f;
             color: #f1c40f;
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1.5rem;
         }
         
         .players-table {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
-            border: 1px solid rgba(138, 43, 226, 0.2);
+            background: #1a1f2e;
+            border-radius: 10px;
+            border: 1px solid #2a3142;
             overflow: hidden;
+        }
+        
+        .table-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #2a3142;
+            background: rgba(102, 126, 234, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .table-header h2 {
+            color: #667eea;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .refresh-btn {
+            background: #27ae60;
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        
+        .refresh-btn:hover {
+            background: #229954;
         }
         
         table {
@@ -306,19 +384,19 @@ if ($rconEnabled) {
         }
         
         thead {
-            background: rgba(138, 43, 226, 0.2);
+            background: rgba(102, 126, 234, 0.1);
         }
         
         th {
-            padding: 15px;
+            padding: 1rem;
             text-align: left;
             font-weight: 600;
-            color: #9b59b6;
-            border-bottom: 1px solid rgba(138, 43, 226, 0.2);
+            color: #667eea;
+            border-bottom: 1px solid #2a3142;
         }
         
         td {
-            padding: 15px;
+            padding: 1rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
         
@@ -327,7 +405,7 @@ if ($rconEnabled) {
         }
         
         tbody tr:hover {
-            background: rgba(138, 43, 226, 0.1);
+            background: rgba(102, 126, 234, 0.05);
         }
         
         .player-info {
@@ -340,7 +418,7 @@ if ($rconEnabled) {
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            border: 2px solid #9b59b6;
+            border: 2px solid #667eea;
         }
         
         .btn {
@@ -417,32 +495,31 @@ if ($rconEnabled) {
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(5px);
         }
         
         .modal-content {
-            background: #1a1f35;
+            background: #1a1f2e;
             margin: 5% auto;
-            padding: 30px;
-            border: 1px solid rgba(138, 43, 226, 0.3);
-            border-radius: 12px;
+            padding: 2rem;
+            border: 1px solid #2a3142;
+            border-radius: 10px;
             width: 90%;
             max-width: 600px;
-            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
         }
         
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid rgba(138, 43, 226, 0.2);
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #2a3142;
         }
         
         .modal-header h2 {
-            color: #9b59b6;
-            font-size: 24px;
+            color: #667eea;
+            font-size: 1.5rem;
         }
         
         .close {
@@ -464,7 +541,7 @@ if ($rconEnabled) {
         .form-group label {
             display: block;
             margin-bottom: 8px;
-            color: #9b59b6;
+            color: #667eea;
             font-weight: 600;
         }
         
@@ -474,9 +551,9 @@ if ($rconEnabled) {
             width: 100%;
             padding: 10px;
             background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(138, 43, 226, 0.2);
-            border-radius: 6px;
-            color: #e0e0e0;
+            border: 1px solid #2a3142;
+            border-radius: 5px;
+            color: #e4e6eb;
             font-size: 14px;
             transition: all 0.3s;
         }
@@ -485,7 +562,7 @@ if ($rconEnabled) {
         .form-group select:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: #9b59b6;
+            border-color: #667eea;
             background: rgba(255, 255, 255, 0.08);
         }
         
@@ -506,13 +583,13 @@ if ($rconEnabled) {
         }
         
         .btn-submit {
-            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 12px 24px;
+            padding: 0.75rem 1.5rem;
             border: none;
-            border-radius: 6px;
+            border-radius: 5px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 1rem;
             font-weight: 600;
             width: 100%;
             transition: all 0.3s;
@@ -520,7 +597,7 @@ if ($rconEnabled) {
         
         .btn-submit:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(138, 43, 226, 0.4);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
         }
         
         .notes-list {
@@ -530,10 +607,10 @@ if ($rconEnabled) {
         
         .note-item {
             background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(138, 43, 226, 0.2);
+            border: 1px solid #2a3142;
             border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
+            padding: 1rem;
+            margin-bottom: 1rem;
         }
         
         .note-header {
@@ -542,37 +619,37 @@ if ($rconEnabled) {
             align-items: center;
             margin-bottom: 10px;
             padding-bottom: 10px;
-            border-bottom: 1px solid rgba(138, 43, 226, 0.1);
+            border-bottom: 1px solid rgba(102, 126, 234, 0.1);
         }
         
         .note-author {
             font-weight: 600;
-            color: #9b59b6;
+            color: #667eea;
         }
         
         .note-date {
             font-size: 12px;
-            color: #888;
+            color: #8b92a8;
         }
         
         .note-text {
-            color: #e0e0e0;
+            color: #e4e6eb;
             line-height: 1.6;
             white-space: pre-wrap;
         }
         
         .empty-state {
             text-align: center;
-            padding: 40px;
-            color: #888;
+            padding: 2.5rem;
+            color: #8b92a8;
         }
         
         .refresh-btn {
             background: #27ae60;
             color: white;
-            padding: 10px 20px;
+            padding: 0.5rem 1rem;
             border: none;
-            border-radius: 6px;
+            border-radius: 5px;
             cursor: pointer;
             font-size: 14px;
             transition: all 0.3s;
@@ -582,23 +659,82 @@ if ($rconEnabled) {
             background: #229954;
         }
         
+        footer {
+            background: #1a1f2e;
+            color: #8b92a8;
+            padding: 1.5rem 2rem;
+            margin-top: 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #2a3142;
+            font-size: 0.9rem;
+        }
+        
+        footer a {
+            color: #667eea;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        footer a:hover {
+            color: #8b9cff;
+        }
+        
         @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                gap: 15px;
+            .navbar {
+                flex-wrap: wrap;
+                padding: 1rem;
             }
             
-            .nav-links {
-                flex-direction: column;
+            .mobile-menu-toggle {
+                display: block;
+            }
+            
+            .navbar-links {
+                display: none;
                 width: 100%;
+                flex-direction: column;
+                margin-top: 1rem;
+                padding-top: 1rem;
+                border-top: 1px solid #2a3142;
             }
             
-            .nav-links a {
+            .navbar-links.active {
+                display: flex;
+            }
+            
+            .navbar-links a, .navbar-links span, .navbar-links img {
+                width: 100%;
                 text-align: center;
             }
             
+            /* Hide user avatar in navbar on mobile */
+            .navbar-links .user-avatar {
+                display: none;
+            }
+            
+            .container {
+                padding: 0 1rem;
+                margin: 1rem auto;
+            }
+            
+            .players-table {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
             table {
+                min-width: 900px;
                 font-size: 12px;
+            }
+            
+            footer {
+                flex-direction: column;
+                gap: 0.5rem;
+                text-align: center;
+                padding: 1rem;
+                font-size: 0.8rem;
             }
             
             th, td {
@@ -613,17 +749,32 @@ if ($rconEnabled) {
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🎮 Active Players</h1>
-            <div class="nav-links">
-                <a href="dashboard">Dashboard</a>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <img src="https://www.420thdelta.net/uploads/monthly_2025_11/banner.png.2aa9557dda39e6c5ba0e3c740df490ee.png" 
+                 alt="420th Delta" 
+                 class="navbar-logo"
+                 onerror="this.style.display='none';">
+            <span class="navbar-title">Active Players</span>
+        </div>
+        <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+        <div class="navbar-links" id="navbarLinks">
+            <a href="dashboard">Dashboard</a>
+            <?php if (SteamAuth::isPanelAdmin()): ?>
+                <a href="admin">Admin Panel</a>
                 <a href="users">Users</a>
                 <a href="ban_management">Bans</a>
-                <a href="admin">Admin</a>
-            </div>
+            <?php endif; ?>
+            <?php if (SteamAuth::hasRole('ADMIN')): ?>
+                <a href="active_players" class="active">Active Players</a>
+            <?php endif; ?>
+            <img src="<?php echo htmlspecialchars($currentUser['avatar_url']); ?>" alt="Avatar" class="user-avatar">
+            <span><?php echo htmlspecialchars($currentUser['steam_name']); ?></span>
+            <a href="logout" class="logout-btn">Logout</a>
         </div>
-        
+    </nav>
+    
+    <div class="container">
         <?php if ($message): ?>
             <div class="message <?php echo $messageType; ?>">
                 <?php echo htmlspecialchars($message); ?>
@@ -635,12 +786,12 @@ if ($rconEnabled) {
                 ⚠️ RCON is not enabled or configured. Please configure RCON in the admin panel to view active players.
             </div>
         <?php else: ?>
-            <div class="info-box">
-                📡 Showing <?php echo count($players); ?> active player(s) from the game server.
-                <button class="refresh-btn" onclick="location.reload()">🔄 Refresh</button>
-            </div>
-            
             <div class="players-table">
+                <div class="table-header">
+                    <h2>🎮 Active Players (<?php echo count($players); ?>)</h2>
+                    <button class="refresh-btn" onclick="location.reload()">🔄 Refresh</button>
+                </div>
+                
                 <?php if (empty($players)): ?>
                     <div class="empty-state">
                         <h3>No players currently online</h3>
@@ -757,7 +908,7 @@ if ($rconEnabled) {
                 <div class="form-group">
                     <label for="ban_type">Ban Type:</label>
                     <select id="ban_type" name="ban_type">
-                        <option value="BOTH">Both (S3 + CAS)</option>
+                        <option value="Whitelist">Whitelist (S3 + CAS)</option>
                         <option value="S3">S3 Only</option>
                         <option value="CAS">CAS Only</option>
                     </select>
@@ -988,6 +1139,16 @@ if ($rconEnabled) {
             div.textContent = text;
             return div.innerHTML;
         }
+        
+        function toggleMobileMenu() {
+            const navbarLinks = document.getElementById('navbarLinks');
+            navbarLinks.classList.toggle('active');
+        }
     </script>
+    
+    <footer>
+        <div>© 2026 <a href="https://420thdelta.net" target="_blank">420th Delta Gaming Community</a></div>
+        <div>Made with ❤️ by <a href="https://sitecritter.com" target="_blank">SiteCritter</a></div>
+    </footer>
 </body>
 </html>

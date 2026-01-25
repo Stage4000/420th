@@ -23,19 +23,19 @@ class BanManager {
      * 
      * @param int $userId User ID to ban
      * @param int $bannedByUserId User ID issuing the ban
-     * @param string $banType Ban type: 'S3', 'CAS', or 'BOTH'
+     * @param string $banType Ban type: 'S3', 'CAS', or 'Whitelist'
      * @param string $reason Ban reason
      * @param string|null $expiresAt Ban expiration (null for indefinite)
      * @param bool $serverKick Whether to kick from game server
      * @param bool $serverBan Whether to ban from game server
      * @return array Result with success status and messages
      */
-    public function banUser($userId, $bannedByUserId, $banType = 'BOTH', $reason = '', $expiresAt = null, $serverKick = false, $serverBan = false) {
+    public function banUser($userId, $bannedByUserId, $banType = 'Whitelist', $reason = '', $expiresAt = null, $serverKick = false, $serverBan = false) {
         $messages = [];
         
         try {
             // Validate ban type
-            if (!in_array($banType, ['S3', 'CAS', 'BOTH'])) {
+            if (!in_array($banType, ['S3', 'CAS', 'Whitelist'])) {
                 throw new Exception("Invalid ban type");
             }
             
@@ -67,7 +67,7 @@ class BanManager {
             );
             
             // Remove roles based on ban type (don't use RoleManager to avoid nested transactions)
-            if ($banType === 'BOTH') {
+            if ($banType === 'Whitelist') {
                 $this->db->query(
                     "UPDATE users SET role_s3 = 0, role_cas = 0 WHERE id = ?",
                     [$userId]
