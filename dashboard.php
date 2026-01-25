@@ -500,6 +500,24 @@ $isWhitelisted = $hasS3 && $hasCAS;
             gap: 1rem;
         }
         
+        .navbar-links a {
+            color: #e4e6eb;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+        
+        .navbar-links a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .navbar-links a.active {
+            background: rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+        }
+        
         /* Responsive Styles */
         @media (max-width: 768px) {
             .navbar {
@@ -611,13 +629,14 @@ $isWhitelisted = $hasS3 && $hasCAS;
         </div>
         <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
         <div class="navbar-links" id="navbarLinks">
+            <a href="dashboard" class="active">Dashboard</a>
             <?php if ($isPanelAdmin): ?>
-                <a href="admin" style="color: #e4e6eb; text-decoration: none;">Admin Panel</a>
-                <a href="users" style="color: #e4e6eb; text-decoration: none;">Users</a>
-                <a href="ban_management" style="color: #e4e6eb; text-decoration: none;">Bans</a>
+                <a href="admin">Admin Panel</a>
+                <a href="users">Users</a>
+                <a href="ban_management">Bans</a>
             <?php endif; ?>
             <?php if (SteamAuth::hasRole('ADMIN')): ?>
-                <a href="active_players" style="color: #e4e6eb; text-decoration: none;">Active Players</a>
+                <a href="active_players">Active Players</a>
             <?php endif; ?>
             <img src="<?php echo htmlspecialchars($user['avatar_url']); ?>" alt="Avatar" class="user-avatar">
             <span><?php echo htmlspecialchars($user['steam_name']); ?></span>

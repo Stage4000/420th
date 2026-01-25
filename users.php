@@ -111,13 +111,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $banReason = isset($_POST['ban_reason']) ? trim($_POST['ban_reason']) : '';
                 $banDuration = isset($_POST['ban_duration']) ? trim($_POST['ban_duration']) : 'indefinite';
-                $banType = isset($_POST['ban_type']) ? trim($_POST['ban_type']) : 'BOTH';
+                $banType = isset($_POST['ban_type']) ? trim($_POST['ban_type']) : 'Whitelist';
                 $serverKick = isset($_POST['server_kick']) && $_POST['server_kick'] === '1';
                 $serverBan = isset($_POST['server_ban']) && $_POST['server_ban'] === '1';
                 $banExpires = null;
                 
                 // Validate ban type
-                if (!in_array($banType, ['S3', 'CAS', 'BOTH'])) {
+                if (!in_array($banType, ['S3', 'CAS', 'Whitelist'])) {
                     throw new Exception("Invalid ban type");
                 }
                 
@@ -403,6 +403,11 @@ foreach ($users as &$user) {
         .navbar-links a:hover {
             background: rgba(255, 255, 255, 0.1);
             border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .navbar-links a.active {
+            background: rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
         }
         
         .user-avatar {
@@ -965,6 +970,11 @@ foreach ($users as &$user) {
         <div class="navbar-links" id="navbarLinks">
             <a href="dashboard">Dashboard</a>
             <a href="admin">Admin Panel</a>
+            <a href="users" class="active">Users</a>
+            <a href="ban_management">Bans</a>
+            <?php if (SteamAuth::hasRole('ADMIN')): ?>
+                <a href="active_players">Active Players</a>
+            <?php endif; ?>
             <img src="<?php echo htmlspecialchars($currentUser['avatar_url']); ?>" alt="Avatar" class="user-avatar">
             <span><?php echo htmlspecialchars($currentUser['steam_name']); ?></span>
             <a href="logout" class="logout-btn">Logout</a>
@@ -1180,7 +1190,7 @@ foreach ($users as &$user) {
                 <div style="margin-bottom: 1rem;">
                     <label style="color: #e4e6eb; display: block; margin-bottom: 0.5rem;">Ban Type:</label>
                     <select name="ban_type" id="banTypeSelect" style="width: 100%; padding: 0.75rem; background: #2a3142; border: 1px solid #3a4152; border-radius: 5px; color: #e4e6eb;">
-                        <option value="BOTH">Both <?php echo htmlspecialchars($roleMetadata['S3'] ?? 'S3'); ?> and <?php echo htmlspecialchars($roleMetadata['CAS'] ?? 'CAS'); ?></option>
+                        <option value="Whitelist">Whitelist (<?php echo htmlspecialchars($roleMetadata['S3'] ?? 'S3'); ?> + <?php echo htmlspecialchars($roleMetadata['CAS'] ?? 'CAS'); ?>)</option>
                         <option value="S3"><?php echo htmlspecialchars($roleMetadata['S3'] ?? 'S3'); ?> Only</option>
                         <option value="CAS"><?php echo htmlspecialchars($roleMetadata['CAS'] ?? 'CAS'); ?> Only</option>
                     </select>
@@ -1580,7 +1590,7 @@ foreach ($users as &$user) {
             const casAlias = <?php echo json_encode($roleMetadata['CAS'] ?? 'CAS'); ?>;
             
             let message = '';
-            if (banType === 'BOTH') {
+            if (banType === 'Whitelist') {
                 message = `This will remove ${s3Alias} and ${casAlias} roles and prevent the user from using "Whitelist Me!" button until the ban expires.`;
             } else if (banType === 'S3') {
                 message = `This will remove the ${s3Alias} role and prevent the user from requesting ${s3Alias} whitelist until the ban expires.`;

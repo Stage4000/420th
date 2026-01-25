@@ -23,6 +23,13 @@ $banManager = new BanManager();
 $staffNotesManager = new StaffNotesManager();
 $currentUser = SteamAuth::getCurrentUser();
 
+// Get all available roles for alias lookups
+$allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
+$roleMetadata = [];
+foreach ($allRoles as $role) {
+    $roleMetadata[$role['name']] = $role['alias'] ?: $role['display_name'];
+}
+
 $message = '';
 $messageType = '';
 
@@ -212,6 +219,11 @@ $totalPages = ceil($total / $perPage);
             background: rgba(255, 255, 255, 0.1);
         }
         
+        .navbar-links a.active {
+            background: rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+        }
+        
         .user-avatar {
             width: 40px;
             height: 40px;
@@ -247,21 +259,6 @@ $totalPages = ceil($total / $perPage);
             max-width: 1400px;
             margin: 2rem auto;
             padding: 0 2rem;
-        }
-        
-        .page-header {
-            background: #1a1f2e;
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-            margin-bottom: 2rem;
-            border: 1px solid #2a3142;
-        }
-        
-        .page-header h1 {
-            font-size: 2rem;
-            color: #e4e6eb;
-            margin-bottom: 0.5rem;
         }
         
         .message {
@@ -327,36 +324,6 @@ $totalPages = ceil($total / $perPage);
         .filter-select:focus {
             outline: none;
             border-color: #667eea;
-        }
-        
-        .stats {
-            display: flex;
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .stat-box {
-            flex: 1;
-            background: #1a1f2e;
-            padding: 1.5rem;
-            border-radius: 10px;
-            border: 1px solid #2a3142;
-            text-align: center;
-        }
-        
-        .stat-value {
-            font-size: 2rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .stat-label {
-            font-size: 14px;
-            color: #8b92a8;
-            margin-top: 5px;
         }
         
         .bans-table {
@@ -457,7 +424,7 @@ $totalPages = ceil($total / $perPage);
             border: 1px solid #f1c40f;
         }
         
-        .ban-type-both {
+        .ban-type-whitelist {
             background: rgba(231, 76, 60, 0.2);
             color: #e74c3c;
             border: 1px solid #e74c3c;
@@ -601,10 +568,6 @@ $totalPages = ceil($total / $perPage);
                 width: 100%;
             }
             
-            .stats {
-                flex-direction: column;
-            }
-            
             table {
                 font-size: 12px;
             }
@@ -627,12 +590,13 @@ $totalPages = ceil($total / $perPage);
         <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
         <div class="navbar-links" id="navbarLinks">
             <a href="dashboard">Dashboard</a>
-            <a href="users">Users</a>
-            <?php if (SteamAuth::hasRole('ADMIN')): ?>
-                <a href="active_players">Active Players</a>
-            <?php endif; ?>
             <?php if (SteamAuth::isPanelAdmin()): ?>
                 <a href="admin">Admin Panel</a>
+                <a href="users">Users</a>
+                <a href="ban_management" class="active">Bans</a>
+            <?php endif; ?>
+            <?php if (SteamAuth::hasRole('ADMIN')): ?>
+                <a href="active_players">Active Players</a>
             <?php endif; ?>
             <img src="<?php echo htmlspecialchars($currentUser['avatar_url']); ?>" alt="Avatar" class="user-avatar">
             <span><?php echo htmlspecialchars($currentUser['steam_name']); ?></span>
@@ -641,22 +605,11 @@ $totalPages = ceil($total / $perPage);
     </nav>
     
     <div class="container">
-        <div class="page-header">
-            <h1>🚫 Ban Management</h1>
-        </div>
-        
         <?php if ($message): ?>
             <div class="message <?php echo $messageType; ?>">
                 <?php echo htmlspecialchars($message); ?>
             </div>
         <?php endif; ?>
-        
-        <div class="stats">
-            <div class="stat-box">
-                <div class="stat-value"><?php echo $total; ?></div>
-                <div class="stat-label">Total Bans<?php echo $filterStatus !== 'all' ? ' (' . ucfirst($filterStatus) . ')' : ''; ?></div>
-            </div>
-        </div>
         
         <div class="controls">
             <div class="search-box">
@@ -723,8 +676,16 @@ $totalPages = ceil($total / $perPage);
                                     </div>
                                 </td>
                                 <td>
+                                    <?php 
+                                    $displayType = $ban['ban_type'];
+                                    if ($ban['ban_type'] === 'S3' && isset($roleMetadata['S3'])) {
+                                        $displayType = $roleMetadata['S3'];
+                                    } elseif ($ban['ban_type'] === 'CAS' && isset($roleMetadata['CAS'])) {
+                                        $displayType = $roleMetadata['CAS'];
+                                    }
+                                    ?>
                                     <span class="ban-type ban-type-<?php echo strtolower($ban['ban_type']); ?>">
-                                        <?php echo htmlspecialchars($ban['ban_type']); ?>
+                                        <?php echo htmlspecialchars($displayType); ?>
                                     </span>
                                     <?php if ($ban['server_kick']): ?>
                                         <span class="badge badge-info" title="Server kick">⚠️</span>

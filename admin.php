@@ -322,6 +322,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border-color: rgba(255, 255, 255, 0.2);
         }
         
+        .navbar-links a.active {
+            background: rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+        }
+        
         .user-avatar {
             width: 40px;
             height: 40px;
@@ -807,6 +812,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
         <div class="navbar-links" id="navbarLinks">
             <a href="dashboard">Dashboard</a>
+            <a href="admin" class="active">Admin Panel</a>
             <a href="users">Users</a>
             <a href="ban_management">Bans</a>
             <?php if (SteamAuth::hasRole('ADMIN')): ?>

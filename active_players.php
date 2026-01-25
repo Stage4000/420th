@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $steamId = trim($_POST['steam_id']);
                 $reason = isset($_POST['reason']) ? trim($_POST['reason']) : 'Banned by admin';
-                $banType = isset($_POST['ban_type']) ? trim($_POST['ban_type']) : 'BOTH';
+                $banType = isset($_POST['ban_type']) ? trim($_POST['ban_type']) : 'Whitelist';
                 $serverBan = isset($_POST['server_ban']) && $_POST['server_ban'] === '1';
                 $banDuration = isset($_POST['ban_duration']) ? trim($_POST['ban_duration']) : 'indefinite';
                 $banExpires = null;
@@ -256,6 +256,11 @@ if ($rconEnabled) {
             background: rgba(255, 255, 255, 0.1);
         }
         
+        .navbar-links a.active {
+            background: rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+        }
+        
         .user-avatar {
             width: 40px;
             height: 40px;
@@ -291,21 +296,6 @@ if ($rconEnabled) {
             max-width: 1400px;
             margin: 2rem auto;
             padding: 0 2rem;
-        }
-        
-        .page-header {
-            background: #1a1f2e;
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-            margin-bottom: 2rem;
-            border: 1px solid #2a3142;
-        }
-        
-        .page-header h1 {
-            font-size: 2rem;
-            color: #e4e6eb;
-            margin-bottom: 0.5rem;
         }
         
         .message {
@@ -730,10 +720,13 @@ if ($rconEnabled) {
         <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
         <div class="navbar-links" id="navbarLinks">
             <a href="dashboard">Dashboard</a>
-            <a href="users">Users</a>
-            <a href="ban_management">Bans</a>
             <?php if (SteamAuth::isPanelAdmin()): ?>
                 <a href="admin">Admin Panel</a>
+                <a href="users">Users</a>
+                <a href="ban_management">Bans</a>
+            <?php endif; ?>
+            <?php if (SteamAuth::hasRole('ADMIN')): ?>
+                <a href="active_players" class="active">Active Players</a>
             <?php endif; ?>
             <img src="<?php echo htmlspecialchars($currentUser['avatar_url']); ?>" alt="Avatar" class="user-avatar">
             <span><?php echo htmlspecialchars($currentUser['steam_name']); ?></span>
@@ -742,10 +735,6 @@ if ($rconEnabled) {
     </nav>
     
     <div class="container">
-        <div class="page-header">
-            <h1>🎮 Active Players</h1>
-        </div>
-        
         <?php if ($message): ?>
             <div class="message <?php echo $messageType; ?>">
                 <?php echo htmlspecialchars($message); ?>
@@ -879,7 +868,7 @@ if ($rconEnabled) {
                 <div class="form-group">
                     <label for="ban_type">Ban Type:</label>
                     <select id="ban_type" name="ban_type">
-                        <option value="BOTH">Both (S3 + CAS)</option>
+                        <option value="Whitelist">Whitelist (S3 + CAS)</option>
                         <option value="S3">S3 Only</option>
                         <option value="CAS">CAS Only</option>
                     </select>
