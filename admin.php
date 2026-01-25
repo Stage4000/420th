@@ -7,14 +7,20 @@ require_once 'role_manager.php';
 require_once 'rcon_manager.php';
 require_once 'html_sanitizer.php';
 
+// Helper function to detect AJAX requests
+function isAjaxRequest() {
+    return !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+           strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+}
+
 // Check if user is logged in and is a panel admin
 if (!SteamAuth::isLoggedIn()) {
-    header('Location: index.php');
+    header('Location: index');
     exit;
 }
 
 if (!SteamAuth::isPanelAdmin()) {
-    header('Location: dashboard.php');
+    header('Location: dashboard');
     exit;
 }
 
@@ -113,12 +119,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $db->getConnection()->commit();
                 $message = "Successfully updated $updated role aliases!";
                 $messageType = "success";
+                
+                if (isAjaxRequest()) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => true, 'message' => $message]);
+                    exit;
+                }
             } catch (Exception $e) {
                 if ($db->getConnection()->inTransaction()) {
                     $db->getConnection()->rollBack();
                 }
                 $message = "Error updating aliases: " . $e->getMessage();
                 $messageType = "error";
+                
+                if (isAjaxRequest()) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'error' => $message]);
+                    exit;
+                }
             }
         } elseif ($_POST['action'] === 'sync_staff_roles') {
             // Sync staff roles (add ALL role to all staff)
@@ -151,9 +169,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 $message = "RCON settings updated successfully!";
                 $messageType = "success";
+                
+                if (isAjaxRequest()) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => true, 'message' => $message]);
+                    exit;
+                }
             } catch (Exception $e) {
                 $message = "Error updating RCON settings: " . $e->getMessage();
                 $messageType = "error";
+                
+                if (isAjaxRequest()) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'error' => $message]);
+                    exit;
+                }
             }
         } elseif ($_POST['action'] === 'test_rcon_connection') {
             // Test RCON connection
@@ -204,9 +234,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 $message = "Whitelist agreement updated successfully!";
                 $messageType = "success";
+                
+                if (isAjaxRequest()) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => true, 'message' => $message]);
+                    exit;
+                }
             } catch (Exception $e) {
                 $message = "Error updating whitelist agreement: " . $e->getMessage();
                 $messageType = "error";
+                
+                if (isAjaxRequest()) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'error' => $message]);
+                    exit;
+                }
             }
         }
     }
@@ -764,11 +806,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
         <div class="navbar-links" id="navbarLinks">
-            <a href="dashboard.php">Dashboard</a>
-            <a href="users.php">Users</a>
+            <a href="dashboard">Dashboard</a>
+            <a href="users">Users</a>
             <img src="<?php echo htmlspecialchars($user['avatar_url']); ?>" alt="Avatar" class="user-avatar">
             <span><?php echo htmlspecialchars($user['steam_name']); ?></span>
-            <a href="logout.php" class="logout-btn">Logout</a>
+            <a href="logout" class="logout-btn">Logout</a>
         </div>
     </nav>
     
@@ -801,7 +843,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <h2>🎮 Arma 3 Server RCON Configuration</h2>
                 <p style="margin-top: 0.5rem; color: #8b92a8; font-weight: normal;">Configure RCON to enable server kicks and bans from the admin panel</p>
             </div>
-            <form method="POST" style="padding: 2rem;">
+            <form method="POST" id="rconForm" style="padding: 2rem;">
                 <input type="hidden" name="action" value="update_rcon_settings">
                 
                 <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
@@ -1032,22 +1074,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             fetch(window.location.href, {
                 method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
                 body: formData
             })
-            .then(response => response.text())
-            .then(() => {
-                button.textContent = '✅ Saved!';
-                button.style.background = '#48bb78';
-                
-                setTimeout(() => {
-                    button.textContent = originalText;
-                    button.style.background = '';
-                    button.disabled = false;
-                }, 2000);
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    button.textContent = '✅ Saved!';
+                    button.style.background = '#48bb78';
+                    
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.style.background = '';
+                        button.disabled = false;
+                    }, 2000);
+                } else {
+                    throw new Error(data.error || 'Unknown error');
+                }
             })
             .catch(error => {
                 button.textContent = '❌ Error';
                 button.style.background = '#f56565';
+                console.error('Error:', error);
                 
                 setTimeout(() => {
                     button.textContent = originalText;
@@ -1072,22 +1122,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             fetch(window.location.href, {
                 method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
                 body: formData
             })
-            .then(response => response.text())
-            .then(() => {
-                button.textContent = '✅ Saved!';
-                button.style.background = '#48bb78';
-                
-                setTimeout(() => {
-                    button.textContent = originalText;
-                    button.style.background = '';
-                    button.disabled = false;
-                }, 2000);
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    button.textContent = '✅ Saved!';
+                    button.style.background = '#48bb78';
+                    
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.style.background = '';
+                        button.disabled = false;
+                    }, 2000);
+                } else {
+                    throw new Error(data.error || 'Unknown error');
+                }
             })
             .catch(error => {
                 button.textContent = '❌ Error';
                 button.style.background = '#f56565';
+                console.error('Error:', error);
                 
                 setTimeout(() => {
                     button.textContent = originalText;
@@ -1096,6 +1154,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }, 2000);
             });
         });
+        
+        // AJAX form submission for RCON settings
+        const rconForm = document.getElementById('rconForm');
+        if (rconForm) {
+            rconForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const form = this;
+                const button = form.querySelector('button[type="submit"]');
+                const originalText = button.textContent;
+                
+                button.disabled = true;
+                button.textContent = '⏳ Saving...';
+                
+                const formData = new FormData(form);
+                
+                fetch(window.location.href, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        button.textContent = '✅ Saved!';
+                        button.style.background = '#48bb78';
+                        
+                        setTimeout(() => {
+                            button.textContent = originalText;
+                            button.style.background = '';
+                            button.disabled = false;
+                        }, 2000);
+                    } else {
+                        throw new Error(data.error || 'Unknown error');
+                    }
+                })
+                .catch(error => {
+                    button.textContent = '❌ Error';
+                    button.style.background = '#f56565';
+                    console.error('Error:', error);
+                    
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.style.background = '';
+                        button.disabled = false;
+                    }, 2000);
+                });
+            });
+        }
         
         // Mobile menu toggle function
         function toggleMobileMenu() {
