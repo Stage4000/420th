@@ -424,7 +424,8 @@ $totalPages = ceil($total / $perPage);
             border: 1px solid #f1c40f;
         }
         
-        .ban-type-whitelist {
+        .ban-type-whitelist,
+        .ban-type-both {
             background: rgba(231, 76, 60, 0.2);
             color: #e74c3c;
             border: 1px solid #e74c3c;
