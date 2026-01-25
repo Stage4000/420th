@@ -177,12 +177,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $messageType = "error";
             }
         } elseif ($_POST['action'] === 'add_note' && $userId && $hasAllFlag) {
-            // Handle adding staff note
+            // Handle adding staff note (validation done in StaffNotesManager)
             try {
-                $noteText = isset($_POST['note_text']) ? trim($_POST['note_text']) : '';
-                if (empty($noteText)) {
-                    throw new Exception("Note text cannot be empty");
-                }
+                $noteText = isset($_POST['note_text']) ? $_POST['note_text'] : '';
                 
                 $notesManager->addNote($userId, $currentUser['id'], $noteText);
                 

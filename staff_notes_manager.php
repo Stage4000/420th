@@ -11,6 +11,23 @@ class StaffNotesManager {
     }
     
     /**
+     * Validate and trim note text
+     * 
+     * @param string $noteText Note text to validate
+     * @return string Trimmed note text
+     * @throws Exception if note text is empty
+     */
+    private function validateNoteText($noteText) {
+        $noteText = trim($noteText);
+        
+        if (empty($noteText)) {
+            throw new Exception("Note text cannot be empty");
+        }
+        
+        return $noteText;
+    }
+    
+    /**
      * Add a staff note to a user
      * 
      * @param int $userId User ID to add note to
@@ -19,11 +36,7 @@ class StaffNotesManager {
      * @return int Note ID
      */
     public function addNote($userId, $createdByUserId, $noteText) {
-        $noteText = trim($noteText);
-        
-        if (empty($noteText)) {
-            throw new Exception("Note text cannot be empty");
-        }
+        $noteText = $this->validateNoteText($noteText);
         
         $this->db->query(
             "INSERT INTO staff_notes (user_id, created_by_user_id, note_text, created_at) 
@@ -43,11 +56,7 @@ class StaffNotesManager {
      * @return bool Success
      */
     public function updateNote($noteId, $updatedByUserId, $noteText) {
-        $noteText = trim($noteText);
-        
-        if (empty($noteText)) {
-            throw new Exception("Note text cannot be empty");
-        }
+        $noteText = $this->validateNoteText($noteText);
         
         $this->db->query(
             "UPDATE staff_notes 

@@ -97,13 +97,14 @@ if ($filterStatus === 'expired') {
 } else {
     // Get all bans (both active and expired)
     $offset = ($page - 1) * $perPage;
-    // Using WHERE 1=1 to simplify dynamic query building with optional search conditions
-    $whereClause = "WHERE 1=1";
     $params = [];
     
+    // Build WHERE clause based on search criteria
     if (!empty($search)) {
-        $whereClause .= " AND (banned_user.steam_name LIKE ? OR banned_user.steam_id LIKE ?)";
+        $whereClause = "WHERE (banned_user.steam_name LIKE ? OR banned_user.steam_id LIKE ?)";
         $params = ["%$search%", "%$search%"];
+    } else {
+        $whereClause = "";
     }
     
     // Get total count
