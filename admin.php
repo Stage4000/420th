@@ -766,6 +766,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="navbar-links" id="navbarLinks">
             <a href="dashboard.php">Dashboard</a>
             <a href="users.php">Users</a>
+            <a href="ban_management.php">Bans</a>
+            <?php if (SteamAuth::hasRole('ADMIN')): ?>
+                <a href="active_players.php">Active Players</a>
+            <?php endif; ?>
             <img src="<?php echo htmlspecialchars($user['avatar_url']); ?>" alt="Avatar" class="user-avatar">
             <span><?php echo htmlspecialchars($user['steam_name']); ?></span>
             <a href="logout.php" class="logout-btn">Logout</a>
