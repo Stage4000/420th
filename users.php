@@ -6,6 +6,7 @@ require_once 'db.php';
 require_once 'role_manager.php';
 require_once 'ban_manager.php';
 require_once 'rcon_manager.php';
+require_once 'staff_notes_manager.php';
 
 // Check if user is logged in and is a panel admin
 if (!SteamAuth::isLoggedIn()) {
@@ -22,6 +23,7 @@ $db = Database::getInstance();
 $roleManager = new RoleManager();
 $banManager = new BanManager();
 $rconManager = new RconManager();
+$notesManager = new StaffNotesManager();
 $currentUser = SteamAuth::getCurrentUser();
 
 // Check if current user has ALL flag (can manage bans) and PANEL flag (can manage roles)
@@ -174,6 +176,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $message = "Error unbanning user: " . $e->getMessage();
                 $messageType = "error";
             }
+        } elseif ($_POST['action'] === 'add_note' && $userId && $hasAllFlag) {
+            // Handle adding staff note
+            try {
+                $noteText = isset($_POST['note_text']) ? trim($_POST['note_text']) : '';
+                if (empty($noteText)) {
+                    throw new Exception("Note text cannot be empty");
+                }
+                
+                $notesManager->addNote($userId, $currentUser['id'], $noteText);
+                
+                if ($isAjax) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => true, 'message' => 'Staff note added successfully']);
+                    exit;
+                }
+                $message = "Staff note added successfully!";
+                $messageType = "success";
+            } catch (Exception $e) {
+                if ($isAjax) {
+                    header('Content-Type: application/json');
+                    http_response_code(400);
+                    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+                    exit;
+                }
+                $message = "Error adding note: " . $e->getMessage();
+                $messageType = "error";
+            }
+        } elseif ($_POST['action'] === 'get_notes' && $userId && $hasAllFlag) {
+            // Handle getting staff notes
+            try {
+                $notes = $notesManager->getUserNotes($userId);
+                
+                if ($isAjax) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => true, 'notes' => $notes]);
+                    exit;
+                }
+            } catch (Exception $e) {
+                if ($isAjax) {
+                    header('Content-Type: application/json');
+                    http_response_code(400);
+                    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+                    exit;
+                }
+            }
         }
     }
 }
@@ -279,6 +326,16 @@ foreach ($users as &$user) {
     // Check if ban is expired (additional safety check)
     if ($user['is_banned'] && $user['ban_expires'] && strtotime($user['ban_expires']) < time()) {
         $user['is_banned'] = 0;
+    }
+    
+    // Add ban history count
+    if ($hasAllFlag) {
+        $user['ban_count'] = count($banManager->getUserBans($user['id']));
+    }
+    
+    // Add notes count
+    if ($hasAllFlag) {
+        $user['notes_count'] = $notesManager->countUserNotes($user['id']);
     }
 }
 ?>
@@ -554,6 +611,15 @@ foreach ($users as &$user) {
             color: #1a1f2e;
             font-weight: 700;
             box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
+        }
+        
+        .info-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+            font-weight: 600;
         }
         
         .roles-list {
@@ -986,6 +1052,14 @@ foreach ($users as &$user) {
                                         <?php if (defined('OWNER_STEAM_ID') && !empty(OWNER_STEAM_ID) && $u['steam_id'] === OWNER_STEAM_ID): ?>
                                             <span class="owner-badge" title="System Owner">👑 Owner</span>
                                         <?php endif; ?>
+                                        <?php if ($hasAllFlag): ?>
+                                            <?php if ($u['ban_count'] > 0): ?>
+                                                <span class="info-badge" title="<?php echo $u['ban_count']; ?> previous ban(s)" style="background: rgba(255, 107, 107, 0.2); color: #ff6b6b;">🚫 <?php echo $u['ban_count']; ?></span>
+                                            <?php endif; ?>
+                                            <?php if ($u['notes_count'] > 0): ?>
+                                                <span class="info-badge" title="<?php echo $u['notes_count']; ?> staff note(s)" style="background: rgba(255, 165, 0, 0.2); color: #ffa94d;">📝 <?php echo $u['notes_count']; ?></span>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                                 <td><?php echo htmlspecialchars($u['steam_id']); ?></td>
@@ -1041,6 +1115,12 @@ foreach ($users as &$user) {
                                                 Ban
                                             </button>
                                         <?php endif; ?>
+                                    <?php endif; ?>
+                                    <?php if ($hasAllFlag): ?>
+                                        <button onclick="openNotesModal(<?php echo $u['id']; ?>, '<?php echo htmlspecialchars(addslashes($u['steam_name'])); ?>')" 
+                                                class="btn btn-secondary btn-small" style="background: #ffa94d; margin-top: 0.5rem;">
+                                            📝 View/Add Notes
+                                        </button>
                                     <?php endif; ?>
                                 </td>
                             </tr>
@@ -1189,6 +1269,40 @@ foreach ($users as &$user) {
                     </button>
                     <button type="button" onclick="closeUnbanModal()" class="btn btn-secondary" style="flex: 1;">
                         Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Staff Notes Modal -->
+    <div id="notesModal" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3>📝 Staff Notes: <span id="notesModalUserName"></span></h3>
+            </div>
+            
+            <div id="notesList" style="max-height: 400px; overflow-y: auto; margin-bottom: 1rem; padding: 1rem; background: #1a1f2e; border-radius: 5px; border: 1px solid #3a4152;">
+                <div style="text-align: center; color: #8b92a8; padding: 2rem;">
+                    Loading notes...
+                </div>
+            </div>
+            
+            <form id="addNoteForm" style="border-top: 1px solid #3a4152; padding-top: 1rem;">
+                <input type="hidden" id="notesUserId" name="user_id">
+                <input type="hidden" name="action" value="add_note">
+                
+                <div style="margin-bottom: 1rem;">
+                    <label style="color: #e4e6eb; display: block; margin-bottom: 0.5rem; font-weight: 600;">Add New Note:</label>
+                    <textarea name="note_text" id="noteTextArea" rows="3" style="width: 100%; padding: 0.75rem; background: #2a3142; border: 1px solid #3a4152; border-radius: 5px; color: #e4e6eb; resize: vertical;" placeholder="Enter staff note..." required></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 0.5rem;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1; background: #ffa94d;">
+                        Add Note
+                    </button>
+                    <button type="button" onclick="closeNotesModal()" class="btn btn-secondary" style="flex: 1;">
+                        Close
                     </button>
                 </div>
             </form>
@@ -1569,6 +1683,115 @@ foreach ($users as &$user) {
             } catch (error) {
                 console.error('Error unbanning user:', error);
                 showToast('Failed to unban user', 'error');
+            }
+        });
+        
+        // Staff Notes Modal Functions
+        function openNotesModal(userId, userName) {
+            document.getElementById('notesModalUserName').textContent = userName;
+            document.getElementById('notesUserId').value = userId;
+            document.getElementById('notesModal').classList.add('active');
+            loadNotes(userId);
+        }
+        
+        function closeNotesModal() {
+            document.getElementById('notesModal').classList.remove('active');
+            document.getElementById('addNoteForm').reset();
+        }
+        
+        async function loadNotes(userId) {
+            const notesList = document.getElementById('notesList');
+            notesList.innerHTML = '<div style="text-align: center; color: #8b92a8; padding: 2rem;">Loading notes...</div>';
+            
+            try {
+                const formData = new FormData();
+                formData.append('action', 'get_notes');
+                formData.append('user_id', userId);
+                
+                const response = await fetch('users.php', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.notes) {
+                    if (data.notes.length === 0) {
+                        notesList.innerHTML = '<div style="text-align: center; color: #8b92a8; padding: 2rem;">No staff notes for this user.</div>';
+                    } else {
+                        notesList.innerHTML = data.notes.map(note => `
+                            <div style="background: #2a3142; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid #3a4152;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                                    <img src="${escapeHtml(note.created_by_avatar)}" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid #4a5568;">
+                                    <div>
+                                        <strong style="color: #e4e6eb;">${escapeHtml(note.created_by_name)}</strong>
+                                        <div style="color: #8b92a8; font-size: 0.85rem;">${escapeHtml(note.created_at)}</div>
+                                    </div>
+                                </div>
+                                <div style="color: #e4e6eb; white-space: pre-wrap; padding-left: 2.75rem;">${escapeHtml(note.note_text)}</div>
+                            </div>
+                        `).join('');
+                    }
+                } else {
+                    notesList.innerHTML = '<div style="text-align: center; color: #ff6b6b; padding: 2rem;">Failed to load notes.</div>';
+                }
+            } catch (error) {
+                console.error('Error loading notes:', error);
+                notesList.innerHTML = '<div style="text-align: center; color: #ff6b6b; padding: 2rem;">Error loading notes.</div>';
+            }
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Handle add note form submission
+        document.getElementById('addNoteForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalText = submitButton.textContent;
+            
+            submitButton.disabled = true;
+            submitButton.textContent = 'Adding...';
+            
+            try {
+                const response = await fetch('users.php', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    document.getElementById('noteTextArea').value = '';
+                    loadNotes(document.getElementById('notesUserId').value);
+                } else {
+                    showToast(data.error || 'Failed to add note', 'error');
+                }
+            } catch (error) {
+                console.error('Error adding note:', error);
+                showToast('Failed to add note', 'error');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = originalText;
+            }
+        });
+        
+        // Close notes modal on outside click
+        document.getElementById('notesModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeNotesModal();
             }
         });
         
