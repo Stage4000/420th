@@ -79,10 +79,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Find or create user record
                 $user = $db->fetchOne("SELECT * FROM users WHERE steam_id = ?", [$steamId]);
                 if (!$user) {
-                    // Create a placeholder user record
+                    // Create a placeholder user record for players not yet in the database
+                    // The Steam name will be updated on their first actual login
                     $db->query(
                         "INSERT INTO users (steam_id, steam_name, created_at) VALUES (?, ?, NOW())",
-                        [$steamId, 'Unknown Player']
+                        [$steamId, 'Guest Player - ' . substr($steamId, -6)]
                     );
                     $userId = $db->getConnection()->lastInsertId();
                 } else {

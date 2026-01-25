@@ -97,6 +97,7 @@ if ($filterStatus === 'expired') {
 } else {
     // Get all bans (both active and expired)
     $offset = ($page - 1) * $perPage;
+    // Using WHERE 1=1 to simplify dynamic query building with optional search conditions
     $whereClause = "WHERE 1=1";
     $params = [];
     

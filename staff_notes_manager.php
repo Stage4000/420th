@@ -19,7 +19,9 @@ class StaffNotesManager {
      * @return int Note ID
      */
     public function addNote($userId, $createdByUserId, $noteText) {
-        if (empty(trim($noteText))) {
+        $noteText = trim($noteText);
+        
+        if (empty($noteText)) {
             throw new Exception("Note text cannot be empty");
         }
         
@@ -41,7 +43,9 @@ class StaffNotesManager {
      * @return bool Success
      */
     public function updateNote($noteId, $updatedByUserId, $noteText) {
-        if (empty(trim($noteText))) {
+        $noteText = trim($noteText);
+        
+        if (empty($noteText)) {
             throw new Exception("Note text cannot be empty");
         }
         
