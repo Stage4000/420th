@@ -7,9 +7,15 @@ require_once 'role_manager.php';
 require_once 'ban_manager.php';
 require_once 'html_sanitizer.php';
 
+// Helper function to detect AJAX requests
+function isAjaxRequest() {
+    return !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+           strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+}
+
 // Check if user is logged in
 if (!SteamAuth::isLoggedIn()) {
-    header('Location: index.php');
+    header('Location: index');
     exit;
 }
 
@@ -64,6 +70,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $message .= "Your ban is indefinite.";
             }
             $messageType = "error";
+            
+            if (isAjaxRequest()) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => $message]);
+                exit;
+            }
         } else {
             try {
                 // Use RoleManager to add roles (handles automatic linking)
@@ -77,9 +89,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 
                 $message = "You have been successfully whitelisted!";
                 $messageType = "success";
+                
+                if (isAjaxRequest()) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => true, 'message' => $message]);
+                    exit;
+                }
             } catch (Exception $e) {
                 $message = "Error processing whitelist request: " . $e->getMessage();
                 $messageType = "error";
+                
+                if (isAjaxRequest()) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'error' => $message]);
+                    exit;
+                }
             }
         }
     }
@@ -588,16 +612,16 @@ $isWhitelisted = $hasS3 && $hasCAS;
         <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
         <div class="navbar-links" id="navbarLinks">
             <?php if ($isPanelAdmin): ?>
-                <a href="admin.php" style="color: #e4e6eb; text-decoration: none;">Admin Panel</a>
-                <a href="users.php" style="color: #e4e6eb; text-decoration: none;">Users</a>
-                <a href="ban_management.php" style="color: #e4e6eb; text-decoration: none;">Bans</a>
+                <a href="admin" style="color: #e4e6eb; text-decoration: none;">Admin Panel</a>
+                <a href="users" style="color: #e4e6eb; text-decoration: none;">Users</a>
+                <a href="ban_management" style="color: #e4e6eb; text-decoration: none;">Bans</a>
             <?php endif; ?>
             <?php if (SteamAuth::hasRole('ADMIN')): ?>
-                <a href="active_players.php" style="color: #e4e6eb; text-decoration: none;">Active Players</a>
+                <a href="active_players" style="color: #e4e6eb; text-decoration: none;">Active Players</a>
             <?php endif; ?>
             <img src="<?php echo htmlspecialchars($user['avatar_url']); ?>" alt="Avatar" class="user-avatar">
             <span><?php echo htmlspecialchars($user['steam_name']); ?></span>
-            <a href="logout.php" class="logout-btn">Logout</a>
+            <a href="logout" class="logout-btn">Logout</a>
         </div>
     </nav>
     
@@ -768,8 +792,40 @@ $isWhitelisted = $hasS3 && $hasCAS;
         function acceptAgreement() {
             // Close the modal
             closeAgreementModal();
-            // Submit the form
-            document.getElementById('whitelistForm').submit();
+            
+            // Submit the form via AJAX
+            const form = document.getElementById('whitelistForm');
+            const formData = new FormData(form);
+            
+            // Disable the whitelist button
+            const whitelistBtn = document.getElementById('whitelistBtn');
+            whitelistBtn.disabled = true;
+            whitelistBtn.textContent = '⏳ Processing...';
+            
+            fetch(window.location.pathname, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload the page to show updated status
+                    location.reload();
+                } else {
+                    alert(data.error || 'Failed to process whitelist request');
+                    whitelistBtn.disabled = false;
+                    whitelistBtn.textContent = '🎯 Whitelist Me!';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to process whitelist request');
+                whitelistBtn.disabled = false;
+                whitelistBtn.textContent = '🎯 Whitelist Me!';
+            });
         }
         
         // Set up event listeners when DOM is ready

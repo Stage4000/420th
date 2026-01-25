@@ -8,13 +8,13 @@ require_once 'staff_notes_manager.php';
 
 // Check if user is logged in and has admin or moderator role
 if (!SteamAuth::isLoggedIn()) {
-    header('Location: index.php');
+    header('Location: index');
     exit;
 }
 
 // Allow both PANEL and ALL (staff) to view bans
 if (!SteamAuth::hasRole('PANEL') && !SteamAuth::hasRole('ALL')) {
-    header('Location: dashboard.php');
+    header('Location: dashboard');
     exit;
 }
 
@@ -511,13 +511,13 @@ $totalPages = ceil($total / $perPage);
         <div class="header">
             <h1>🚫 Ban Management</h1>
             <div class="nav-links">
-                <a href="dashboard.php">Dashboard</a>
+                <a href="dashboard">Dashboard</a>
                 <?php if (SteamAuth::hasRole('ADMIN')): ?>
-                    <a href="active_players.php">Active Players</a>
+                    <a href="active_players">Active Players</a>
                 <?php endif; ?>
-                <a href="users.php">Users</a>
+                <a href="users">Users</a>
                 <?php if (SteamAuth::isPanelAdmin()): ?>
-                    <a href="admin.php">Admin</a>
+                    <a href="admin">Admin</a>
                 <?php endif; ?>
             </div>
         </div>

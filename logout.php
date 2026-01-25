@@ -4,5 +4,5 @@
 require_once 'steam_auth.php';
 
 SteamAuth::logout();
-header('Location: index.php');
+header('Location: index');
 exit;

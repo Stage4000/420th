@@ -3,7 +3,7 @@
 
 // Check if installation is needed
 if (!file_exists('config.php') && !isset($_GET['installer'])) {
-    header('Location: install.php');
+    header('Location: install');
     exit;
 }
 
@@ -40,7 +40,7 @@ if ($steamId) {
             $_SESSION['installer_first_user'] = true;
         }
         
-        header('Location: dashboard.php');
+        header('Location: dashboard');
         exit;
     } else {
         $error = "Failed to retrieve Steam user information.";
@@ -154,7 +154,7 @@ if ($steamId) {
         <div class="error-icon">⚠️</div>
         <h1>Authentication Error</h1>
         <p class="error-message"><?php echo htmlspecialchars($error); ?></p>
-        <a href="index.php" class="back-btn">Back to Login</a>
+        <a href="index" class="back-btn">Back to Login</a>
     </div>
     
     <footer>

@@ -10,12 +10,12 @@ require_once 'staff_notes_manager.php';
 
 // Check if user is logged in and has admin role
 if (!SteamAuth::isLoggedIn()) {
-    header('Location: index.php');
+    header('Location: index');
     exit;
 }
 
 if (!SteamAuth::hasRole('ADMIN')) {
-    header('Location: dashboard.php');
+    header('Location: dashboard');
     exit;
 }
 
@@ -617,10 +617,10 @@ if ($rconEnabled) {
         <div class="header">
             <h1>🎮 Active Players</h1>
             <div class="nav-links">
-                <a href="dashboard.php">Dashboard</a>
-                <a href="users.php">Users</a>
-                <a href="ban_management.php">Bans</a>
-                <a href="admin.php">Admin</a>
+                <a href="dashboard">Dashboard</a>
+                <a href="users">Users</a>
+                <a href="ban_management">Bans</a>
+                <a href="admin">Admin</a>
             </div>
         </div>
         

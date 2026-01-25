@@ -10,12 +10,12 @@ require_once 'staff_notes_manager.php';
 
 // Check if user is logged in and is a panel admin
 if (!SteamAuth::isLoggedIn()) {
-    header('Location: index.php');
+    header('Location: index');
     exit;
 }
 
 if (!SteamAuth::isPanelAdmin()) {
-    header('Location: dashboard.php');
+    header('Location: dashboard');
     exit;
 }
 
@@ -963,11 +963,11 @@ foreach ($users as &$user) {
         </div>
         <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
         <div class="navbar-links" id="navbarLinks">
-            <a href="dashboard.php">Dashboard</a>
-            <a href="admin.php">Admin Panel</a>
+            <a href="dashboard">Dashboard</a>
+            <a href="admin">Admin Panel</a>
             <img src="<?php echo htmlspecialchars($currentUser['avatar_url']); ?>" alt="Avatar" class="user-avatar">
             <span><?php echo htmlspecialchars($currentUser['steam_name']); ?></span>
-            <a href="logout.php" class="logout-btn">Logout</a>
+            <a href="logout" class="logout-btn">Logout</a>
         </div>
     </nav>
     
@@ -1004,7 +1004,7 @@ foreach ($users as &$user) {
                 <?php endif; ?>
                 <button type="submit" class="btn btn-primary">🔍 Search</button>
                 <?php if (!empty($search) || !empty($roleFilter)): ?>
-                    <a href="users.php" class="btn btn-secondary">Clear</a>
+                    <a href="users" class="btn btn-secondary">Clear</a>
                 <?php endif; ?>
             </form>
         </div>
@@ -1485,7 +1485,7 @@ foreach ($users as &$user) {
             button.disabled = true;
             button.textContent = '...';
             
-            fetch('users.php', {
+            fetch('users', {
                 method: 'POST',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
@@ -1632,7 +1632,7 @@ foreach ($users as &$user) {
             const formData = new FormData(this);
             
             try {
-                const response = await fetch('users.php', {
+                const response = await fetch('users', {
                     method: 'POST',
                     body: formData,
                     headers: {
@@ -1661,7 +1661,7 @@ foreach ($users as &$user) {
             const formData = new FormData(this);
             
             try {
-                const response = await fetch('users.php', {
+                const response = await fetch('users', {
                     method: 'POST',
                     body: formData,
                     headers: {
