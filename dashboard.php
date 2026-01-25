@@ -7,6 +7,12 @@ require_once 'role_manager.php';
 require_once 'ban_manager.php';
 require_once 'html_sanitizer.php';
 
+// Helper function to detect AJAX requests
+function isAjaxRequest() {
+    return !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+           strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+}
+
 // Check if user is logged in
 if (!SteamAuth::isLoggedIn()) {
     header('Location: index');
@@ -55,10 +61,6 @@ $messageType = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($_POST['action'] === 'whitelist_me') {
-        // Check if this is an AJAX request
-        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
-                  strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
-        
         // Check if user is banned
         if ($isBanned) {
             $message = "You cannot whitelist yourself while banned. ";
@@ -69,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
             $messageType = "error";
             
-            if ($isAjax) {
+            if (isAjaxRequest()) {
                 header('Content-Type: application/json');
                 echo json_encode(['success' => false, 'error' => $message]);
                 exit;
@@ -88,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $message = "You have been successfully whitelisted!";
                 $messageType = "success";
                 
-                if ($isAjax) {
+                if (isAjaxRequest()) {
                     header('Content-Type: application/json');
                     echo json_encode(['success' => true, 'message' => $message]);
                     exit;
@@ -97,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $message = "Error processing whitelist request: " . $e->getMessage();
                 $messageType = "error";
                 
-                if ($isAjax) {
+                if (isAjaxRequest()) {
                     header('Content-Type: application/json');
                     echo json_encode(['success' => false, 'error' => $message]);
                     exit;
@@ -796,7 +798,7 @@ $isWhitelisted = $hasS3 && $hasCAS;
             whitelistBtn.disabled = true;
             whitelistBtn.textContent = '⏳ Processing...';
             
-            fetch('dashboard', {
+            fetch(window.location.pathname, {
                 method: 'POST',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'

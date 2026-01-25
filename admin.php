@@ -7,6 +7,12 @@ require_once 'role_manager.php';
 require_once 'rcon_manager.php';
 require_once 'html_sanitizer.php';
 
+// Helper function to detect AJAX requests
+function isAjaxRequest() {
+    return !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+           strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+}
+
 // Check if user is logged in and is a panel admin
 if (!SteamAuth::isLoggedIn()) {
     header('Location: index');
@@ -114,11 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $message = "Successfully updated $updated role aliases!";
                 $messageType = "success";
                 
-                // Check if this is an AJAX request
-                $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
-                          strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
-                
-                if ($isAjax) {
+                if (isAjaxRequest()) {
                     header('Content-Type: application/json');
                     echo json_encode(['success' => true, 'message' => $message]);
                     exit;
@@ -130,11 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $message = "Error updating aliases: " . $e->getMessage();
                 $messageType = "error";
                 
-                // Check if this is an AJAX request
-                $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
-                          strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
-                
-                if ($isAjax) {
+                if (isAjaxRequest()) {
                     header('Content-Type: application/json');
                     echo json_encode(['success' => false, 'error' => $message]);
                     exit;
@@ -172,11 +170,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $message = "RCON settings updated successfully!";
                 $messageType = "success";
                 
-                // Check if this is an AJAX request
-                $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
-                          strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
-                
-                if ($isAjax) {
+                if (isAjaxRequest()) {
                     header('Content-Type: application/json');
                     echo json_encode(['success' => true, 'message' => $message]);
                     exit;
@@ -185,11 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $message = "Error updating RCON settings: " . $e->getMessage();
                 $messageType = "error";
                 
-                // Check if this is an AJAX request
-                $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
-                          strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
-                
-                if ($isAjax) {
+                if (isAjaxRequest()) {
                     header('Content-Type: application/json');
                     echo json_encode(['success' => false, 'error' => $message]);
                     exit;
@@ -245,11 +235,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $message = "Whitelist agreement updated successfully!";
                 $messageType = "success";
                 
-                // Check if this is an AJAX request
-                $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
-                          strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
-                
-                if ($isAjax) {
+                if (isAjaxRequest()) {
                     header('Content-Type: application/json');
                     echo json_encode(['success' => true, 'message' => $message]);
                     exit;
@@ -258,11 +244,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $message = "Error updating whitelist agreement: " . $e->getMessage();
                 $messageType = "error";
                 
-                // Check if this is an AJAX request
-                $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
-                          strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
-                
-                if ($isAjax) {
+                if (isAjaxRequest()) {
                     header('Content-Type: application/json');
                     echo json_encode(['success' => false, 'error' => $message]);
                     exit;
