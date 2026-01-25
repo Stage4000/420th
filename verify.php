@@ -247,7 +247,7 @@ if (!in_array($remoteAddr, $allowedIps) && !in_array($_SERVER['REMOTE_ADDR'], $a
             <h3>Next Steps:</h3>
             <ol>
                 <li>Delete this verification file (verify.php)</li>
-                <li>Navigate to <a href="index">index.php</a> to test the login</li>
+                <li>Navigate to <a href="index">the homepage</a> to test the login</li>
                 <li>After first login, grant yourself the PANEL role using SQL:
                     <pre>-- Find your user ID
 SELECT id FROM users WHERE steam_id = 'YOUR_STEAM_ID';
