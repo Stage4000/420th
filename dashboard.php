@@ -614,6 +614,10 @@ $isWhitelisted = $hasS3 && $hasCAS;
             <?php if ($isPanelAdmin): ?>
                 <a href="admin" style="color: #e4e6eb; text-decoration: none;">Admin Panel</a>
                 <a href="users" style="color: #e4e6eb; text-decoration: none;">Users</a>
+                <a href="ban_management" style="color: #e4e6eb; text-decoration: none;">Bans</a>
+            <?php endif; ?>
+            <?php if (SteamAuth::hasRole('ADMIN')): ?>
+                <a href="active_players" style="color: #e4e6eb; text-decoration: none;">Active Players</a>
             <?php endif; ?>
             <img src="<?php echo htmlspecialchars($user['avatar_url']); ?>" alt="Avatar" class="user-avatar">
             <span><?php echo htmlspecialchars($user['steam_name']); ?></span>

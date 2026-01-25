@@ -109,3 +109,20 @@ INSERT INTO `server_settings` (`setting_key`, `setting_value`) VALUES
     </li>
 </ul>')
 ON DUPLICATE KEY UPDATE `setting_key` = `setting_key`;
+
+
+-- Staff notes table for recording punitive actions and other user notes
+CREATE TABLE IF NOT EXISTS `staff_notes` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `user_id` INT NOT NULL,
+    `note_text` TEXT NOT NULL,
+    `created_by_user_id` INT NOT NULL,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `updated_by_user_id` INT NULL,
+    `updated_at` DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`created_by_user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`updated_by_user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL,
+    INDEX `idx_user_id` (`user_id`),
+    INDEX `idx_created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
