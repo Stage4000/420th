@@ -9,7 +9,7 @@ require_once 'html_sanitizer.php';
 
 // Check if user is logged in
 if (!SteamAuth::isLoggedIn()) {
-    header('Location: index.php');
+    header('Location: index');
     exit;
 }
 
@@ -588,12 +588,12 @@ $isWhitelisted = $hasS3 && $hasCAS;
         <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
         <div class="navbar-links" id="navbarLinks">
             <?php if ($isPanelAdmin): ?>
-                <a href="admin.php" style="color: #e4e6eb; text-decoration: none;">Admin Panel</a>
-                <a href="users.php" style="color: #e4e6eb; text-decoration: none;">Users</a>
+                <a href="admin" style="color: #e4e6eb; text-decoration: none;">Admin Panel</a>
+                <a href="users" style="color: #e4e6eb; text-decoration: none;">Users</a>
             <?php endif; ?>
             <img src="<?php echo htmlspecialchars($user['avatar_url']); ?>" alt="Avatar" class="user-avatar">
             <span><?php echo htmlspecialchars($user['steam_name']); ?></span>
-            <a href="logout.php" class="logout-btn">Logout</a>
+            <a href="logout" class="logout-btn">Logout</a>
         </div>
     </nav>
     

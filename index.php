@@ -121,7 +121,7 @@
     <?php
     // Check if installation is needed
     if (!file_exists('config.php')) {
-        header('Location: install.php');
+        header('Location: install');
         exit;
     }
     
@@ -129,7 +129,7 @@
     
     // Redirect if already logged in
     if (SteamAuth::isLoggedIn()) {
-        header('Location: dashboard.php');
+        header('Location: dashboard');
         exit;
     }
     

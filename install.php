@@ -20,7 +20,7 @@ if (file_exists('config.php')) {
         $stmt = $testConn->query("SHOW TABLES LIKE 'roles'");
         if ($stmt->rowCount() > 0) {
             // Already installed, redirect to index
-            header('Location: index.php');
+            header('Location: index');
             exit;
         }
     } catch (PDOException $e) {
@@ -128,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['installer_db_user'] = $dbUser;
                 $_SESSION['installer_db_pass'] = $dbPass;
                 
-                header('Location: install.php?step=2');
+                header('Location: install?step=2');
                 exit;
                 
             } catch (PDOException $e) {
@@ -138,7 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($step === 2) {
         // First admin setup - this happens after Steam login
         if (isset($_SESSION['installer_first_user']) && $_SESSION['installer_first_user']) {
-            header('Location: index.php');
+            header('Location: index');
             exit;
         }
     }
@@ -431,7 +431,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     Click the button below to sign in with Steam.<br>
                     You will be granted the PANEL administrator role automatically.
                 </p>
-                <a href="callback.php?installer=1" class="steam-login-btn">
+                <a href="callback?installer=1" class="steam-login-btn">
                     Sign in with Steam to Complete Setup
                 </a>
             </div>
