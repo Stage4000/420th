@@ -197,7 +197,7 @@ $isWhitelisted = $hasS3 && $hasCAS;
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 2rem auto;
             padding: 0 2rem;
             flex: 1;
@@ -241,7 +241,7 @@ $isWhitelisted = $hasS3 && $hasCAS;
         .role-badge {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 1rem;
+            padding: 1rem 1.5rem;
             border-radius: 8px;
             text-align: center;
             font-weight: 500;
@@ -250,6 +250,7 @@ $isWhitelisted = $hasS3 && $hasCAS;
             align-items: center;
             justify-content: center;
             min-height: 3rem;
+            min-width: 150px;
         }
         
         .role-badge.staff {

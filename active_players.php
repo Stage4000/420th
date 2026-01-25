@@ -196,6 +196,7 @@ if ($rconEnabled) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Active Players - 420th Delta</title>
+    <link rel="icon" type="image/png" href="favicon.png">
     <style>
         * {
             margin: 0;
@@ -686,6 +687,14 @@ if ($rconEnabled) {
             .container {
                 padding: 0 1rem;
                 margin: 1rem auto;
+            }
+            
+            .players-table {
+                overflow-x: auto;
+            }
+            
+            table {
+                min-width: 900px;
             }
             
             footer {

@@ -159,6 +159,7 @@ $totalPages = ceil($total / $perPage);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ban Management - 420th Delta</title>
+    <link rel="icon" type="image/png" href="favicon.png">
     <style>
         * {
             margin: 0;
@@ -559,6 +560,14 @@ $totalPages = ceil($total / $perPage);
             .container {
                 padding: 0 1rem;
                 margin: 1rem auto;
+            }
+            
+            .bans-table {
+                overflow-x: auto;
+            }
+            
+            table {
+                min-width: 800px;
             }
             
             footer {

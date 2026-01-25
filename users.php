@@ -540,20 +540,22 @@ foreach ($users as &$user) {
         .users-table {
             background: #1a1f2e;
             border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid #2a3142;
             overflow: hidden;
         }
         
         .table-header {
             padding: 1.5rem;
-            border-bottom: 2px solid #2a3142;
+            border-bottom: 1px solid #2a3142;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background: rgba(102, 126, 234, 0.05);
         }
         
         .table-header h2 {
-            color: #e4e6eb;
+            color: #667eea;
+            font-weight: 600;
         }
         
         table {
@@ -562,26 +564,30 @@ foreach ($users as &$user) {
         }
         
         thead {
-            background: #1e2837;
+            background: rgba(102, 126, 234, 0.1);
         }
         
         th, td {
             padding: 1rem;
             text-align: left;
-            border-bottom: 1px solid #2a3142;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
         
         th {
             font-weight: 600;
-            color: #e4e6eb;
+            color: #667eea;
         }
         
         td {
-            color: #8b92a8;
+            color: #e4e6eb;
         }
         
-        tr:hover {
-            background: #1e2837;
+        tbody tr {
+            transition: background 0.2s;
+        }
+        
+        tbody tr:hover {
+            background: rgba(102, 126, 234, 0.05);
         }
         
         .user-info {
