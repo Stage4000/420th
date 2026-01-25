@@ -59,82 +59,12 @@
             transition: all 0.3s;
             cursor: pointer;
             border: 1px solid #2a3142;
-            position: relative;
-            overflow: visible;
         }
         
         .steam-login-btn:hover {
             background: #2a475e;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-        
-        /* Smoke animation container */
-        .smoke-container {
-            position: relative;
-            display: inline-block;
-        }
-        
-        /* Smoke particles */
-        .smoke {
-            position: absolute;
-            bottom: 50%;
-            left: 50%;
-            width: 6px;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.6);
-            border-radius: 50%;
-            pointer-events: none;
-            animation: smoke-rise 3s ease-out infinite;
-            filter: blur(2px);
-        }
-        
-        @keyframes smoke-rise {
-            0% {
-                transform: translate(-50%, 0) scale(1);
-                opacity: 0;
-            }
-            10% {
-                opacity: 0.8;
-            }
-            50% {
-                opacity: 0.5;
-            }
-            100% {
-                transform: translate(-50%, -100px) scale(2.5);
-                opacity: 0;
-            }
-        }
-        
-        /* Multiple smoke particles with different delays and positions */
-        .smoke:nth-child(1) {
-            animation-delay: 0s;
-            left: 45%;
-        }
-        
-        .smoke:nth-child(2) {
-            animation-delay: 0.5s;
-            left: 50%;
-        }
-        
-        .smoke:nth-child(3) {
-            animation-delay: 1s;
-            left: 55%;
-        }
-        
-        .smoke:nth-child(4) {
-            animation-delay: 1.5s;
-            left: 48%;
-        }
-        
-        .smoke:nth-child(5) {
-            animation-delay: 2s;
-            left: 52%;
-        }
-        
-        .smoke:nth-child(6) {
-            animation-delay: 2.5s;
-            left: 46%;
         }
         
         .steam-icon {
@@ -215,20 +145,12 @@
         </div>
         <div class="subtitle">Whitelist Dashboard</div>
         
-        <div class="smoke-container">
-            <a href="<?php echo htmlspecialchars($loginUrl); ?>" class="steam-login-btn">
-                <svg class="steam-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white">
-                    <path d="M12 2a10 10 0 0 1 10 10 10 10 0 0 1-10 10c-4.6 0-8.45-3.08-9.64-7.27l3.83 1.58a2.84 2.84 0 0 0 2.78 2.27c1.56 0 2.83-1.27 2.83-2.83v-.13l3.4-2.43h.08c2.08 0 3.77-1.69 3.77-3.77s-1.69-3.77-3.77-3.77-3.78 1.69-3.78 3.77v.05l-2.37 3.46-.16-.01c-.31 0-.61.04-.89.13L2.15 11.1A10 10 0 0 1 12 2m4.25 5.43c1.38 0 2.51 1.12 2.51 2.51 0 1.38-1.13 2.51-2.51 2.51s-2.51-1.13-2.51-2.51c0-1.39 1.13-2.51 2.51-2.51m-8.46 9.31l-.89-.37c.19.58.76 1.04 1.47 1.04.83 0 1.51-.68 1.51-1.51s-.68-1.51-1.51-1.51h-.08l.96-.7c.03.1.05.2.05.31 0 1.04-.84 1.88-1.88 1.88-.37 0-.72-.11-1.01-.3z"/>
-                </svg>
-                Sign in with Steam
-            </a>
-            <div class="smoke"></div>
-            <div class="smoke"></div>
-            <div class="smoke"></div>
-            <div class="smoke"></div>
-            <div class="smoke"></div>
-            <div class="smoke"></div>
-        </div>
+        <a href="<?php echo htmlspecialchars($loginUrl); ?>" class="steam-login-btn">
+            <svg class="steam-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white">
+                <path d="M12 2a10 10 0 0 1 10 10 10 10 0 0 1-10 10c-4.6 0-8.45-3.08-9.64-7.27l3.83 1.58a2.84 2.84 0 0 0 2.78 2.27c1.56 0 2.83-1.27 2.83-2.83v-.13l3.4-2.43h.08c2.08 0 3.77-1.69 3.77-3.77s-1.69-3.77-3.77-3.77-3.78 1.69-3.78 3.77v.05l-2.37 3.46-.16-.01c-.31 0-.61.04-.89.13L2.15 11.1A10 10 0 0 1 12 2m4.25 5.43c1.38 0 2.51 1.12 2.51 2.51 0 1.38-1.13 2.51-2.51 2.51s-2.51-1.13-2.51-2.51c0-1.39 1.13-2.51 2.51-2.51m-8.46 9.31l-.89-.37c.19.58.76 1.04 1.47 1.04.83 0 1.51-.68 1.51-1.51s-.68-1.51-1.51-1.51h-.08l.96-.7c.03.1.05.2.05.31 0 1.04-.84 1.88-1.88 1.88-.37 0-.72-.11-1.01-.3z"/>
+            </svg>
+            Sign in with Steam
+        </a>
         
         <div class="description">
             Sign in with your Steam account to view your whitelist roles and access the dashboard.
