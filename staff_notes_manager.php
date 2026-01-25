@@ -58,14 +58,14 @@ class StaffNotesManager {
     public function updateNote($noteId, $updatedByUserId, $noteText) {
         $noteText = $this->validateNoteText($noteText);
         
-        $this->db->query(
+        $result = $this->db->query(
             "UPDATE staff_notes 
              SET note_text = ?, updated_by_user_id = ?, updated_at = NOW() 
              WHERE id = ?",
             [$noteText, $updatedByUserId, $noteId]
         );
         
-        return true;
+        return $result > 0; // Return true if at least one row was updated
     }
     
     /**
@@ -75,8 +75,8 @@ class StaffNotesManager {
      * @return bool Success
      */
     public function deleteNote($noteId) {
-        $this->db->query("DELETE FROM staff_notes WHERE id = ?", [$noteId]);
-        return true;
+        $result = $this->db->query("DELETE FROM staff_notes WHERE id = ?", [$noteId]);
+        return $result > 0; // Return true if at least one row was deleted
     }
     
     /**

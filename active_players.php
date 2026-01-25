@@ -81,9 +81,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!$user) {
                     // Create a placeholder user record for players not yet in the database
                     // The Steam name will be updated on their first actual login
+                    // Using last 6 digits of Steam ID for identification
+                    $placeholderName = 'Guest#' . substr($steamId, -6);
                     $db->query(
                         "INSERT INTO users (steam_id, steam_name, created_at) VALUES (?, ?, NOW())",
-                        [$steamId, 'Guest Player - ' . substr($steamId, -6)]
+                        [$steamId, $placeholderName]
                     );
                     $userId = $db->getConnection()->lastInsertId();
                 } else {
