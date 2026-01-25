@@ -865,6 +865,11 @@ foreach ($users as &$user) {
             /* Make tables horizontally scrollable on mobile */
             .users-table {
                 overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            table {
+                min-width: 900px;
             }
             
             .search-form {

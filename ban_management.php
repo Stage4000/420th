@@ -343,6 +343,18 @@ $totalPages = ceil($total / $perPage);
             margin-bottom: 1.5rem;
         }
         
+        .table-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #2a3142;
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        .table-header h2 {
+            color: #667eea;
+            font-weight: 600;
+            margin: 0;
+        }
+        
         table {
             width: 100%;
             border-collapse: collapse;
@@ -564,6 +576,7 @@ $totalPages = ceil($total / $perPage);
             
             .bans-table {
                 overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
             }
             
             table {
@@ -629,28 +642,32 @@ $totalPages = ceil($total / $perPage);
             </div>
         <?php endif; ?>
         
-        <div class="controls">
-            <div class="search-box">
+        <div class="bans-table">
+            <div class="table-header">
+                <h2>🚫 All Bans (<?php echo $total; ?>)</h2>
+            </div>
+            
+            <div class="controls">
+                <div class="search-box">
+                    <form method="GET" action="">
+                        <input type="text" name="search" placeholder="🔍 Search by player name or Steam ID..." 
+                               value="<?php echo htmlspecialchars($search); ?>">
+                        <input type="hidden" name="status" value="<?php echo htmlspecialchars($filterStatus); ?>">
+                    </form>
+                </div>
                 <form method="GET" action="">
-                    <input type="text" name="search" placeholder="🔍 Search by player name or Steam ID..." 
-                           value="<?php echo htmlspecialchars($search); ?>">
-                    <input type="hidden" name="status" value="<?php echo htmlspecialchars($filterStatus); ?>">
+                    <select name="status" class="filter-select" onchange="this.form.submit()">
+                        <option value="all" <?php echo $filterStatus === 'all' ? 'selected' : ''; ?>>All Bans</option>
+                        <option value="active" <?php echo $filterStatus === 'active' ? 'selected' : ''; ?>>Active Only</option>
+                        <option value="expired" <?php echo $filterStatus === 'expired' ? 'selected' : ''; ?>>Expired Only</option>
+                    </select>
+                    <?php if (!empty($search)): ?>
+                        <input type="hidden" name="search" value="<?php echo htmlspecialchars($search); ?>">
+                    <?php endif; ?>
                 </form>
             </div>
-            <form method="GET" action="">
-                <select name="status" class="filter-select" onchange="this.form.submit()">
-                    <option value="all" <?php echo $filterStatus === 'all' ? 'selected' : ''; ?>>All Bans</option>
-                    <option value="active" <?php echo $filterStatus === 'active' ? 'selected' : ''; ?>>Active Only</option>
-                    <option value="expired" <?php echo $filterStatus === 'expired' ? 'selected' : ''; ?>>Expired Only</option>
-                </select>
-                <?php if (!empty($search)): ?>
-                    <input type="hidden" name="search" value="<?php echo htmlspecialchars($search); ?>">
-                <?php endif; ?>
-            </form>
-        </div>
         
-        <div class="bans-table">
-            <?php if (empty($bans)): ?>
+        <?php if (empty($bans)): ?>
                 <div class="empty-state">
                     <h3>No bans found</h3>
                     <p>There are no bans matching your criteria.</p>

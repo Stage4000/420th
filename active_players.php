@@ -348,6 +348,36 @@ if ($rconEnabled) {
             overflow: hidden;
         }
         
+        .table-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #2a3142;
+            background: rgba(102, 126, 234, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .table-header h2 {
+            color: #667eea;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .refresh-btn {
+            background: #27ae60;
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        
+        .refresh-btn:hover {
+            background: #229954;
+        }
+        
         table {
             width: 100%;
             border-collapse: collapse;
@@ -691,6 +721,7 @@ if ($rconEnabled) {
             
             .players-table {
                 overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
             }
             
             table {
@@ -758,12 +789,12 @@ if ($rconEnabled) {
                 ⚠️ RCON is not enabled or configured. Please configure RCON in the admin panel to view active players.
             </div>
         <?php else: ?>
-            <div class="info-box">
-                📡 Showing <?php echo count($players); ?> active player(s) from the game server.
-                <button class="refresh-btn" onclick="location.reload()">🔄 Refresh</button>
-            </div>
-            
             <div class="players-table">
+                <div class="table-header">
+                    <h2>🎮 Active Players (<?php echo count($players); ?>)</h2>
+                    <button class="refresh-btn" onclick="location.reload()">🔄 Refresh</button>
+                </div>
+                
                 <?php if (empty($players)): ?>
                     <div class="empty-state">
                         <h3>No players currently online</h3>
