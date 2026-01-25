@@ -171,6 +171,8 @@ $totalPages = ceil($total / $perPage);
             background: #0a0e1a;
             min-height: 100vh;
             color: #e4e6eb;
+            display: flex;
+            flex-direction: column;
         }
         
         .navbar {
@@ -259,6 +261,7 @@ $totalPages = ceil($total / $perPage);
             max-width: 1400px;
             margin: 2rem auto;
             padding: 0 2rem;
+            flex: 1;
         }
         
         .message {
@@ -313,12 +316,17 @@ $totalPages = ceil($total / $perPage);
         
         .filter-select {
             padding: 10px 15px;
-            background: rgba(255, 255, 255, 0.05);
+            background: #1a1f2e;
             border: 1px solid #2a3142;
             border-radius: 5px;
             color: #e4e6eb;
             font-size: 14px;
             cursor: pointer;
+        }
+        
+        .filter-select option {
+            background: #1a1f2e;
+            color: #e4e6eb;
         }
         
         .filter-select:focus {

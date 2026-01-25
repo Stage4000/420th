@@ -273,6 +273,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #0a0e1a;
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
         
         .navbar {
@@ -352,6 +354,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             max-width: 1400px;
             margin: 2rem auto;
             padding: 0 2rem;
+            flex: 1;
         }
         
         .header-card {

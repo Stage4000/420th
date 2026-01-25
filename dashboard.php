@@ -138,6 +138,8 @@ $isWhitelisted = $hasS3 && $hasCAS;
             background: #0a0e1a;
             min-height: 100vh;
             color: #e4e6eb;
+            display: flex;
+            flex-direction: column;
         }
         
         .navbar {
@@ -198,6 +200,7 @@ $isWhitelisted = $hasS3 && $hasCAS;
             max-width: 1200px;
             margin: 2rem auto;
             padding: 0 2rem;
+            flex: 1;
         }
         
         .welcome-card {

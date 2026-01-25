@@ -356,6 +356,8 @@ foreach ($users as &$user) {
             background: #0a0e1a;
             min-height: 100vh;
             color: #e4e6eb;
+            display: flex;
+            flex-direction: column;
         }
         
         .navbar {
@@ -435,6 +437,7 @@ foreach ($users as &$user) {
             max-width: 1400px;
             margin: 2rem auto;
             padding: 0 2rem;
+            flex: 1;
         }
         
         .message {
