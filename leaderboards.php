@@ -461,7 +461,7 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
             }
             
             function renderLeaderboard(leaderboard, statName) {
-                const statDisplay = statName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                const statDisplay = statName.replace(/_/g, ' ').replace(/\b\w/g, letter => letter.toUpperCase());
                 
                 if (leaderboard.length === 0) {
                     leaderboardCard.innerHTML = `

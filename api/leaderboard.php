@@ -9,7 +9,10 @@ require_once __DIR__ . '/../stats_manager.php';
 // Check if user is logged in
 if (!SteamAuth::isLoggedIn()) {
     http_response_code(401);
-    echo json_encode(['error' => 'Unauthorized']);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Unauthorized'
+    ]);
     exit;
 }
 
