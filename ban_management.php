@@ -723,10 +723,10 @@ $totalPages = ceil($total / $perPage);
                                     <span class="ban-type ban-type-<?php echo strtolower($ban['ban_type']); ?>">
                                         <?php echo htmlspecialchars($displayType); ?>
                                     </span>
-                                    <?php if ($ban['server_kick']): ?>
+                                    <?php if (!empty($ban['server_kick'])): ?>
                                         <span class="badge badge-info" title="Server kick">⚠️</span>
                                     <?php endif; ?>
-                                    <?php if ($ban['server_ban']): ?>
+                                    <?php if (!empty($ban['server_ban'])): ?>
                                         <span class="badge badge-info" title="Server ban">🚫</span>
                                     <?php endif; ?>
                                 </td>

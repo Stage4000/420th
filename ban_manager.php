@@ -155,7 +155,7 @@ class BanManager {
             $messages[] = "Whitelist unban successful";
             
             // If the ban included a server ban, remove it via RCON
-            if ($activeBan && $activeBan['server_ban'] && $this->rconManager->isEnabled()) {
+            if ($activeBan && !empty($activeBan['server_ban']) && $this->rconManager->isEnabled()) {
                 $steamId = $activeBan['steam_id'];
                 
                 try {
@@ -164,7 +164,7 @@ class BanManager {
                 } catch (Exception $e) {
                     $messages[] = "Warning: Server unban failed - " . $e->getMessage();
                 }
-            } elseif ($activeBan && $activeBan['server_ban'] && !$this->rconManager->isEnabled()) {
+            } elseif ($activeBan && !empty($activeBan['server_ban']) && !$this->rconManager->isEnabled()) {
                 $messages[] = "Warning: RCON is not enabled, server unban skipped";
             }
             
