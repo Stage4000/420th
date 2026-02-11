@@ -287,6 +287,34 @@ $totalPages = ceil($total / $perPage);
             color: #fc8181;
         }
         
+        .page-header {
+            background: #1a1f2e;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            margin-bottom: 2rem;
+            border: 1px solid #2a3142;
+            text-align: center;
+        }
+        
+        .page-header h1 {
+            color: #e4e6eb;
+            margin-bottom: 0.5rem;
+        }
+        
+        .page-header p {
+            color: #8b92a8;
+        }
+        
+        .filters-card {
+            background: #1a1f2e;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            margin-bottom: 2rem;
+            border: 1px solid #2a3142;
+        }
+        
         .controls {
             background: #1a1f2e;
             padding: 1.5rem;
@@ -641,35 +669,58 @@ $totalPages = ceil($total / $perPage);
     </nav>
     
     <div class="container">
+        <div class="page-header">
+            <h1>🚫 Ban Management</h1>
+            <p>View and manage all player bans across the platform</p>
+        </div>
+        
         <?php if ($message): ?>
             <div class="message <?php echo $messageType; ?>">
                 <?php echo htmlspecialchars($message); ?>
             </div>
         <?php endif; ?>
         
+        <div class="filters-card">
+            <form method="GET" action="" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+                <div style="flex: 1; min-width: 250px;">
+                    <input 
+                        type="text" 
+                        name="search" 
+                        placeholder="🔍 Search by player name or Steam ID..." 
+                        value="<?php echo htmlspecialchars($search); ?>"
+                        style="width: 100%; padding: 0.75rem; background: #0f1318; border: 1px solid #2a3142; border-radius: 5px; color: #e4e6eb; font-size: 1rem;"
+                    >
+                    <input type="hidden" name="status" value="<?php echo htmlspecialchars($filterStatus); ?>">
+                </div>
+                <button type="submit" style="padding: 0.75rem 1.5rem; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; white-space: nowrap;">
+                    Search
+                </button>
+                <?php if (!empty($search)): ?>
+                    <a href="?status=<?php echo htmlspecialchars($filterStatus); ?>" style="padding: 0.75rem 1.5rem; background: #2a3142; color: #e4e6eb; border-radius: 5px; text-decoration: none; font-weight: 600; white-space: nowrap;">
+                        Clear
+                    </a>
+                <?php endif; ?>
+            </form>
+            <form method="GET" action="" style="margin-top: 1rem;">
+                <select 
+                    name="status" 
+                    onchange="this.form.submit()"
+                    style="padding: 0.75rem; background: #0f1318; color: #e4e6eb; border: 1px solid #2a3142; border-radius: 5px; font-size: 1rem; cursor: pointer;"
+                >
+                    <option value="all" <?php echo $filterStatus === 'all' ? 'selected' : ''; ?>>All Bans</option>
+                    <option value="active" <?php echo $filterStatus === 'active' ? 'selected' : ''; ?>>Active Only</option>
+                    <option value="expired" <?php echo $filterStatus === 'expired' ? 'selected' : ''; ?>>Expired Only</option>
+                </select>
+                <?php if (!empty($search)): ?>
+                    <input type="hidden" name="search" value="<?php echo htmlspecialchars($search); ?>">
+                <?php endif; ?>
+            </form>
+        </div>
+        
         <div class="bans-table">
             <div class="table-header">
-                <h2>🚫 All Bans (<?php echo $total; ?>)</h2>
-            </div>
-            
-            <div class="controls">
-                <div class="search-box">
-                    <form method="GET" action="">
-                        <input type="text" name="search" placeholder="🔍 Search by player name or Steam ID..." 
-                               value="<?php echo htmlspecialchars($search); ?>">
-                        <input type="hidden" name="status" value="<?php echo htmlspecialchars($filterStatus); ?>">
-                    </form>
-                </div>
-                <form method="GET" action="">
-                    <select name="status" class="filter-select" onchange="this.form.submit()">
-                        <option value="all" <?php echo $filterStatus === 'all' ? 'selected' : ''; ?>>All Bans</option>
-                        <option value="active" <?php echo $filterStatus === 'active' ? 'selected' : ''; ?>>Active Only</option>
-                        <option value="expired" <?php echo $filterStatus === 'expired' ? 'selected' : ''; ?>>Expired Only</option>
-                    </select>
-                    <?php if (!empty($search)): ?>
-                        <input type="hidden" name="search" value="<?php echo htmlspecialchars($search); ?>">
-                    <?php endif; ?>
-                </form>
+                <h2>All Bans (<?php echo $total; ?>)</h2>
+                <span style="color: #8b92a8;">Page <?php echo $page; ?> of <?php echo max(1, $totalPages); ?></span>
             </div>
         
         <?php if (empty($bans)): ?>

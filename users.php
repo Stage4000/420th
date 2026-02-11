@@ -463,6 +463,34 @@ foreach ($users as &$user) {
             color: #fc8181;
         }
         
+        .page-header {
+            background: #1a1f2e;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            margin-bottom: 2rem;
+            border: 1px solid #2a3142;
+            text-align: center;
+        }
+        
+        .page-header h1 {
+            color: #e4e6eb;
+            margin-bottom: 0.5rem;
+        }
+        
+        .page-header p {
+            color: #8b92a8;
+        }
+        
+        .filters-card {
+            background: #1a1f2e;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            margin-bottom: 2rem;
+            border: 1px solid #2a3142;
+        }
+        
         .search-bar {
             background: #1a1f2e;
             padding: 1.5rem;
@@ -1001,6 +1029,11 @@ foreach ($users as &$user) {
     </nav>
     
     <div class="container">
+        <div class="page-header">
+            <h1>👥 User Management</h1>
+            <p>Manage users, roles, bans, and permissions</p>
+        </div>
+        
         <?php if (!empty($message)): ?>
             <div class="message <?php echo $messageType; ?>">
                 <?php echo htmlspecialchars($message); ?>
@@ -1008,7 +1041,7 @@ foreach ($users as &$user) {
         <?php endif; ?>
         
         <!-- Search Bar -->
-        <div class="search-bar">
+        <div class="filters-card">
             <form method="GET" class="search-form">
                 <input 
                     type="text" 
