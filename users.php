@@ -745,8 +745,6 @@ unset($user);
             
             table {
                 font-size: 0.875rem;
-                display: block;
-                overflow-x: auto;
             }
             
             th, td {
