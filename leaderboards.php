@@ -231,6 +231,11 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
             margin-bottom: 1rem;
         }
         
+        .current-user-label {
+            color: #667eea;
+            font-weight: 600;
+        }
+        
         .info-message {
             background: rgba(102, 126, 234, 0.1);
             border: 1px solid rgba(102, 126, 234, 0.3);
@@ -396,7 +401,7 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
                                     <td>
                                         <?php echo htmlspecialchars($entry['name']); ?>
                                         <?php if ($isCurrentUser): ?>
-                                            <span style="color: #667eea; font-weight: 600;"> (You)</span>
+                                            <span class="current-user-label"> (You)</span>
                                         <?php endif; ?>
                                     </td>
                                     <td class="stat">
@@ -461,7 +466,7 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
             }
             
             function renderLeaderboard(leaderboard, statName) {
-                const statDisplay = statName.replace(/_/g, ' ').replace(/\b\w/g, letter => letter.toUpperCase());
+                const statDisplay = statName.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
                 
                 if (leaderboard.length === 0) {
                     leaderboardCard.innerHTML = `
@@ -499,7 +504,7 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
                         rankHtml = rank;
                     }
                     
-                    const youLabel = isCurrentUser ? '<span style="color: #667eea; font-weight: 600;"> (You)</span>' : '';
+                    const youLabel = isCurrentUser ? '<span class="current-user-label"> (You)</span>' : '';
                     
                     html += `
                         <tr${rowClass}>

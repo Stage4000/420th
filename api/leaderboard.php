@@ -19,12 +19,7 @@ if (!SteamAuth::isLoggedIn()) {
 $user = SteamAuth::getCurrentUser();
 $statsManager = new StatsManager();
 
-// Get filter parameters
-$selectedStat = isset($_GET['stat']) ? $_GET['stat'] : 'score';
-$selectedPeriod = isset($_GET['period']) ? $_GET['period'] : 'alltime';
-$selectedServer = isset($_GET['server']) ? $_GET['server'] : 'main';
-
-// Check if stats tables exist
+// Check if stats tables exist first
 $statsExist = $statsManager->statsTablesExist();
 
 if (!$statsExist) {
@@ -33,6 +28,33 @@ if (!$statsExist) {
         'message' => 'Statistics tables have not been created yet.'
     ]);
     exit;
+}
+
+// Get filter parameters with validation
+$selectedStat = isset($_GET['stat']) ? $_GET['stat'] : 'score';
+$selectedPeriod = isset($_GET['period']) ? $_GET['period'] : 'alltime';
+$selectedServer = isset($_GET['server']) ? $_GET['server'] : 'main';
+
+// Validate period
+$validPeriods = ['daily', 'weekly', 'monthly', 'alltime'];
+if (!in_array($selectedPeriod, $validPeriods)) {
+    $selectedPeriod = 'alltime';
+}
+
+// Validate stat exists
+$allStats = $statsManager->getAllStats();
+$validStats = array_column($allStats, 'stat_id');
+if (!in_array($selectedStat, $validStats)) {
+    // Default to first available stat or 'score'
+    $selectedStat = !empty($validStats) ? $validStats[0] : 'score';
+}
+
+// Validate server exists
+$allServers = $statsManager->getAllServers();
+$validServers = array_column($allServers, 'server_id');
+if (!in_array($selectedServer, $validServers)) {
+    // Default to first available server or 'main'
+    $selectedServer = !empty($validServers) ? $validServers[0] : 'main';
 }
 
 // Get leaderboard data
