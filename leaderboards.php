@@ -92,6 +92,24 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
             border: 1px solid #2a3142;
         }
         
+        .filters-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #2a3142;
+        }
+        
+        .filters-header h2 {
+            color: #e4e6eb;
+            margin-bottom: 0.5rem;
+            font-size: 1.5rem;
+        }
+        
+        .filters-header p {
+            color: #8b92a8;
+            font-size: 0.9rem;
+        }
+        
         .filters-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -325,6 +343,10 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
             </div>
         <?php else: ?>
             <div class="filters-card">
+                <div class="filters-header">
+                    <h2>⚙️ Filter Options</h2>
+                    <p>Select criteria to view different leaderboards</p>
+                </div>
                 <form method="GET" action="leaderboards">
                     <div class="filters-grid">
                         <div class="filter-group">
