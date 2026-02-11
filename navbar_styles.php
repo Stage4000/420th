@@ -76,7 +76,7 @@
         padding: 0.5rem 1rem;
         border-radius: 5px;
         text-decoration: none;
-        transition: background 0.3s;
+        transition: all 0.3s;
         border: 1px solid transparent;
     }
     

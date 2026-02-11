@@ -530,6 +530,7 @@ $totalPages = ceil($total / $perPage);
     <?php 
     $currentPage = 'ban_management';
     $pageTitle = 'Ban Management';
+    $user = $currentUser;
     ?>
     <?php include 'navbar.php'; ?>
     

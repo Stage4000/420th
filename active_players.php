@@ -669,6 +669,7 @@ if ($rconEnabled) {
     <?php 
     $currentPage = 'active_players';
     $pageTitle = 'Active Players';
+    $user = $currentUser;
     ?>
     <?php include 'navbar.php'; ?>
     
