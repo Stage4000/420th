@@ -1767,7 +1767,7 @@ foreach ($users as &$user) {
                 formData.append('action', 'get_notes');
                 formData.append('user_id', userId);
                 
-                const response = await fetch('users.php', {
+                const response = await fetch('users', {
                     method: 'POST',
                     body: formData,
                     headers: {
@@ -1821,7 +1821,7 @@ foreach ($users as &$user) {
             submitButton.textContent = 'Adding...';
             
             try {
-                const response = await fetch('users.php', {
+                const response = await fetch('users', {
                     method: 'POST',
                     body: formData,
                     headers: {

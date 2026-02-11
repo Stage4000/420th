@@ -1059,7 +1059,7 @@ if ($rconEnabled) {
             const formData = new FormData(this);
             formData.append('action', 'kick_player');
             
-            fetch('active_players.php', {
+            fetch('active_players', {
                 method: 'POST',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
@@ -1088,7 +1088,7 @@ if ($rconEnabled) {
             const formData = new FormData(this);
             formData.append('action', 'ban_player');
             
-            fetch('active_players.php', {
+            fetch('active_players', {
                 method: 'POST',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
@@ -1115,7 +1115,7 @@ if ($rconEnabled) {
             formData.append('action', 'get_notes');
             formData.append('user_id', userId);
             
-            fetch('active_players.php', {
+            fetch('active_players', {
                 method: 'POST',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
@@ -1174,7 +1174,7 @@ if ($rconEnabled) {
             formData.append('user_id', userId);
             formData.append('note_text', noteText);
             
-            fetch('active_players.php', {
+            fetch('active_players', {
                 method: 'POST',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
