@@ -557,12 +557,6 @@ unset($user);
             gap: 0.75rem;
         }
         
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 5px;
-        }
-        
         .role-badge {
             display: inline-block;
             padding: 0.25rem 0.75rem;
@@ -849,37 +843,7 @@ unset($user);
             }
         }
         
-        footer {
-            background: #1a1f2e;
-            color: #8b92a8;
-            padding: 1.5rem 2rem;
-            margin-top: auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-top: 1px solid #2a3142;
-            font-size: 0.9rem;
-        }
-        
-        footer a {
-            color: #667eea;
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        
-        footer a:hover {
-            color: #8b9cff;
-        }
-        
-        @media (max-width: 768px) {
-            footer {
-                flex-direction: column;
-                gap: 0.5rem;
-                text-align: center;
-                padding: 1rem;
-                font-size: 0.8rem;
-            }
-        }
+        <?php include 'footer_styles.php'; ?>
     </style>
 </head>
 <body>
@@ -1720,9 +1684,6 @@ unset($user);
         });
     </script>
     
-    <footer>
-        <div>© 2026 <a href="https://420thdelta.net" target="_blank">420th Delta Gaming Community</a></div>
-        <div>Made with ❤️ by <a href="https://sitecritter.com" target="_blank">SiteCritter</a></div>
-    </footer>
+    <?php include 'footer.php'; ?>
 </body>
 </html>
