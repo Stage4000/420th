@@ -67,7 +67,7 @@
         width: 40px;
         height: 40px;
         border-radius: 50%;
-        border: 2px solid #4a5568;
+        border: 2px solid #667eea;
     }
     
     .logout-btn {
