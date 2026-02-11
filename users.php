@@ -884,8 +884,8 @@ foreach ($users as &$user) {
     $currentPage = 'users';
     $pageTitle = 'User Management';
     $user = $currentUser;
-    $isPanelAdmin = SteamAuth::isPanelAdmin();
-    $canViewBans = $isPanelAdmin || SteamAuth::hasRole('ALL');
+    $isPanelAdmin = true; // Already verified by access control above
+    $canViewBans = true; // Panel admins can always view bans
     $canViewActivePlayers = SteamAuth::hasRole('ADMIN');
     ?>
     <?php include 'navbar.php'; ?>

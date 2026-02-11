@@ -687,8 +687,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php 
     $currentPage = 'admin';
     $pageTitle = 'Admin Panel';
-    $isPanelAdmin = SteamAuth::isPanelAdmin();
-    $canViewBans = $isPanelAdmin || SteamAuth::hasRole('ALL');
+    $isPanelAdmin = true; // Already verified by access control above
+    $canViewBans = true; // Panel admins can always view bans
     $canViewActivePlayers = SteamAuth::hasRole('ADMIN');
     ?>
     <?php include 'navbar.php'; ?>

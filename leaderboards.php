@@ -297,6 +297,7 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
     <?php 
     $currentPage = 'leaderboards';
     $pageTitle = 'Leaderboards';
+    $isPanelAdmin = SteamAuth::isPanelAdmin();
     $canViewBans = $isPanelAdmin || SteamAuth::hasRole('ALL');
     $canViewActivePlayers = SteamAuth::hasRole('ADMIN');
     ?>

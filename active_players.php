@@ -672,7 +672,7 @@ if ($rconEnabled) {
     $user = $currentUser;
     $isPanelAdmin = SteamAuth::isPanelAdmin();
     $canViewBans = $isPanelAdmin || SteamAuth::hasRole('ALL');
-    $canViewActivePlayers = SteamAuth::hasRole('ADMIN');
+    $canViewActivePlayers = true; // Already verified by access control above
     ?>
     <?php include 'navbar.php'; ?>
     

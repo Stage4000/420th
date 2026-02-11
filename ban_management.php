@@ -532,7 +532,7 @@ $totalPages = ceil($total / $perPage);
     $pageTitle = 'Ban Management';
     $user = $currentUser;
     $isPanelAdmin = SteamAuth::isPanelAdmin();
-    $canViewBans = $isPanelAdmin || SteamAuth::hasRole('ALL');
+    $canViewBans = true; // Already verified by access control above
     $canViewActivePlayers = SteamAuth::hasRole('ADMIN');
     ?>
     <?php include 'navbar.php'; ?>
