@@ -208,10 +208,9 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
         
         .leaderboard-card {
             background: #1a1f2e;
-            padding: 2rem;
             border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
             border: 1px solid #2a3142;
+            overflow: hidden;
         }
         
         .leaderboard-table {
@@ -220,18 +219,14 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
         }
         
         .leaderboard-table thead {
-            background: #0f1318;
-            border-bottom: 2px solid #667eea;
+            background: rgba(102, 126, 234, 0.1);
         }
         
         .leaderboard-table th {
             padding: 1rem;
             text-align: left;
-            color: #667eea;
             font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-            letter-spacing: 0.5px;
+            color: #667eea;
         }
         
         .leaderboard-table th.rank {
@@ -245,7 +240,6 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
         }
         
         .leaderboard-table tbody tr {
-            border-bottom: 1px solid #2a3142;
             transition: background 0.2s;
         }
         
@@ -260,6 +254,7 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
         .leaderboard-table td {
             padding: 1rem;
             color: #e4e6eb;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
         
         .leaderboard-table td.rank {
