@@ -1,3 +1,13 @@
+<?php
+/**
+ * Navbar Styles Template
+ * 
+ * This file should be included within a <style> block in the parent document.
+ * It contains CSS rules for the navigation bar component.
+ * 
+ * Usage: <?php include 'navbar_styles.php'; ?>
+ */
+?>
 .navbar {
         background: #1a1f2e;
         color: white;
