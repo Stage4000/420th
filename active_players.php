@@ -345,6 +345,34 @@ if ($rconEnabled) {
             margin-bottom: 1.5rem;
         }
         
+        .page-header {
+            background: #1a1f2e;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            margin-bottom: 2rem;
+            border: 1px solid #2a3142;
+            text-align: center;
+        }
+        
+        .page-header h1 {
+            color: #e4e6eb;
+            margin-bottom: 0.5rem;
+        }
+        
+        .page-header p {
+            color: #8b92a8;
+        }
+        
+        .filters-card {
+            background: #1a1f2e;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            margin-bottom: 2rem;
+            border: 1px solid #2a3142;
+        }
+        
         .players-table {
             background: #1a1f2e;
             border-radius: 10px;
@@ -780,6 +808,11 @@ if ($rconEnabled) {
     </nav>
     
     <div class="container">
+        <div class="page-header">
+            <h1>🎮 Active Players</h1>
+            <p>View and manage currently connected players on the server</p>
+        </div>
+        
         <?php if ($message): ?>
             <div class="message <?php echo $messageType; ?>">
                 <?php echo htmlspecialchars($message); ?>
@@ -791,10 +824,33 @@ if ($rconEnabled) {
                 ⚠️ RCON is not enabled or configured. Please configure RCON in the admin panel to view active players.
             </div>
         <?php else: ?>
+            <div class="filters-card">
+                <form method="GET" action="active_players" style="display: flex; gap: 1rem; align-items: center;">
+                    <div style="flex: 1;">
+                        <input 
+                            type="text" 
+                            name="search" 
+                            placeholder="🔍 Search by player name or Steam ID..." 
+                            value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>"
+                            style="width: 100%; padding: 0.75rem; background: #0f1318; border: 1px solid #2a3142; border-radius: 5px; color: #e4e6eb; font-size: 1rem;"
+                        >
+                    </div>
+                    <button type="submit" style="padding: 0.75rem 1.5rem; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; white-space: nowrap;">
+                        Search
+                    </button>
+                    <?php if (isset($_GET['search']) && !empty($_GET['search'])): ?>
+                        <a href="active_players" style="padding: 0.75rem 1.5rem; background: #2a3142; color: #e4e6eb; border-radius: 5px; text-decoration: none; font-weight: 600; white-space: nowrap;">
+                            Clear
+                        </a>
+                    <?php endif; ?>
+                    <button class="refresh-btn" type="button" onclick="location.reload()" style="white-space: nowrap;">🔄 Refresh</button>
+                </form>
+            </div>
+            
             <div class="players-table">
                 <div class="table-header">
-                    <h2>🎮 Active Players (<?php echo count($players); ?>)</h2>
-                    <button class="refresh-btn" onclick="location.reload()">🔄 Refresh</button>
+                    <h2>Active Players (<?php echo count($players); ?>)</h2>
+                    <span style="color: #8b92a8;">Real-time player data</span>
                 </div>
                 
                 <?php if (empty($players)): ?>
