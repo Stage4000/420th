@@ -436,7 +436,6 @@ $isWhitelisted = $hasS3 && $hasCAS;
             scrollbar-color: #667eea #0f1318;
         }
         
-
         footer {
             background: #1a1f2e;
             color: #8b92a8;

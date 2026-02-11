@@ -1,5 +1,4 @@
-<style>
-    .navbar {
+.navbar {
         background: #1a1f2e;
         color: white;
         padding: 1rem 2rem;
@@ -130,4 +129,3 @@
             display: none;
         }
     }
-</style>
