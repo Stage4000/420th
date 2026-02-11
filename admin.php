@@ -821,6 +821,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php if (SteamAuth::hasRole('ADMIN')): ?>
                 <a href="active_players">Active Players</a>
             <?php endif; ?>
+            <a href="leaderboards">Leaderboards</a>
             <img src="<?php echo htmlspecialchars($user['avatar_url']); ?>" alt="Avatar" class="user-avatar">
             <span><?php echo htmlspecialchars($user['steam_name']); ?></span>
             <a href="logout" class="logout-btn">Logout</a>

@@ -768,6 +768,7 @@ if ($rconEnabled) {
             <?php if (SteamAuth::hasRole('ADMIN')): ?>
                 <a href="active_players" class="active">Active Players</a>
             <?php endif; ?>
+            <a href="leaderboards">Leaderboards</a>
             <img src="<?php echo htmlspecialchars($currentUser['avatar_url']); ?>" alt="Avatar" class="user-avatar">
             <span><?php echo htmlspecialchars($currentUser['steam_name']); ?></span>
             <a href="logout" class="logout-btn">Logout</a>
