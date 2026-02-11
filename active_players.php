@@ -20,6 +20,10 @@ if (!$hasAdminRole) {
     exit;
 }
 
+// Cache additional role checks for navbar
+$hasPanelRole = SteamAuth::hasRole('PANEL');
+$hasAllRole = SteamAuth::hasRole('ALL');
+
 $db = Database::getInstance();
 $rconManager = new RconManager();
 $banManager = new BanManager();
@@ -671,8 +675,8 @@ if ($rconEnabled) {
     $currentPage = 'active_players';
     $pageTitle = 'Active Players';
     $user = $currentUser;
-    $isPanelAdmin = SteamAuth::isPanelAdmin();
-    $canViewBans = $isPanelAdmin || SteamAuth::hasRole('ALL');
+    $isPanelAdmin = $hasPanelRole; // Use cached role check from access control
+    $canViewBans = $hasPanelRole || $hasAllRole; // Use cached role checks
     $canViewActivePlayers = true; // Already verified by access control above (cached in $hasAdminRole)
     ?>
     <?php include 'navbar.php'; ?>
