@@ -335,6 +335,9 @@ foreach ($users as &$user) {
         $user['notes_count'] = $notesManager->countUserNotes($user['id']);
     }
 }
+// Important: Unset $user to break the reference from foreach loop above
+// This prevents corruption when $user is reassigned later for navbar
+unset($user);
 ?>
 
 <!DOCTYPE html>
