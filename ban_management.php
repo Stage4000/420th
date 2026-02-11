@@ -23,6 +23,13 @@ $banManager = new BanManager();
 $staffNotesManager = new StaffNotesManager();
 $currentUser = SteamAuth::getCurrentUser();
 
+// Get all available roles for alias lookups
+$allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
+$roleMetadata = [];
+foreach ($allRoles as $role) {
+    $roleMetadata[$role['name']] = $role['alias'] ?: $role['display_name'];
+}
+
 $message = '';
 $messageType = '';
 
@@ -152,6 +159,7 @@ $totalPages = ceil($total / $perPage);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ban Management - 420th Delta</title>
+    <link rel="icon" type="image/png" href="favicon.png">
     <style>
         * {
             margin: 0;
@@ -160,85 +168,129 @@ $totalPages = ceil($total / $perPage);
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%);
-            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0e1a;
             min-height: 100vh;
-            padding: 20px;
+            color: #e4e6eb;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .navbar {
+            background: #1a1f2e;
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #2a3142;
+        }
+        
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .navbar-logo {
+            height: 40px;
+            width: auto;
+        }
+        
+        .navbar-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .navbar-links {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .navbar-links a {
+            color: #e4e6eb;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+        
+        .navbar-links a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .navbar-links a.active {
+            background: rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #4a5568;
+        }
+        
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
         }
         
         .container {
             max-width: 1400px;
-            margin: 0 auto;
-        }
-        
-        .header {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
-            padding: 20px 30px;
-            margin-bottom: 30px;
-            border: 1px solid rgba(138, 43, 226, 0.2);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .header h1 {
-            font-size: 28px;
-            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .nav-links {
-            display: flex;
-            gap: 15px;
-        }
-        
-        .nav-links a {
-            color: #9b59b6;
-            text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            transition: all 0.3s;
-            border: 1px solid rgba(138, 43, 226, 0.2);
-        }
-        
-        .nav-links a:hover {
-            background: rgba(138, 43, 226, 0.2);
-            border-color: #9b59b6;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            flex: 1;
         }
         
         .message {
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
         }
         
         .message.success {
-            background: rgba(46, 204, 113, 0.1);
-            border-color: #2ecc71;
-            color: #2ecc71;
+            background: #1e3a28;
+            border: 1px solid #2d5a3d;
+            color: #68d391;
         }
         
         .message.error {
-            background: rgba(231, 76, 60, 0.1);
-            border-color: #e74c3c;
-            color: #e74c3c;
+            background: #3a1e1e;
+            border: 1px solid #5a2d2d;
+            color: #fc8181;
         }
         
         .controls {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border: 1px solid rgba(138, 43, 226, 0.2);
+            background: #1a1f2e;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            border: 1px solid #2a3142;
             display: flex;
-            gap: 15px;
+            gap: 1rem;
             flex-wrap: wrap;
             align-items: center;
         }
@@ -252,62 +304,55 @@ $totalPages = ceil($total / $perPage);
             width: 100%;
             padding: 10px 15px;
             background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(138, 43, 226, 0.2);
-            border-radius: 6px;
-            color: #e0e0e0;
+            border: 1px solid #2a3142;
+            border-radius: 5px;
+            color: #e4e6eb;
             font-size: 14px;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
         }
         
         .filter-select {
             padding: 10px 15px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(138, 43, 226, 0.2);
-            border-radius: 6px;
-            color: #e0e0e0;
+            background: #1a1f2e;
+            border: 1px solid #2a3142;
+            border-radius: 5px;
+            color: #e4e6eb;
             font-size: 14px;
             cursor: pointer;
         }
         
+        .filter-select option {
+            background: #1a1f2e;
+            color: #e4e6eb;
+        }
+        
         .filter-select:focus {
             outline: none;
-            border-color: #9b59b6;
-        }
-        
-        .stats {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .stat-box {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
-            padding: 20px;
-            border: 1px solid rgba(138, 43, 226, 0.2);
-            text-align: center;
-        }
-        
-        .stat-value {
-            font-size: 32px;
-            font-weight: 700;
-            color: #9b59b6;
-        }
-        
-        .stat-label {
-            font-size: 14px;
-            color: #888;
-            margin-top: 5px;
+            border-color: #667eea;
         }
         
         .bans-table {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
-            border: 1px solid rgba(138, 43, 226, 0.2);
+            background: #1a1f2e;
+            border-radius: 10px;
+            border: 1px solid #2a3142;
             overflow: hidden;
-            margin-bottom: 20px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .table-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #2a3142;
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        .table-header h2 {
+            color: #667eea;
+            font-weight: 600;
+            margin: 0;
         }
         
         table {
@@ -316,20 +361,19 @@ $totalPages = ceil($total / $perPage);
         }
         
         thead {
-            background: rgba(138, 43, 226, 0.2);
+            background: rgba(102, 126, 234, 0.1);
         }
         
         th {
-            padding: 15px;
+            padding: 1rem;
             text-align: left;
             font-weight: 600;
-            color: #9b59b6;
-            border-bottom: 1px solid rgba(138, 43, 226, 0.2);
-            cursor: pointer;
+            color: #667eea;
+            border-bottom: 1px solid #2a3142;
         }
         
         td {
-            padding: 15px;
+            padding: 1rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
         
@@ -338,7 +382,7 @@ $totalPages = ceil($total / $perPage);
         }
         
         tbody tr:hover {
-            background: rgba(138, 43, 226, 0.1);
+            background: rgba(102, 126, 234, 0.05);
         }
         
         .user-info {
@@ -351,7 +395,7 @@ $totalPages = ceil($total / $perPage);
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            border: 2px solid #9b59b6;
+            border: 2px solid #667eea;
         }
         
         .badge {
@@ -401,6 +445,7 @@ $totalPages = ceil($total / $perPage);
             border: 1px solid #f1c40f;
         }
         
+        .ban-type-whitelist,
         .ban-type-both {
             background: rgba(231, 76, 60, 0.2);
             color: #e74c3c;
@@ -438,50 +483,112 @@ $totalPages = ceil($total / $perPage);
             display: flex;
             justify-content: center;
             gap: 10px;
-            margin-top: 20px;
+            margin-top: 1.5rem;
         }
         
         .pagination a,
         .pagination span {
-            padding: 8px 15px;
+            padding: 0.5rem 1rem;
             background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(138, 43, 226, 0.2);
-            border-radius: 6px;
-            color: #9b59b6;
+            border: 1px solid #2a3142;
+            border-radius: 5px;
+            color: #667eea;
             text-decoration: none;
             transition: all 0.3s;
         }
         
         .pagination a:hover {
-            background: rgba(138, 43, 226, 0.2);
-            border-color: #9b59b6;
+            background: rgba(102, 126, 234, 0.1);
+            border-color: #667eea;
         }
         
         .pagination .current {
-            background: rgba(138, 43, 226, 0.3);
-            border-color: #9b59b6;
+            background: rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
             color: white;
         }
         
         .empty-state {
             text-align: center;
             padding: 40px;
-            color: #888;
+            color: #8b92a8;
+        }
+        
+        footer {
+            background: #1a1f2e;
+            color: #8b92a8;
+            padding: 1.5rem 2rem;
+            margin-top: 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #2a3142;
+            font-size: 0.9rem;
+        }
+        
+        footer a {
+            color: #667eea;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        footer a:hover {
+            color: #8b9cff;
         }
         
         @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                gap: 15px;
+            .navbar {
+                flex-wrap: wrap;
+                padding: 1rem;
             }
             
-            .nav-links {
-                flex-direction: column;
+            .mobile-menu-toggle {
+                display: block;
+            }
+            
+            .navbar-links {
+                display: none;
                 width: 100%;
+                flex-direction: column;
+                margin-top: 1rem;
+                padding-top: 1rem;
+                border-top: 1px solid #2a3142;
             }
             
-            .nav-links a {
+            .navbar-links.active {
+                display: flex;
+            }
+            
+            .navbar-links a, .navbar-links span, .navbar-links img {
+                width: 100%;
                 text-align: center;
+            }
+            
+            /* Hide user avatar in navbar on mobile */
+            .navbar-links .user-avatar {
+                display: none;
+            }
+            
+            .container {
+                padding: 0 1rem;
+                margin: 1rem auto;
+            }
+            
+            .bans-table {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            table {
+                min-width: 800px;
+            }
+            
+            footer {
+                flex-direction: column;
+                gap: 0.5rem;
+                text-align: center;
+                padding: 1rem;
+                font-size: 0.8rem;
             }
             
             .controls {
@@ -490,10 +597,6 @@ $totalPages = ceil($total / $perPage);
             
             .search-box {
                 width: 100%;
-            }
-            
-            .stats {
-                flex-direction: column;
             }
             
             table {
@@ -507,56 +610,64 @@ $totalPages = ceil($total / $perPage);
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🚫 Ban Management</h1>
-            <div class="nav-links">
-                <a href="dashboard">Dashboard</a>
-                <?php if (SteamAuth::hasRole('ADMIN')): ?>
-                    <a href="active_players">Active Players</a>
-                <?php endif; ?>
-                <a href="users">Users</a>
-                <?php if (SteamAuth::isPanelAdmin()): ?>
-                    <a href="admin">Admin</a>
-                <?php endif; ?>
-            </div>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <img src="https://www.420thdelta.net/uploads/monthly_2025_11/banner.png.2aa9557dda39e6c5ba0e3c740df490ee.png" 
+                 alt="420th Delta" 
+                 class="navbar-logo"
+                 onerror="this.style.display='none';">
+            <span class="navbar-title">Ban Management</span>
         </div>
-        
+        <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+        <div class="navbar-links" id="navbarLinks">
+            <a href="dashboard">Dashboard</a>
+            <?php if (SteamAuth::isPanelAdmin()): ?>
+                <a href="admin">Admin Panel</a>
+                <a href="users">Users</a>
+                <a href="ban_management" class="active">Bans</a>
+            <?php endif; ?>
+            <?php if (SteamAuth::hasRole('ADMIN')): ?>
+                <a href="active_players">Active Players</a>
+            <?php endif; ?>
+            <img src="<?php echo htmlspecialchars($currentUser['avatar_url']); ?>" alt="Avatar" class="user-avatar">
+            <span><?php echo htmlspecialchars($currentUser['steam_name']); ?></span>
+            <a href="logout" class="logout-btn">Logout</a>
+        </div>
+    </nav>
+    
+    <div class="container">
         <?php if ($message): ?>
             <div class="message <?php echo $messageType; ?>">
                 <?php echo htmlspecialchars($message); ?>
             </div>
         <?php endif; ?>
         
-        <div class="stats">
-            <div class="stat-box">
-                <div class="stat-value"><?php echo $total; ?></div>
-                <div class="stat-label">Total Bans<?php echo $filterStatus !== 'all' ? ' (' . ucfirst($filterStatus) . ')' : ''; ?></div>
+        <div class="bans-table">
+            <div class="table-header">
+                <h2>🚫 All Bans (<?php echo $total; ?>)</h2>
             </div>
-        </div>
-        
-        <div class="controls">
-            <div class="search-box">
+            
+            <div class="controls">
+                <div class="search-box">
+                    <form method="GET" action="">
+                        <input type="text" name="search" placeholder="🔍 Search by player name or Steam ID..." 
+                               value="<?php echo htmlspecialchars($search); ?>">
+                        <input type="hidden" name="status" value="<?php echo htmlspecialchars($filterStatus); ?>">
+                    </form>
+                </div>
                 <form method="GET" action="">
-                    <input type="text" name="search" placeholder="🔍 Search by player name or Steam ID..." 
-                           value="<?php echo htmlspecialchars($search); ?>">
-                    <input type="hidden" name="status" value="<?php echo htmlspecialchars($filterStatus); ?>">
+                    <select name="status" class="filter-select" onchange="this.form.submit()">
+                        <option value="all" <?php echo $filterStatus === 'all' ? 'selected' : ''; ?>>All Bans</option>
+                        <option value="active" <?php echo $filterStatus === 'active' ? 'selected' : ''; ?>>Active Only</option>
+                        <option value="expired" <?php echo $filterStatus === 'expired' ? 'selected' : ''; ?>>Expired Only</option>
+                    </select>
+                    <?php if (!empty($search)): ?>
+                        <input type="hidden" name="search" value="<?php echo htmlspecialchars($search); ?>">
+                    <?php endif; ?>
                 </form>
             </div>
-            <form method="GET" action="">
-                <select name="status" class="filter-select" onchange="this.form.submit()">
-                    <option value="all" <?php echo $filterStatus === 'all' ? 'selected' : ''; ?>>All Bans</option>
-                    <option value="active" <?php echo $filterStatus === 'active' ? 'selected' : ''; ?>>Active Only</option>
-                    <option value="expired" <?php echo $filterStatus === 'expired' ? 'selected' : ''; ?>>Expired Only</option>
-                </select>
-                <?php if (!empty($search)): ?>
-                    <input type="hidden" name="search" value="<?php echo htmlspecialchars($search); ?>">
-                <?php endif; ?>
-            </form>
-        </div>
         
-        <div class="bans-table">
-            <?php if (empty($bans)): ?>
+        <?php if (empty($bans)): ?>
                 <div class="empty-state">
                     <h3>No bans found</h3>
                     <p>There are no bans matching your criteria.</p>
@@ -600,8 +711,16 @@ $totalPages = ceil($total / $perPage);
                                     </div>
                                 </td>
                                 <td>
+                                    <?php 
+                                    $displayType = $ban['ban_type'];
+                                    if ($ban['ban_type'] === 'S3' && isset($roleMetadata['S3'])) {
+                                        $displayType = $roleMetadata['S3'];
+                                    } elseif ($ban['ban_type'] === 'CAS' && isset($roleMetadata['CAS'])) {
+                                        $displayType = $roleMetadata['CAS'];
+                                    }
+                                    ?>
                                     <span class="ban-type ban-type-<?php echo strtolower($ban['ban_type']); ?>">
-                                        <?php echo htmlspecialchars($ban['ban_type']); ?>
+                                        <?php echo htmlspecialchars($displayType); ?>
                                     </span>
                                     <?php if ($ban['server_kick']): ?>
                                         <span class="badge badge-info" title="Server kick">⚠️</span>
@@ -678,5 +797,17 @@ $totalPages = ceil($total / $perPage);
             </div>
         <?php endif; ?>
     </div>
+    
+    <footer>
+        <div>© 2026 <a href="https://420thdelta.net" target="_blank">420th Delta Gaming Community</a></div>
+        <div>Made with ❤️ by <a href="https://sitecritter.com" target="_blank">SiteCritter</a></div>
+    </footer>
+    
+    <script>
+        function toggleMobileMenu() {
+            const navbarLinks = document.getElementById('navbarLinks');
+            navbarLinks.classList.toggle('active');
+        }
+    </script>
 </body>
 </html>
