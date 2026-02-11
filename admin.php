@@ -327,7 +327,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         .info-card {
             background: #1e2837;
-            border: 1px solid #2a3142;
             border-left: 4px solid #4299e1;
             padding: 1.5rem;
             border-radius: 5px;
