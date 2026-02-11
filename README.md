@@ -4,6 +4,15 @@ A PHP-based whitelist management panel with Steam OAuth authentication for the 4
 
 ## ✨ New Features
 
+### 🏆 Stats Leaderboards (New!)
+Track and display player statistics across multiple time periods:
+- Real-time leaderboards for various stats (kills, deaths, revives, transports, etc.)
+- Filter by time period (daily, weekly, monthly, all-time)
+- Multi-server support
+- Automatic score calculation with configurable multipliers
+- Stored procedures and triggers for efficient stat aggregation
+- Automatic data pruning to maintain performance
+
 ### 🎯 Auto-Whitelist Button
 Users can click the "Whitelist Me!" button on their dashboard to automatically receive S3 and CAS roles. Once whitelisted, the button is replaced with a confirmation badge showing role aliases.
 
@@ -60,6 +69,7 @@ Restructured database using **boolean columns** for roles instead of junction ta
 - **Admin Panel**: Manage user roles and aliases (requires PANEL role)
 - **Ban Management**: Issue whitelist and server bans with RCON support
 - **Arma 3 RCON**: Kick and ban players from game server via BattlEye
+- **Stats Leaderboards**: Track and display player statistics with leaderboards
 - **Optimized Database**: Boolean columns for fast role queries
 - **Database-Driven**: MySQL/MariaDB backend for persistent storage
 
@@ -313,6 +323,67 @@ If you have an existing installation using the old `user_roles` junction table, 
    - Test the connection
    - Now you can kick/ban players from the game server via the user management page
 
+### For All Users
+
+**View Leaderboards:**
+1. Click "Leaderboards" in the navigation menu
+2. Use the filters to select:
+   - **Statistic**: Choose from kills, deaths, revives, score, etc.
+   - **Time Period**: Daily, Weekly, Monthly, or All Time
+   - **Server**: Select which server's stats to view
+3. View top 50 players for the selected criteria
+4. Your own rank (if present) will be highlighted
+
+## Stats System
+
+The leaderboards system tracks various player statistics and displays them in real-time:
+
+### Tracked Statistics
+
+- **kills**: Standard kills (multiplier: 1)
+- **kills_air**: Air vehicle kills (multiplier: 5)
+- **kills_cars**: Ground vehicle kills (multiplier: 2)
+- **kills_ships**: Naval vehicle kills (multiplier: 3)
+- **kills_tanks**: Tank kills (multiplier: 3)
+- **deaths**: Player deaths (multiplier: -1)
+- **incaps**: Player incapacitations (multiplier: -1)
+- **revives**: Player revives (multiplier: 2)
+- **transports**: Transport missions (multiplier: 2)
+- **playtime**: Total playtime (multiplier: 0)
+- **score**: Overall score calculated from all stats
+
+### Adding Stats (For Developers)
+
+Use the `add_player_stat` stored procedure to add stats:
+
+```sql
+CALL add_player_stat('steam_id', 'Player Name', 'stat_id', 'server_id', amount);
+```
+
+Example:
+```sql
+-- Add 3 kills for a player
+CALL add_player_stat('76561198012345678', 'John Doe', 'kills', 'main', 3);
+
+-- Add a revive
+CALL add_player_stat('76561198012345678', 'John Doe', 'revives', 'main', 1);
+```
+
+The system automatically:
+- Updates daily, weekly, monthly, and all-time statistics
+- Calculates scores based on stat multipliers
+- Aggregates data using database triggers
+
+### Database Migration
+
+If you have an existing installation, run the migration script:
+
+```bash
+php migrate_add_stats.php
+```
+
+This will create all necessary tables, stored procedures, triggers, and events.
+
 ## File Structure
 
 ```
@@ -320,19 +391,22 @@ If you have an existing installation using the old `user_roles` junction table, 
 ├── composer.json       # PHP dependencies
 ├── vendor/             # Composer dependencies (RCON library)
 ├── config.php          # Configuration file
-├── database.sql        # Database schema
+├── database.sql        # Database schema (includes stats tables)
 ├── db.php             # Database connection handler
 ├── steam_auth.php     # Steam OAuth authentication
 ├── ban_manager.php    # Ban management class
 ├── role_manager.php   # Role management class
-├── rcon_manager.php   # RCON management class (New!)
+├── rcon_manager.php   # RCON management class
+├── stats_manager.php  # Stats management class (New!)
 ├── index.php          # Login page
 ├── callback.php       # OAuth callback handler
 ├── dashboard.php      # User dashboard
 ├── admin.php          # Admin panel with RCON config
 ├── users.php          # User management with ban/kick
+├── leaderboards.php   # Stats leaderboards page (New!)
 ├── logout.php         # Logout handler
 ├── migrate_add_rcon_settings.php  # RCON migration script
+├── migrate_add_stats.php          # Stats migration script (New!)
 └── README.md          # This file
 ```
 
