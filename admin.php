@@ -649,7 +649,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     <div class="container">
         <div class="header-card">
-            <h1>Settings</h1>
+            <h1>⚙️ Settings</h1>
             <p>Configure role aliases and automatic role linking</p>
         </div>
         
