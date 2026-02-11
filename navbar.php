@@ -44,7 +44,7 @@ if (!isset($canViewActivePlayers)) {
     <div class="navbar-links" id="navbarLinks">
         <a href="dashboard" <?php echo $currentPage === 'dashboard' ? 'class="active"' : ''; ?>>Dashboard</a>
         <?php if ($isPanelAdmin): ?>
-            <a href="admin" <?php echo $currentPage === 'admin' ? 'class="active"' : ''; ?>>Admin Panel</a>
+            <a href="admin" <?php echo $currentPage === 'admin' ? 'class="active"' : ''; ?>>Settings</a>
             <a href="users" <?php echo $currentPage === 'users' ? 'class="active"' : ''; ?>>Users</a>
         <?php endif; ?>
         <?php if ($canViewBans): ?>
