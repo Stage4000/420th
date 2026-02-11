@@ -250,7 +250,7 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
         }
         
         .leaderboard-table tbody tr:hover {
-            background: rgba(102, 126, 234, 0.1);
+            background: rgba(102, 126, 234, 0.05);
         }
         
         .leaderboard-table tbody tr.highlight {
