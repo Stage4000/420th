@@ -176,90 +176,7 @@ $totalPages = ceil($total / $perPage);
             flex-direction: column;
         }
         
-        .navbar {
-            background: #1a1f2e;
-            color: white;
-            padding: 1rem 2rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #2a3142;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        
-        .navbar-brand {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        
-        .navbar-logo {
-            height: 40px;
-            width: auto;
-        }
-        
-        .navbar-title {
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-        
-        .navbar-links {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        
-        .navbar-links a {
-            color: #e4e6eb;
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-            border-radius: 5px;
-            transition: all 0.3s;
-            border: 1px solid transparent;
-        }
-        
-        .navbar-links a:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-        
-        .navbar-links a.active {
-            background: rgba(102, 126, 234, 0.2);
-            border-color: #667eea;
-        }
-        
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 2px solid #4a5568;
-        }
-        
-        .logout-btn {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            padding: 0.5rem 1rem;
-            text-decoration: none;
-            border-radius: 5px;
-            transition: all 0.3s;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-        
-        .mobile-menu-toggle {
-            display: none;
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 0.5rem;
-        }
+        <?php include 'navbar_styles.php'; ?>
         
         .container {
             width: 90%;
@@ -569,38 +486,6 @@ $totalPages = ceil($total / $perPage);
         }
         
         @media (max-width: 768px) {
-            .navbar {
-                flex-wrap: wrap;
-                padding: 1rem;
-            }
-            
-            .mobile-menu-toggle {
-                display: block;
-            }
-            
-            .navbar-links {
-                display: none;
-                width: 100%;
-                flex-direction: column;
-                margin-top: 1rem;
-                padding-top: 1rem;
-                border-top: 1px solid #2a3142;
-            }
-            
-            .navbar-links.active {
-                display: flex;
-            }
-            
-            .navbar-links a, .navbar-links span, .navbar-links img {
-                width: 100%;
-                text-align: center;
-            }
-            
-            /* Hide user avatar in navbar on mobile */
-            .navbar-links .user-avatar {
-                display: none;
-            }
-            
             .container {
                 padding: 0 1rem;
                 margin: 1rem auto;
@@ -642,31 +527,12 @@ $totalPages = ceil($total / $perPage);
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="navbar-brand">
-            <img src="https://www.420thdelta.net/uploads/monthly_2025_11/banner.png.2aa9557dda39e6c5ba0e3c740df490ee.png" 
-                 alt="420th Delta" 
-                 class="navbar-logo"
-                 onerror="this.style.display='none';">
-            <span class="navbar-title">Ban Management</span>
-        </div>
-        <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
-        <div class="navbar-links" id="navbarLinks">
-            <a href="dashboard">Dashboard</a>
-            <?php if (SteamAuth::isPanelAdmin()): ?>
-                <a href="admin">Admin Panel</a>
-                <a href="users">Users</a>
-                <a href="ban_management" class="active">Bans</a>
-            <?php endif; ?>
-            <?php if (SteamAuth::hasRole('ADMIN')): ?>
-                <a href="active_players">Active Players</a>
-            <?php endif; ?>
-            <a href="leaderboards">Leaderboards</a>
-            <img src="<?php echo htmlspecialchars($currentUser['avatar_url']); ?>" alt="Avatar" class="user-avatar">
-            <span><?php echo htmlspecialchars($currentUser['steam_name']); ?></span>
-            <a href="logout" class="logout-btn">Logout</a>
-        </div>
-    </nav>
+    <?php 
+    $currentPage = 'ban_management';
+    $pageTitle = 'Ban Management';
+    $user = $currentUser;
+    ?>
+    <?php include 'navbar.php'; ?>
     
     <div class="container">
         <div class="page-header">
@@ -690,29 +556,22 @@ $totalPages = ceil($total / $perPage);
                         value="<?php echo htmlspecialchars($search); ?>"
                         style="width: 100%; padding: 0.75rem; background: #0f1318; border: 1px solid #2a3142; border-radius: 5px; color: #e4e6eb; font-size: 1rem;"
                     >
-                    <input type="hidden" name="status" value="<?php echo htmlspecialchars($filterStatus); ?>">
                 </div>
-                <button type="submit" style="padding: 0.75rem 1.5rem; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; white-space: nowrap;">
-                    Search
-                </button>
-                <?php if (!empty($search)): ?>
-                    <a href="?status=<?php echo htmlspecialchars($filterStatus); ?>" style="padding: 0.75rem 1.5rem; background: #2a3142; color: #e4e6eb; border-radius: 5px; text-decoration: none; font-weight: 600; white-space: nowrap;">
-                        Clear
-                    </a>
-                <?php endif; ?>
-            </form>
-            <form method="GET" action="" style="margin-top: 1rem;">
                 <select 
                     name="status" 
-                    onchange="this.form.submit()"
                     style="padding: 0.75rem; background: #0f1318; color: #e4e6eb; border: 1px solid #2a3142; border-radius: 5px; font-size: 1rem; cursor: pointer;"
                 >
                     <option value="all" <?php echo $filterStatus === 'all' ? 'selected' : ''; ?>>All Bans</option>
                     <option value="active" <?php echo $filterStatus === 'active' ? 'selected' : ''; ?>>Active Only</option>
                     <option value="expired" <?php echo $filterStatus === 'expired' ? 'selected' : ''; ?>>Expired Only</option>
                 </select>
-                <?php if (!empty($search)): ?>
-                    <input type="hidden" name="search" value="<?php echo htmlspecialchars($search); ?>">
+                <button type="submit" style="padding: 0.75rem 1.5rem; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; white-space: nowrap;">
+                    Search
+                </button>
+                <?php if (!empty($search) || $filterStatus !== 'all'): ?>
+                    <a href="ban_management" style="padding: 0.75rem 1.5rem; background: #2a3142; color: #e4e6eb; border-radius: 5px; text-decoration: none; font-weight: 600; white-space: nowrap;">
+                        Clear
+                    </a>
                 <?php endif; ?>
             </form>
         </div>
@@ -858,12 +717,5 @@ $totalPages = ceil($total / $perPage);
         <div>© 2026 <a href="https://420thdelta.net" target="_blank">420th Delta Gaming Community</a></div>
         <div>Made with ❤️ by <a href="https://sitecritter.com" target="_blank">SiteCritter</a></div>
     </footer>
-    
-    <script>
-        function toggleMobileMenu() {
-            const navbarLinks = document.getElementById('navbarLinks');
-            navbarLinks.classList.toggle('active');
-        }
-    </script>
 </body>
 </html>

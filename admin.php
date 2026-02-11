@@ -277,81 +277,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             flex-direction: column;
         }
         
-        .navbar {
-            background: #1a1f2e;
-            color: white;
-            padding: 1rem 2rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #2a3142;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        
-        .navbar-brand {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        
-        .navbar-logo {
-            height: 40px;
-            width: auto;
-        }
-        
-        .navbar-title {
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-        
-        .navbar-links {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-        
-        .navbar-links a {
-            color: #e4e6eb;
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-            border-radius: 5px;
-            transition: all 0.3s;
-            border: 1px solid transparent;
-        }
-        
-        .navbar-links a:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-        
-        .navbar-links a.active {
-            background: rgba(102, 126, 234, 0.2);
-            border-color: #667eea;
-        }
-        
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 2px solid #4a5568;
-        }
-        
-        .logout-btn {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            padding: 0.5rem 1rem;
-            text-decoration: none;
-            border-radius: 5px;
-            transition: all 0.3s;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
+        <?php include 'navbar_styles.php'; ?>
         
         .container {
             width: 90%;
@@ -686,46 +612,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             transform: translateX(-50%) translateY(0);
         }
         
-        /* Mobile Menu Toggle */
-        .mobile-menu-toggle {
-            display: none;
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 0.5rem;
-        }
-        
         /* Responsive Styles */
         @media (max-width: 768px) {
-            .navbar {
-                flex-wrap: wrap;
-                padding: 1rem;
-            }
-            
-            .mobile-menu-toggle {
-                display: block;
-            }
-            
-            .navbar-links {
-                display: none;
-                width: 100%;
-                flex-direction: column;
-                margin-top: 1rem;
-                padding-top: 1rem;
-                border-top: 1px solid #2a3142;
-            }
-            
-            .navbar-links.active {
-                display: flex;
-            }
-            
-            .navbar-links a {
-                width: 100%;
-                text-align: center;
-            }
-            
             .container {
                 padding: 0 1rem;
                 margin: 1rem auto;
@@ -751,18 +639,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         @media (max-width: 480px) {
-            .navbar-brand {
-                font-size: 1.25rem;
-            }
-            
-            .navbar-logo {
-                height: 30px;
-            }
-            
-            .user-avatar {
-                display: none;
-            }
-            
             .header-card h1 {
                 font-size: 1.5rem;
             }
@@ -808,29 +684,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="navbar-brand">
-            <img src="https://www.420thdelta.net/uploads/monthly_2025_11/banner.png.2aa9557dda39e6c5ba0e3c740df490ee.png" 
-                 alt="420th Delta" 
-                 class="navbar-logo"
-                 onerror="this.style.display='none';">
-            <span class="navbar-title">Admin Panel</span>
-        </div>
-        <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
-        <div class="navbar-links" id="navbarLinks">
-            <a href="dashboard">Dashboard</a>
-            <a href="admin" class="active">Admin Panel</a>
-            <a href="users">Users</a>
-            <a href="ban_management">Bans</a>
-            <?php if (SteamAuth::hasRole('ADMIN')): ?>
-                <a href="active_players">Active Players</a>
-            <?php endif; ?>
-            <a href="leaderboards">Leaderboards</a>
-            <img src="<?php echo htmlspecialchars($user['avatar_url']); ?>" alt="Avatar" class="user-avatar">
-            <span><?php echo htmlspecialchars($user['steam_name']); ?></span>
-            <a href="logout" class="logout-btn">Logout</a>
-        </div>
-    </nav>
+    <?php 
+    $currentPage = 'admin';
+    $pageTitle = 'Admin Panel';
+    ?>
+    <?php include 'navbar.php'; ?>
     
     <div class="container">
         <div class="header-card">
@@ -1222,12 +1080,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }, 2000);
                 });
             });
-        }
-        
-        // Mobile menu toggle function
-        function toggleMobileMenu() {
-            const navbarLinks = document.getElementById('navbarLinks');
-            navbarLinks.classList.toggle('active');
         }
     </script>
     
