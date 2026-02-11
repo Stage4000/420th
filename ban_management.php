@@ -690,29 +690,22 @@ $totalPages = ceil($total / $perPage);
                         value="<?php echo htmlspecialchars($search); ?>"
                         style="width: 100%; padding: 0.75rem; background: #0f1318; border: 1px solid #2a3142; border-radius: 5px; color: #e4e6eb; font-size: 1rem;"
                     >
-                    <input type="hidden" name="status" value="<?php echo htmlspecialchars($filterStatus); ?>">
                 </div>
-                <button type="submit" style="padding: 0.75rem 1.5rem; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; white-space: nowrap;">
-                    Search
-                </button>
-                <?php if (!empty($search)): ?>
-                    <a href="?status=<?php echo htmlspecialchars($filterStatus); ?>" style="padding: 0.75rem 1.5rem; background: #2a3142; color: #e4e6eb; border-radius: 5px; text-decoration: none; font-weight: 600; white-space: nowrap;">
-                        Clear
-                    </a>
-                <?php endif; ?>
-            </form>
-            <form method="GET" action="" style="margin-top: 1rem;">
                 <select 
                     name="status" 
-                    onchange="this.form.submit()"
                     style="padding: 0.75rem; background: #0f1318; color: #e4e6eb; border: 1px solid #2a3142; border-radius: 5px; font-size: 1rem; cursor: pointer;"
                 >
                     <option value="all" <?php echo $filterStatus === 'all' ? 'selected' : ''; ?>>All Bans</option>
                     <option value="active" <?php echo $filterStatus === 'active' ? 'selected' : ''; ?>>Active Only</option>
                     <option value="expired" <?php echo $filterStatus === 'expired' ? 'selected' : ''; ?>>Expired Only</option>
                 </select>
-                <?php if (!empty($search)): ?>
-                    <input type="hidden" name="search" value="<?php echo htmlspecialchars($search); ?>">
+                <button type="submit" style="padding: 0.75rem 1.5rem; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; white-space: nowrap;">
+                    Search
+                </button>
+                <?php if (!empty($search) || $filterStatus !== 'all'): ?>
+                    <a href="ban_management" style="padding: 0.75rem 1.5rem; background: #2a3142; color: #e4e6eb; border-radius: 5px; text-decoration: none; font-weight: 600; white-space: nowrap;">
+                        Clear
+                    </a>
                 <?php endif; ?>
             </form>
         </div>
