@@ -462,6 +462,7 @@ $totalPages = ceil($total / $perPage);
         
         @media (max-width: 768px) {
             .container {
+                width: 100%;
                 padding: 0 1rem;
                 margin: 1rem auto;
             }

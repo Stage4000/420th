@@ -738,6 +738,7 @@ unset($user);
         /* Responsive Styles */
         @media (max-width: 768px) {
             .container {
+                width: 100%;
                 padding: 0 1rem;
                 margin: 1rem auto;
             }

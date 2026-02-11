@@ -410,6 +410,15 @@ $isWhitelisted = $hasS3 && $hasCAS;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
         
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .container {
+                width: 100%;
+                padding: 0 1rem;
+                margin: 1rem auto;
+            }
+        }
+        
         <?php include 'footer_styles.php'; ?>
     </style>
 </head>
