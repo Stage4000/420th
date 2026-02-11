@@ -92,6 +92,24 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
             border: 1px solid #2a3142;
         }
         
+        .filters-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #2a3142;
+        }
+        
+        .filters-header h2 {
+            color: #e4e6eb;
+            margin-bottom: 0.5rem;
+            font-size: 1.5rem;
+        }
+        
+        .filters-header p {
+            color: #8b92a8;
+            font-size: 0.9rem;
+        }
+        
         .filters-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -231,6 +249,11 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
             margin-bottom: 1rem;
         }
         
+        .current-user-label {
+            color: #667eea;
+            font-weight: 600;
+        }
+        
         .info-message {
             background: rgba(102, 126, 234, 0.1);
             border: 1px solid rgba(102, 126, 234, 0.3);
@@ -239,6 +262,38 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
             margin-bottom: 2rem;
             color: #667eea;
             text-align: center;
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(26, 31, 46, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            z-index: 10;
+        }
+        
+        .loading-spinner {
+            border: 4px solid rgba(102, 126, 234, 0.2);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .leaderboard-card {
+            position: relative;
         }
         
         <?php include 'footer_styles.php'; ?>
@@ -288,11 +343,15 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
             </div>
         <?php else: ?>
             <div class="filters-card">
+                <div class="filters-header">
+                    <h2>⚙️ Filter Options</h2>
+                    <p>Select criteria to view different leaderboards</p>
+                </div>
                 <form method="GET" action="leaderboards">
                     <div class="filters-grid">
                         <div class="filter-group">
                             <label for="stat">Statistic</label>
-                            <select name="stat" id="stat" onchange="this.form.submit()">
+                            <select name="stat" id="stat">
                                 <?php foreach ($allStats as $stat): ?>
                                     <option value="<?php echo htmlspecialchars($stat['stat_id']); ?>" 
                                             <?php echo $selectedStat === $stat['stat_id'] ? 'selected' : ''; ?>>
@@ -304,7 +363,7 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
                         
                         <div class="filter-group">
                             <label for="period">Time Period</label>
-                            <select name="period" id="period" onchange="this.form.submit()">
+                            <select name="period" id="period">
                                 <option value="daily" <?php echo $selectedPeriod === 'daily' ? 'selected' : ''; ?>>Daily</option>
                                 <option value="weekly" <?php echo $selectedPeriod === 'weekly' ? 'selected' : ''; ?>>Weekly</option>
                                 <option value="monthly" <?php echo $selectedPeriod === 'monthly' ? 'selected' : ''; ?>>Monthly</option>
@@ -314,7 +373,7 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
                         
                         <div class="filter-group">
                             <label for="server">Server</label>
-                            <select name="server" id="server" onchange="this.form.submit()">
+                            <select name="server" id="server">
                                 <?php foreach ($allServers as $server): ?>
                                     <option value="<?php echo htmlspecialchars($server['server_id']); ?>" 
                                             <?php echo $selectedServer === $server['server_id'] ? 'selected' : ''; ?>>
@@ -364,7 +423,7 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
                                     <td>
                                         <?php echo htmlspecialchars($entry['name']); ?>
                                         <?php if ($isCurrentUser): ?>
-                                            <span style="color: #667eea; font-weight: 600;"> (You)</span>
+                                            <span class="current-user-label"> (You)</span>
                                         <?php endif; ?>
                                     </td>
                                     <td class="stat">
@@ -380,5 +439,147 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
     </div>
     
     <?php include 'footer.php'; ?>
+    
+    <script>
+        // AJAX functionality for leaderboard updates
+        document.addEventListener('DOMContentLoaded', function() {
+            const statSelect = document.getElementById('stat');
+            const periodSelect = document.getElementById('period');
+            const serverSelect = document.getElementById('server');
+            const leaderboardCard = document.querySelector('.leaderboard-card');
+            
+            // Add event listeners to all filter selects
+            if (statSelect) statSelect.addEventListener('change', updateLeaderboard);
+            if (periodSelect) periodSelect.addEventListener('change', updateLeaderboard);
+            if (serverSelect) serverSelect.addEventListener('change', updateLeaderboard);
+            
+            function updateLeaderboard() {
+                const stat = statSelect.value;
+                const period = periodSelect.value;
+                const server = serverSelect.value;
+                
+                // Show loading overlay
+                showLoading();
+                
+                // Update URL without page refresh
+                const url = new URL(window.location);
+                url.searchParams.set('stat', stat);
+                url.searchParams.set('period', period);
+                url.searchParams.set('server', server);
+                window.history.pushState({}, '', url);
+                
+                // Fetch new leaderboard data
+                fetch(`api/leaderboard.php?stat=${encodeURIComponent(stat)}&period=${encodeURIComponent(period)}&server=${encodeURIComponent(server)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            renderLeaderboard(data.leaderboard, data.stat);
+                        } else {
+                            showError(data.message || 'Failed to load leaderboard data');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching leaderboard:', error);
+                        showError('An error occurred while loading the leaderboard');
+                    })
+                    .finally(() => {
+                        hideLoading();
+                    });
+            }
+            
+            function renderLeaderboard(leaderboard, statId) {
+                const statDisplay = statId.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+                
+                if (leaderboard.length === 0) {
+                    showMessage('📊', 'No Data Available', 'There are no statistics recorded for this period yet.');
+                    return;
+                }
+                
+                let html = `
+                    <table class="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th class="rank">Rank</th>
+                                <th>Player</th>
+                                <th class="stat">${escapeHtml(statDisplay)}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                leaderboard.forEach(entry => {
+                    const rank = entry.rank;
+                    const isCurrentUser = entry.is_current_user;
+                    const rowClass = isCurrentUser ? ' class="highlight"' : '';
+                    
+                    let rankHtml;
+                    if (rank <= 3) {
+                        const medalClass = rank === 1 ? 'gold' : (rank === 2 ? 'silver' : 'bronze');
+                        rankHtml = `<span class="rank-medal ${medalClass}">${rank}</span>`;
+                    } else {
+                        rankHtml = rank;
+                    }
+                    
+                    const youLabel = isCurrentUser ? '<span class="current-user-label"> (You)</span>' : '';
+                    
+                    html += `
+                        <tr${rowClass}>
+                            <td class="rank">${rankHtml}</td>
+                            <td>${escapeHtml(entry.name)}${youLabel}</td>
+                            <td class="stat">${formatNumber(entry.amount)}</td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                        </tbody>
+                    </table>
+                `;
+                
+                leaderboardCard.innerHTML = html;
+            }
+            
+            function showLoading() {
+                const existingOverlay = leaderboardCard.querySelector('.loading-overlay');
+                if (!existingOverlay) {
+                    const overlay = document.createElement('div');
+                    overlay.className = 'loading-overlay';
+                    overlay.innerHTML = '<div class="loading-spinner"></div>';
+                    leaderboardCard.appendChild(overlay);
+                }
+            }
+            
+            function hideLoading() {
+                const overlay = leaderboardCard.querySelector('.loading-overlay');
+                if (overlay) {
+                    overlay.remove();
+                }
+            }
+            
+            function showError(message) {
+                showMessage('⚠️', 'Error', message);
+            }
+            
+            function showMessage(icon, title, message) {
+                leaderboardCard.innerHTML = `
+                    <div class="no-data">
+                        <div class="no-data-icon">${icon}</div>
+                        <h2>${escapeHtml(title)}</h2>
+                        <p>${escapeHtml(message)}</p>
+                    </div>
+                `;
+            }
+            
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+            
+            function formatNumber(num) {
+                return new Intl.NumberFormat().format(num);
+            }
+        });
+    </script>
 </body>
 </html>
