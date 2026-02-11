@@ -670,6 +670,7 @@ if ($rconEnabled) {
     $currentPage = 'active_players';
     $pageTitle = 'Active Players';
     $user = $currentUser;
+    $isPanelAdmin = SteamAuth::isPanelAdmin();
     ?>
     <?php include 'navbar.php'; ?>
     

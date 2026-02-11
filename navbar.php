@@ -37,6 +37,8 @@ if (!isset($isPanelAdmin)) {
         <?php if ($isPanelAdmin): ?>
             <a href="admin" <?php echo $currentPage === 'admin' ? 'class="active"' : ''; ?>>Admin Panel</a>
             <a href="users" <?php echo $currentPage === 'users' ? 'class="active"' : ''; ?>>Users</a>
+        <?php endif; ?>
+        <?php if ($isPanelAdmin || SteamAuth::hasRole('ALL')): ?>
             <a href="ban_management" <?php echo $currentPage === 'ban_management' ? 'class="active"' : ''; ?>>Bans</a>
         <?php endif; ?>
         <?php if (SteamAuth::hasRole('ADMIN')): ?>

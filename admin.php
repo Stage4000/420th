@@ -687,6 +687,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php 
     $currentPage = 'admin';
     $pageTitle = 'Admin Panel';
+    $isPanelAdmin = SteamAuth::isPanelAdmin();
     ?>
     <?php include 'navbar.php'; ?>
     

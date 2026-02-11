@@ -883,6 +883,8 @@ foreach ($users as &$user) {
     <?php 
     $currentPage = 'users';
     $pageTitle = 'User Management';
+    $user = $currentUser;
+    $isPanelAdmin = SteamAuth::isPanelAdmin();
     ?>
     <?php include 'navbar.php'; ?>
     
