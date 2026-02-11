@@ -151,6 +151,9 @@ $isWhitelisted = $hasS3 && $hasCAS;
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid #2a3142;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
         
         .navbar-brand {
@@ -197,6 +200,7 @@ $isWhitelisted = $hasS3 && $hasCAS;
         }
         
         .container {
+            width: 90%;
             max-width: 1400px;
             margin: 2rem auto;
             padding: 0 2rem;
@@ -593,7 +597,7 @@ $isWhitelisted = $hasS3 && $hasCAS;
             background: #1a1f2e;
             color: #8b92a8;
             padding: 1.5rem 2rem;
-            margin-top: 3rem;
+            margin-top: auto;
             display: flex;
             justify-content: space-between;
             align-items: center;

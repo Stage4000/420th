@@ -46,7 +46,7 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #0f1318 0%, #1a1f2e 100%);
             color: #e4e6eb;
             min-height: 100vh;
@@ -63,6 +63,9 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
             justify-content: space-between;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
             border-bottom: 1px solid #2a3142;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
         
         .navbar-brand {
@@ -129,6 +132,7 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
         }
         
         .container {
+            width: 90%;
             max-width: 1400px;
             margin: 2rem auto;
             padding: 0 2rem;
@@ -320,7 +324,9 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
         footer {
             background: rgba(26, 31, 46, 0.95);
             padding: 1.5rem 2rem;
-            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             color: #8b92a8;
             margin-top: auto;
             border-top: 1px solid #2a3142;
@@ -338,6 +344,14 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
         }
         
         @media (max-width: 768px) {
+            footer {
+                flex-direction: column;
+                gap: 0.5rem;
+                text-align: center;
+                padding: 1rem;
+                font-size: 0.8rem;
+            }
+            
             .navbar {
                 flex-wrap: wrap;
                 padding: 1rem;
@@ -501,7 +515,8 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
     </div>
     
     <footer>
-        <p>&copy; 2025 420th Delta. All rights reserved.</p>
+        <div>© 2026 <a href="https://420thdelta.net" target="_blank">420th Delta Gaming Community</a></div>
+        <div>Made with ❤️ by <a href="https://sitecritter.com" target="_blank">SiteCritter</a></div>
     </footer>
 </body>
 </html>
