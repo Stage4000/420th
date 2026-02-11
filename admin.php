@@ -505,32 +505,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             color: #999;
         }
         
-        /* Custom Scrollbar Styles */
-        ::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: #0f1318;
-            border-radius: 5px;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: #667eea;
-            border-radius: 5px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: #5568d3;
-        }
-        
-        /* Firefox Scrollbar */
-        html, body, .modal-content, .users-table {
-            scrollbar-width: thin;
-            scrollbar-color: #667eea #0f1318;
-        }
-        
         /* Tooltip Styles */
         .info-icon {
             display: inline-flex;

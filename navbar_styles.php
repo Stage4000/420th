@@ -3,11 +3,37 @@
  * Navbar Styles Template
  * 
  * This file should be included within a <style> block in the parent document.
- * It contains CSS rules for the navigation bar component.
+ * It contains CSS rules for the navigation bar component and scrollbar styling.
  * 
  * Usage: <?php include 'navbar_styles.php'; ?>
  */
 ?>
+/* Custom Scrollbar Styles */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0f1318;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #667eea;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #5568d3;
+}
+
+/* Firefox Scrollbar */
+html, body, .modal-content, .users-table {
+    scrollbar-width: thin;
+    scrollbar-color: #667eea #0f1318;
+}
+
 .navbar {
         background: #1a1f2e;
         color: white;
