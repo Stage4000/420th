@@ -13,7 +13,9 @@ if (!SteamAuth::isLoggedIn()) {
 }
 
 // Allow both PANEL and ALL (staff) to view bans
-if (!SteamAuth::hasRole('PANEL') && !SteamAuth::hasRole('ALL')) {
+$hasPanelRole = SteamAuth::hasRole('PANEL');
+$hasAllRole = SteamAuth::hasRole('ALL');
+if (!$hasPanelRole && !$hasAllRole) {
     header('Location: dashboard');
     exit;
 }
@@ -531,7 +533,7 @@ $totalPages = ceil($total / $perPage);
     $currentPage = 'ban_management';
     $pageTitle = 'Ban Management';
     $user = $currentUser;
-    $isPanelAdmin = SteamAuth::isPanelAdmin();
+    $isPanelAdmin = $hasPanelRole; // Use cached role check from access control
     $canViewBans = true; // Already verified by access control above
     $canViewActivePlayers = SteamAuth::hasRole('ADMIN');
     ?>

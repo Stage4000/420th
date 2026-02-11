@@ -14,7 +14,8 @@ if (!SteamAuth::isLoggedIn()) {
     exit;
 }
 
-if (!SteamAuth::hasRole('ADMIN')) {
+$hasAdminRole = SteamAuth::hasRole('ADMIN');
+if (!$hasAdminRole) {
     header('Location: dashboard');
     exit;
 }
@@ -672,7 +673,7 @@ if ($rconEnabled) {
     $user = $currentUser;
     $isPanelAdmin = SteamAuth::isPanelAdmin();
     $canViewBans = $isPanelAdmin || SteamAuth::hasRole('ALL');
-    $canViewActivePlayers = true; // Already verified by access control above
+    $canViewActivePlayers = true; // Already verified by access control above (cached in $hasAdminRole)
     ?>
     <?php include 'navbar.php'; ?>
     
