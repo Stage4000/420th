@@ -279,28 +279,28 @@ DELIMITER ;
 
 -- https://mariadb.com/docs/server/server-usage/triggers-events/triggers/trigger-overview
 CREATE TRIGGER tg_add_stat_player_weekly
-    AFTER INSERT OR UPDATE ON stat_player_daily
+    AFTER INSERT ON stat_player_daily
     FOR EACH ROW
     INSERT INTO stat_player_weekly (created_at, steam_id, stat_id, server_id, amount)
         VALUES (YEARWEEK(NEW.created_at), NEW.steam_id, NEW.stat_id, NEW.server_id, NEW.amount)
         ON DUPLICATE KEY UPDATE
-            amount = amount + NEW.amount - COALESCE(OLD.amount, 0);
+            amount = amount + NEW.amount;
 
 CREATE TRIGGER tg_add_stat_player_monthly
-    AFTER INSERT OR UPDATE ON stat_player_daily
+    AFTER INSERT ON stat_player_daily
     FOR EACH ROW
     INSERT INTO stat_player_monthly (created_at, steam_id, stat_id, server_id, amount)
         VALUES (EXTRACT(YEAR_MONTH FROM NEW.created_at), NEW.steam_id, NEW.stat_id, NEW.server_id, NEW.amount)
         ON DUPLICATE KEY UPDATE
-            amount = amount + NEW.amount - COALESCE(OLD.amount, 0);
+            amount = amount + NEW.amount;
 
 CREATE TRIGGER tg_add_stat_player_alltime
-    AFTER INSERT OR UPDATE ON stat_player_daily
+    AFTER INSERT ON stat_player_daily
     FOR EACH ROW
     INSERT INTO stat_player_alltime (steam_id, stat_id, server_id, amount)
         VALUES (NEW.steam_id, NEW.stat_id, NEW.server_id, NEW.amount)
         ON DUPLICATE KEY UPDATE
-            amount = amount + NEW.amount - COALESCE(OLD.amount, 0);
+            amount = amount + NEW.amount;
 
 -- https://mariadb.com/docs/server/server-usage/triggers-events/event-scheduler/events
 CREATE EVENT IF NOT EXISTS prune_stat_player_event
