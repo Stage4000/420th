@@ -245,6 +245,7 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
         
         @media (max-width: 768px) {
             .container {
+                width: 100%;
                 padding: 0 1rem;
             }
             
