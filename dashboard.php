@@ -470,10 +470,12 @@ $isWhitelisted = $hasS3 && $hasCAS;
     </style>
 </head>
 <body>
-    <?php
+    <?php 
     $currentPage = 'dashboard';
     $pageTitle = 'Dashboard';
     // $user and $isPanelAdmin are already defined
+    $canViewBans = $isPanelAdmin || SteamAuth::hasRole('ALL');
+    $canViewActivePlayers = SteamAuth::hasRole('ADMIN');
     ?>
     <?php include 'navbar.php'; ?>
     
