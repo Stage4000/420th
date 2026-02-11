@@ -275,6 +275,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow-x: hidden;
         }
         
         <?php include 'navbar_styles.php'; ?>
@@ -584,6 +585,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         /* Responsive Styles */
         @media (max-width: 768px) {
             .container {
+                width: 100%;
                 padding: 0 1rem;
                 margin: 1rem auto;
             }
@@ -608,8 +610,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         @media (max-width: 480px) {
+            .container {
+                padding: 0 0.5rem;
+            }
+            
             .header-card h1 {
                 font-size: 1.5rem;
+            }
+            
+            .header-card, .info-card, .users-table {
+                padding: 1rem;
             }
             
             /* Hide less important table columns on very small screens */
