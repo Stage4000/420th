@@ -275,6 +275,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow-x: hidden;
         }
         
         <?php include 'navbar_styles.php'; ?>
@@ -291,8 +292,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background: #1a1f2e;
             padding: 2rem;
             border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
             margin-bottom: 2rem;
+            border: 1px solid #2a3142;
         }
         
         .header-card h1 {
@@ -339,7 +341,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .users-table {
             background: #1a1f2e;
             border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
             overflow: hidden;
         }
         
@@ -583,6 +585,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         /* Responsive Styles */
         @media (max-width: 768px) {
             .container {
+                width: 100%;
                 padding: 0 1rem;
                 margin: 1rem auto;
             }
@@ -607,8 +610,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         @media (max-width: 480px) {
+            .container {
+                padding: 0 0.5rem;
+            }
+            
             .header-card h1 {
                 font-size: 1.5rem;
+            }
+            
+            .header-card, .info-card, .users-table {
+                padding: 1rem;
             }
             
             /* Hide less important table columns on very small screens */

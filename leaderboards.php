@@ -47,7 +47,7 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0f1318 0%, #1a1f2e 100%);
+            background: #0a0e1a;
             color: #e4e6eb;
             min-height: 100vh;
             display: flex;
