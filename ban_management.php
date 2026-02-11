@@ -185,6 +185,9 @@ $totalPages = ceil($total / $perPage);
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid #2a3142;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
         
         .navbar-brand {
@@ -259,6 +262,7 @@ $totalPages = ceil($total / $perPage);
         }
         
         .container {
+            width: 90%;
             max-width: 1400px;
             margin: 2rem auto;
             padding: 0 2rem;
@@ -302,12 +306,12 @@ $totalPages = ceil($total / $perPage);
         
         .search-box input {
             width: 100%;
-            padding: 10px 15px;
-            background: rgba(255, 255, 255, 0.05);
+            padding: 0.75rem;
+            background: #0f1318;
             border: 1px solid #2a3142;
             border-radius: 5px;
             color: #e4e6eb;
-            font-size: 14px;
+            font-size: 1rem;
         }
         
         .search-box input:focus {
@@ -316,12 +320,12 @@ $totalPages = ceil($total / $perPage);
         }
         
         .filter-select {
-            padding: 10px 15px;
+            padding: 0.75rem;
             background: #1a1f2e;
             border: 1px solid #2a3142;
             border-radius: 5px;
             color: #e4e6eb;
-            font-size: 14px;
+            font-size: 1rem;
             cursor: pointer;
         }
         
@@ -518,7 +522,7 @@ $totalPages = ceil($total / $perPage);
             background: #1a1f2e;
             color: #8b92a8;
             padding: 1.5rem 2rem;
-            margin-top: 3rem;
+            margin-top: auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
