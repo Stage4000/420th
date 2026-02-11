@@ -31,9 +31,9 @@ if (!$statsExist) {
 }
 
 // Get filter parameters with validation
-$selectedStat = isset($_GET['stat']) ? $_GET['stat'] : 'score';
-$selectedPeriod = isset($_GET['period']) ? $_GET['period'] : 'alltime';
-$selectedServer = isset($_GET['server']) ? $_GET['server'] : 'main';
+$selectedStat = $_GET['stat'] ?? 'score';
+$selectedPeriod = $_GET['period'] ?? 'alltime';
+$selectedServer = $_GET['server'] ?? 'main';
 
 // Validate period
 $validPeriods = ['daily', 'weekly', 'monthly', 'alltime'];

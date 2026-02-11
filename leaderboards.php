@@ -465,17 +465,11 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
                     });
             }
             
-            function renderLeaderboard(leaderboard, statName) {
-                const statDisplay = statName.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+            function renderLeaderboard(leaderboard, statId) {
+                const statDisplay = statId.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
                 
                 if (leaderboard.length === 0) {
-                    leaderboardCard.innerHTML = `
-                        <div class="no-data">
-                            <div class="no-data-icon">📊</div>
-                            <h2>No Data Available</h2>
-                            <p>There are no statistics recorded for this period yet.</p>
-                        </div>
-                    `;
+                    showMessage('📊', 'No Data Available', 'There are no statistics recorded for this period yet.');
                     return;
                 }
                 
@@ -541,10 +535,14 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
             }
             
             function showError(message) {
+                showMessage('⚠️', 'Error', message);
+            }
+            
+            function showMessage(icon, title, message) {
                 leaderboardCard.innerHTML = `
                     <div class="no-data">
-                        <div class="no-data-icon">⚠️</div>
-                        <h2>Error</h2>
+                        <div class="no-data-icon">${icon}</div>
+                        <h2>${escapeHtml(title)}</h2>
                         <p>${escapeHtml(message)}</p>
                     </div>
                 `;
