@@ -295,11 +295,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
             margin-bottom: 2rem;
             border: 1px solid #2a3142;
+            text-align: center;
         }
         
         .header-card h1 {
             color: #e4e6eb;
             margin-bottom: 0.5rem;
+        }
+        
+        .header-card p {
+            color: #8b92a8;
         }
         
         .message {
@@ -645,7 +650,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="container">
         <div class="header-card">
             <h1>Settings</h1>
-            <p style="color: #e4e6eb;">Configure role aliases and automatic role linking</p>
+            <p>Configure role aliases and automatic role linking</p>
         </div>
         
         <?php if (isset($message)): ?>
