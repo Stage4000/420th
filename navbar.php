@@ -7,6 +7,8 @@
  * - $pageTitle: The title to display in the navbar
  * - $user: User data array with 'avatar_url' and 'steam_name'
  * - $isPanelAdmin: Boolean indicating if user is a panel admin (optional)
+ * - $canViewBans: Boolean indicating if user can view bans (optional, computed from isPanelAdmin || hasRole('ALL'))
+ * - $canViewActivePlayers: Boolean indicating if user can view active players (optional, computed from hasRole('ADMIN'))
  */
 
 // Ensure required variables are set
@@ -21,6 +23,13 @@ if (!isset($user)) {
 }
 if (!isset($isPanelAdmin)) {
     $isPanelAdmin = false;
+}
+// Cache role checks to avoid repeated method calls
+if (!isset($canViewBans)) {
+    $canViewBans = $isPanelAdmin || SteamAuth::hasRole('ALL');
+}
+if (!isset($canViewActivePlayers)) {
+    $canViewActivePlayers = SteamAuth::hasRole('ADMIN');
 }
 ?>
 <nav class="navbar">
@@ -37,9 +46,11 @@ if (!isset($isPanelAdmin)) {
         <?php if ($isPanelAdmin): ?>
             <a href="admin" <?php echo $currentPage === 'admin' ? 'class="active"' : ''; ?>>Admin Panel</a>
             <a href="users" <?php echo $currentPage === 'users' ? 'class="active"' : ''; ?>>Users</a>
+        <?php endif; ?>
+        <?php if ($canViewBans): ?>
             <a href="ban_management" <?php echo $currentPage === 'ban_management' ? 'class="active"' : ''; ?>>Bans</a>
         <?php endif; ?>
-        <?php if (SteamAuth::hasRole('ADMIN')): ?>
+        <?php if ($canViewActivePlayers): ?>
             <a href="active_players" <?php echo $currentPage === 'active_players' ? 'class="active"' : ''; ?>>Active Players</a>
         <?php endif; ?>
         <a href="leaderboards" <?php echo $currentPage === 'leaderboards' ? 'class="active"' : ''; ?>>Leaderboards</a>

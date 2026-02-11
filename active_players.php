@@ -14,10 +14,15 @@ if (!SteamAuth::isLoggedIn()) {
     exit;
 }
 
-if (!SteamAuth::hasRole('ADMIN')) {
+$hasAdminRole = SteamAuth::hasRole('ADMIN');
+if (!$hasAdminRole) {
     header('Location: dashboard');
     exit;
 }
+
+// Cache additional role checks for navbar
+$hasPanelRole = SteamAuth::hasRole('PANEL');
+$hasAllRole = SteamAuth::hasRole('ALL');
 
 $db = Database::getInstance();
 $rconManager = new RconManager();
@@ -608,27 +613,7 @@ if ($rconEnabled) {
             background: #229954;
         }
         
-        footer {
-            background: #1a1f2e;
-            color: #8b92a8;
-            padding: 1.5rem 2rem;
-            margin-top: auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-top: 1px solid #2a3142;
-            font-size: 0.9rem;
-        }
-        
-        footer a {
-            color: #667eea;
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        
-        footer a:hover {
-            color: #8b9cff;
-        }
+        <?php include 'footer_styles.php'; ?>
         
         @media (max-width: 768px) {
             .container {
@@ -670,6 +655,9 @@ if ($rconEnabled) {
     $currentPage = 'active_players';
     $pageTitle = 'Active Players';
     $user = $currentUser;
+    $isPanelAdmin = $hasPanelRole; // Use cached role check from access control
+    $canViewBans = $hasPanelRole || $hasAllRole; // Use cached role checks
+    $canViewActivePlayers = true; // Already verified by access control above (cached in $hasAdminRole)
     ?>
     <?php include 'navbar.php'; ?>
     
@@ -1068,9 +1056,6 @@ if ($rconEnabled) {
         }
     </script>
     
-    <footer>
-        <div>© 2026 <a href="https://420thdelta.net" target="_blank">420th Delta Gaming Community</a></div>
-        <div>Made with ❤️ by <a href="https://sitecritter.com" target="_blank">SiteCritter</a></div>
-    </footer>
+    <?php include 'footer.php'; ?>
 </body>
 </html>

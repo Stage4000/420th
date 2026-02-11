@@ -241,37 +241,9 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
             text-align: center;
         }
         
-        footer {
-            background: rgba(26, 31, 46, 0.95);
-            padding: 1.5rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: #8b92a8;
-            margin-top: auto;
-            border-top: 1px solid #2a3142;
-            font-size: 0.9rem;
-        }
-        
-        footer a {
-            color: #667eea;
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        
-        footer a:hover {
-            color: #8b9cff;
-        }
+        <?php include 'footer_styles.php'; ?>
         
         @media (max-width: 768px) {
-            footer {
-                flex-direction: column;
-                gap: 0.5rem;
-                text-align: center;
-                padding: 1rem;
-                font-size: 0.8rem;
-            }
-            
             .container {
                 padding: 0 1rem;
             }
@@ -297,6 +269,9 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
     <?php 
     $currentPage = 'leaderboards';
     $pageTitle = 'Leaderboards';
+    $isPanelAdmin = SteamAuth::isPanelAdmin();
+    $canViewBans = $isPanelAdmin || SteamAuth::hasRole('ALL');
+    $canViewActivePlayers = SteamAuth::hasRole('ADMIN');
     ?>
     <?php include 'navbar.php'; ?>
     
@@ -403,9 +378,6 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
         <?php endif; ?>
     </div>
     
-    <footer>
-        <div>© 2026 <a href="https://420thdelta.net" target="_blank">420th Delta Gaming Community</a></div>
-        <div>Made with ❤️ by <a href="https://sitecritter.com" target="_blank">SiteCritter</a></div>
-    </footer>
+    <?php include 'footer.php'; ?>
 </body>
 </html>
