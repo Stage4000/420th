@@ -54,82 +54,7 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
             flex-direction: column;
         }
         
-        .navbar {
-            background: rgba(26, 31, 46, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 1rem 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-            border-bottom: 1px solid #2a3142;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        
-        .navbar-brand {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        
-        .navbar-logo {
-            height: 40px;
-            width: auto;
-        }
-        
-        .navbar-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #667eea;
-        }
-        
-        .navbar-links {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        
-        .navbar-links a {
-            color: #e4e6eb;
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-            border-radius: 5px;
-            transition: all 0.3s;
-            border: 1px solid transparent;
-        }
-        
-        .navbar-links a:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-        
-        .navbar-links a.active {
-            background: rgba(102, 126, 234, 0.2);
-            border-color: #667eea;
-        }
-        
-        .user-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            border: 2px solid #667eea;
-        }
-        
-        .logout-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 0.5rem 1rem;
-            text-decoration: none;
-            border-radius: 5px;
-            transition: transform 0.2s;
-            border: none !important;
-        }
-        
-        .logout-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        }
+        <?php include 'navbar_styles.php'; ?>
         
         .container {
             width: 90%;
@@ -347,18 +272,6 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
                 font-size: 0.8rem;
             }
             
-            .navbar {
-                flex-wrap: wrap;
-                padding: 1rem;
-            }
-            
-            .navbar-links {
-                width: 100%;
-                margin-top: 1rem;
-                justify-content: center;
-                gap: 0.5rem;
-            }
-            
             .container {
                 padding: 0 1rem;
             }
@@ -381,30 +294,11 @@ $leaderboard = $statsExist ? $statsManager->getLeaderboard($selectedStat, $selec
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="navbar-brand">
-            <img src="https://www.420thdelta.net/uploads/monthly_2025_11/banner.png.2aa9557dda39e6c5ba0e3c740df490ee.png" 
-                 alt="420th Delta" 
-                 class="navbar-logo"
-                 onerror="this.style.display='none';">
-            <span class="navbar-title">Leaderboards</span>
-        </div>
-        <div class="navbar-links">
-            <a href="dashboard">Dashboard</a>
-            <?php if ($isPanelAdmin): ?>
-                <a href="admin">Admin Panel</a>
-                <a href="users">Users</a>
-                <a href="ban_management">Bans</a>
-            <?php endif; ?>
-            <?php if (SteamAuth::hasRole('ADMIN')): ?>
-                <a href="active_players">Active Players</a>
-            <?php endif; ?>
-            <a href="leaderboards" class="active">Leaderboards</a>
-            <img src="<?php echo htmlspecialchars($user['avatar_url']); ?>" alt="Avatar" class="user-avatar">
-            <span><?php echo htmlspecialchars($user['steam_name']); ?></span>
-            <a href="logout" class="logout-btn">Logout</a>
-        </div>
-    </nav>
+    <?php 
+    $currentPage = 'leaderboards';
+    $pageTitle = 'Leaderboards';
+    ?>
+    <?php include 'navbar.php'; ?>
     
     <div class="container">
         <div class="page-header">
