@@ -185,6 +185,7 @@ class RconManager {
                     $player['time'] = 'N/A'; // RCON doesn't track session time
                 }
             }
+            unset($player); // Break the reference to avoid unexpected behavior
             
             return $players;
         } catch (Exception $e) {
