@@ -171,12 +171,33 @@ class RconManager {
     
     /**
      * Get list of online players
-     * @return array Array of players
+     * @return array Array of players with normalized field names
      */
     public function getPlayers() {
         try {
             $this->connect();
-            return $this->rcon->getPlayersArray();
+            $rawPlayers = $this->rcon->getPlayersArray();
+            
+            // Normalize field names to match expected structure
+            // RCON library returns: id, name, GUID, ping, ip
+            // Code expects: num, name, guid, ping, time
+            $normalizedPlayers = [];
+            foreach ($rawPlayers as $player) {
+                $name = isset($player['name']) && trim($player['name']) !== '' 
+                    ? $player['name'] 
+                    : 'Unknown';
+                    
+                $normalizedPlayers[] = [
+                    'num' => $player['id'] ?? null,
+                    'name' => $name,
+                    'guid' => $player['GUID'] ?? $player['guid'] ?? null,
+                    'ping' => $player['ping'] ?? 'N/A',
+                    'time' => 'N/A', // RCON doesn't provide playtime
+                    'ip' => $player['ip'] ?? null
+                ];
+            }
+            
+            return $normalizedPlayers;
         } catch (Exception $e) {
             throw new Exception("Failed to get player list: " . $e->getMessage());
         }
