@@ -226,21 +226,46 @@ class RconManager {
             $this->connect();
             
             $this->logDebug("Calling RCON getPlayersArray()");
-            $players = $this->rcon->getPlayersArray();
+            $rawPlayers = $this->rcon->getPlayersArray();
             
             $this->logDebug("Raw RCON response from getPlayersArray()", [
-                'player_count' => count($players),
-                'raw_data' => $players
+                'player_count' => count($rawPlayers),
+                'raw_data' => $rawPlayers
             ]);
             
-            // Add missing 'time' field that RCON doesn't provide
-            // RCON library already returns: num, name, id, ip, ipport, ping, guid
-            foreach ($players as &$player) {
-                if (!isset($player['time'])) {
-                    $player['time'] = 'N/A'; // RCON doesn't track session time
+            // Transform RCON data to expected format
+            // RCON returns numerically indexed arrays:
+            // [0] => player number
+            // [1] => IP:Port
+            // [2] => ping
+            // [3] => guid (BE GUID)
+            // [4] => player name
+            $players = [];
+            foreach ($rawPlayers as $rawPlayer) {
+                // Skip if not a valid player array
+                if (!is_array($rawPlayer) || count($rawPlayer) < 5) {
+                    $this->logDebug("Skipping invalid player data", ['data' => $rawPlayer]);
+                    continue;
                 }
+                
+                // Extract IP and port from IP:Port format
+                $ipPort = explode(':', $rawPlayer[1]);
+                $ip = $ipPort[0] ?? '';
+                $port = $ipPort[1] ?? '';
+                
+                // Create associative array with expected field names
+                $player = [
+                    'num' => $rawPlayer[0],
+                    'ip' => $ip,
+                    'ipport' => $port,
+                    'ping' => $rawPlayer[2],
+                    'guid' => $rawPlayer[3],
+                    'name' => $rawPlayer[4],
+                    'time' => 'N/A' // RCON doesn't track session time
+                ];
+                
+                $players[] = $player;
             }
-            unset($player); // Break the reference to avoid unexpected behavior
             
             $this->logDebug("Processed player data", [
                 'player_count' => count($players),
