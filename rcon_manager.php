@@ -217,8 +217,10 @@ class RconManager {
             if (preg_match('/^\d{' . self::STEAM_ID64_LENGTH . '}$/', $identifier)) {
                 $players = $this->rcon->getPlayersArray();
                 foreach ($players as $player) {
-                    if (isset($player['guid']) && $player['guid'] === $identifier) {
-                        $identifier = $player['num'];
+                    // RCON library uses 'GUID' (uppercase), not 'guid'
+                    if (isset($player['GUID']) && $player['GUID'] === $identifier) {
+                        // RCON library uses 'id', not 'num'
+                        $identifier = $player['id'];
                         break;
                     }
                 }
@@ -255,10 +257,12 @@ class RconManager {
                 $guid = null;
                 
                 foreach ($players as $player) {
-                    if ($player['num'] == $identifier || 
+                    // RCON library uses 'id', not 'num'
+                    if ($player['id'] == $identifier || 
                         stripos($player['name'], $identifier) !== false) {
-                        $guid = isset($player['guid']) ? $player['guid'] : null;
-                        $identifier = $player['num'];
+                        // RCON library uses 'GUID' (uppercase), not 'guid'
+                        $guid = isset($player['GUID']) ? $player['GUID'] : null;
+                        $identifier = $player['id'];
                         break;
                     }
                 }
