@@ -183,16 +183,15 @@ class RconManager {
             // Code expects: num, name, guid, ping, time
             $normalizedPlayers = [];
             foreach ($rawPlayers as $player) {
-                // Handle missing or empty player name
-                $name = isset($player['name']) && trim($player['name']) !== '' 
-                    ? $player['name'] 
-                    : 'Unknown';
-                
                 // Validate that required fields exist
                 if (!isset($player['id']) || !isset($player['GUID'])) {
-                    error_log("RCON: Incomplete player data received - missing id or GUID");
+                    $playerName = $player['name'] ?? 'unknown';
+                    error_log("RCON: Incomplete player data received - missing id or GUID for player: {$playerName}");
                     continue; // Skip this player if critical data is missing
                 }
+                
+                // Handle missing or empty player name
+                $name = (!empty($player['name']) && trim($player['name']) !== '') ? $player['name'] : 'Unknown';
                     
                 $normalizedPlayers[] = [
                     'num' => $player['id'],
