@@ -249,7 +249,9 @@ class RconManager {
                 }
                 
                 // Extract IP and port from IP:Port format
-                $ipPort = explode(':', $rawPlayer[1]);
+                // Ensure we have a string before splitting
+                $ipPortString = is_string($rawPlayer[1]) ? $rawPlayer[1] : '';
+                $ipPort = explode(':', $ipPortString);
                 $ip = $ipPort[0] ?? '';
                 $port = $ipPort[1] ?? '';
                 
@@ -257,7 +259,7 @@ class RconManager {
                 $player = [
                     'num' => $rawPlayer[0],
                     'ip' => $ip,
-                    'ipport' => $port,
+                    'ipport' => $port,  // Note: This is just the port number, not IP:Port
                     'ping' => $rawPlayer[2],
                     'guid' => $rawPlayer[3],
                     'name' => $rawPlayer[4],
