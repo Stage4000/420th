@@ -13,6 +13,9 @@ class RconManager {
     // Steam ID64 is always 17 digits
     const STEAM_ID64_LENGTH = 17;
     
+    // RCON debug log file
+    const LOG_FILE = __DIR__ . '/rcon_debug.log';
+    
     private $db;
     private $rcon;
     private $enabled;
@@ -26,6 +29,25 @@ class RconManager {
         $this->libraryAvailable = class_exists('Nizarii\\ARC');
         $this->db = Database::getInstance();
         $this->loadSettings();
+    }
+    
+    /**
+     * Log RCON debug information
+     * @param string $message Log message
+     * @param mixed $data Optional data to log
+     */
+    private function logDebug($message, $data = null) {
+        $timestamp = date('Y-m-d H:i:s');
+        $logEntry = "[{$timestamp}] {$message}";
+        
+        if ($data !== null) {
+            $logEntry .= "\n" . print_r($data, true);
+        }
+        
+        $logEntry .= "\n" . str_repeat('-', 80) . "\n";
+        
+        // Append to log file
+        file_put_contents(self::LOG_FILE, $logEntry, FILE_APPEND);
     }
     
     /**
@@ -127,17 +149,31 @@ class RconManager {
      */
     private function connect() {
         if (!$this->libraryAvailable) {
+            $this->logDebug("RCON library not available");
             throw new Exception("RCON library not installed. Run 'composer install' to enable RCON features.");
         }
         
         if (!$this->isEnabled()) {
+            $this->logDebug("RCON not enabled or not configured");
             throw new Exception("RCON is not enabled or not configured");
         }
         
         if (!$this->rcon) {
             try {
+                $this->logDebug("Attempting RCON connection", [
+                    'host' => $this->host,
+                    'port' => $this->port,
+                    'password_set' => !empty($this->password)
+                ]);
+                
                 $this->rcon = new \Nizarii\ARC($this->host, $this->password, $this->port);
+                
+                $this->logDebug("RCON connection established successfully");
             } catch (Exception $e) {
+                $this->logDebug("RCON connection failed", [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
                 throw new Exception("Failed to connect to RCON server: " . $e->getMessage());
             }
         }
@@ -151,10 +187,16 @@ class RconManager {
      */
     public function testConnection() {
         try {
+            $this->logDebug("testConnection() called");
+            
             $this->connect();
             
             // Try to get player list as connection test
             $players = $this->rcon->getPlayersArray();
+            
+            $this->logDebug("testConnection() successful", [
+                'player_count' => count($players)
+            ]);
             
             return [
                 'success' => true,
@@ -162,6 +204,10 @@ class RconManager {
                 'player_count' => count($players)
             ];
         } catch (Exception $e) {
+            $this->logDebug("testConnection() failed", [
+                'error' => $e->getMessage()
+            ]);
+            
             return [
                 'success' => false,
                 'message' => $e->getMessage()
@@ -171,13 +217,69 @@ class RconManager {
     
     /**
      * Get list of online players
-     * @return array Array of players
+     * @return array Array of players with enhanced fields
      */
     public function getPlayers() {
         try {
+            $this->logDebug("getPlayers() called");
+            
             $this->connect();
-            return $this->rcon->getPlayersArray();
+            
+            $this->logDebug("Calling RCON getPlayersArray()");
+            $rawPlayers = $this->rcon->getPlayersArray();
+            
+            $this->logDebug("Raw RCON response from getPlayersArray()", [
+                'player_count' => count($rawPlayers),
+                'raw_data' => $rawPlayers
+            ]);
+            
+            // Transform RCON data to expected format
+            // RCON returns numerically indexed arrays:
+            // [0] => player number
+            // [1] => IP:Port
+            // [2] => ping
+            // [3] => guid (BE GUID)
+            // [4] => player name
+            $players = [];
+            foreach ($rawPlayers as $rawPlayer) {
+                // Skip if not a valid player array
+                if (!is_array($rawPlayer) || count($rawPlayer) < 5) {
+                    $this->logDebug("Skipping invalid player data", ['data' => $rawPlayer]);
+                    continue;
+                }
+                
+                // Extract IP and port from IP:Port format
+                // Ensure we have a string before splitting
+                $ipPortString = is_string($rawPlayer[1]) ? $rawPlayer[1] : '';
+                $ipPort = explode(':', $ipPortString);
+                $ip = $ipPort[0] ?? '';
+                $port = $ipPort[1] ?? '';
+                
+                // Create associative array with expected field names
+                $player = [
+                    'num' => $rawPlayer[0],
+                    'ip' => $ip,
+                    'ipport' => $port,  // Note: This is just the port number, not IP:Port
+                    'ping' => $rawPlayer[2],
+                    'guid' => $rawPlayer[3],
+                    'name' => $rawPlayer[4],
+                    'time' => 'N/A' // RCON doesn't track session time
+                ];
+                
+                $players[] = $player;
+            }
+            
+            $this->logDebug("Processed player data", [
+                'player_count' => count($players),
+                'processed_data' => $players
+            ]);
+            
+            return $players;
         } catch (Exception $e) {
+            $this->logDebug("getPlayers() failed", [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             throw new Exception("Failed to get player list: " . $e->getMessage());
         }
     }
@@ -310,5 +412,45 @@ class RconManager {
         } catch (Exception $e) {
             throw new Exception("Failed to execute command: " . $e->getMessage());
         }
+    }
+    
+    /**
+     * Get the path to the RCON debug log file
+     * @return string Log file path
+     */
+    public static function getLogFilePath() {
+        return self::LOG_FILE;
+    }
+    
+    /**
+     * Clear the RCON debug log file
+     * @return bool Success status
+     */
+    public static function clearLog() {
+        if (file_exists(self::LOG_FILE)) {
+            return unlink(self::LOG_FILE);
+        }
+        return true;
+    }
+    
+    /**
+     * Get the contents of the RCON debug log file
+     * @param int $lines Number of lines to retrieve from the end (0 for all)
+     * @return string Log contents
+     */
+    public static function getLog($lines = 0) {
+        if (!file_exists(self::LOG_FILE)) {
+            return "Log file does not exist yet.";
+        }
+        
+        $content = file_get_contents(self::LOG_FILE);
+        
+        if ($lines > 0) {
+            $logLines = explode("\n", $content);
+            $logLines = array_slice($logLines, -$lines);
+            return implode("\n", $logLines);
+        }
+        
+        return $content;
     }
 }
