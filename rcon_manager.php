@@ -171,39 +171,22 @@ class RconManager {
     
     /**
      * Get list of online players
-     * @return array Array of players with normalized field names
+     * @return array Array of players with enhanced fields
      */
     public function getPlayers() {
         try {
             $this->connect();
-            $rawPlayers = $this->rcon->getPlayersArray();
+            $players = $this->rcon->getPlayersArray();
             
-            // Normalize field names to match expected structure
-            // RCON library returns: id, name, GUID, ping, ip
-            // Code expects: num, name, guid, ping, time
-            $normalizedPlayers = [];
-            foreach ($rawPlayers as $player) {
-                // Validate that required fields exist
-                if (!isset($player['id']) || !isset($player['GUID'])) {
-                    $playerName = $player['name'] ?? 'unknown';
-                    error_log("RCON: Incomplete player data received - missing id or GUID for player: {$playerName}");
-                    continue; // Skip this player if critical data is missing
+            // Add missing 'time' field that RCON doesn't provide
+            // RCON library already returns: num, name, id, ip, ipport, ping, guid
+            foreach ($players as &$player) {
+                if (!isset($player['time'])) {
+                    $player['time'] = 'N/A'; // RCON doesn't track session time
                 }
-                
-                // Handle missing or empty player name
-                $name = (!empty($player['name']) && trim($player['name']) !== '') ? $player['name'] : 'Unknown';
-                    
-                $normalizedPlayers[] = [
-                    'num' => $player['id'],
-                    'name' => $name,
-                    'guid' => $player['GUID'],
-                    'ping' => $player['ping'] ?? 'N/A',
-                    'time' => 'N/A', // RCON doesn't provide playtime
-                    'ip' => $player['ip'] ?? null
-                ];
             }
             
-            return $normalizedPlayers;
+            return $players;
         } catch (Exception $e) {
             throw new Exception("Failed to get player list: " . $e->getMessage());
         }
@@ -223,10 +206,8 @@ class RconManager {
             if (preg_match('/^\d{' . self::STEAM_ID64_LENGTH . '}$/', $identifier)) {
                 $players = $this->rcon->getPlayersArray();
                 foreach ($players as $player) {
-                    // RCON library uses 'GUID' (uppercase), not 'guid'
-                    if (isset($player['GUID']) && $player['GUID'] === $identifier) {
-                        // RCON library uses 'id', not 'num'
-                        $identifier = $player['id'];
+                    if (isset($player['guid']) && $player['guid'] === $identifier) {
+                        $identifier = $player['num'];
                         break;
                     }
                 }
@@ -263,12 +244,10 @@ class RconManager {
                 $guid = null;
                 
                 foreach ($players as $player) {
-                    // RCON library uses 'id', not 'num'
-                    if ($player['id'] == $identifier || 
+                    if ($player['num'] == $identifier || 
                         stripos($player['name'], $identifier) !== false) {
-                        // RCON library uses 'GUID' (uppercase), not 'guid'
-                        $guid = isset($player['GUID']) ? $player['GUID'] : null;
-                        $identifier = $player['id'];
+                        $guid = isset($player['guid']) ? $player['guid'] : null;
+                        $identifier = $player['num'];
                         break;
                     }
                 }
