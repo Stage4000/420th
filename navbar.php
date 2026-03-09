@@ -45,9 +45,9 @@ if (!isset($canViewActivePlayers)) {
         <a href="dashboard" <?php echo $currentPage === 'dashboard' ? 'class="active"' : ''; ?>>Dashboard</a>
         <?php if ($isPanelAdmin): ?>
             <a href="admin" <?php echo $currentPage === 'admin' ? 'class="active"' : ''; ?>>Settings</a>
-            <a href="users" <?php echo $currentPage === 'users' ? 'class="active"' : ''; ?>>Users</a>
         <?php endif; ?>
         <?php if ($canViewBans): ?>
+            <a href="users" <?php echo $currentPage === 'users' ? 'class="active"' : ''; ?>>Users</a>
             <a href="ban_management" <?php echo $currentPage === 'ban_management' ? 'class="active"' : ''; ?>>Bans</a>
         <?php endif; ?>
         <?php if ($canViewActivePlayers): ?>
