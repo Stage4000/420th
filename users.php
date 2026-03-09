@@ -8,13 +8,13 @@ require_once 'ban_manager.php';
 require_once 'rcon_manager.php';
 require_once 'staff_notes_manager.php';
 
-// Check if user is logged in and is a panel admin
+// Check if user is logged in and has panel admin or staff (ALL) access
 if (!SteamAuth::isLoggedIn()) {
     header('Location: index');
     exit;
 }
 
-if (!SteamAuth::isPanelAdmin()) {
+if (!SteamAuth::isPanelAdmin() && !SteamAuth::hasRole('ALL')) {
     header('Location: dashboard');
     exit;
 }
@@ -824,8 +824,8 @@ unset($user);
     $currentPage = 'users';
     $pageTitle = 'User Management';
     $user = $currentUser;
-    $isPanelAdmin = true; // Already verified by access control above
-    $canViewBans = true; // Panel admins can always view bans
+    $isPanelAdmin = SteamAuth::isPanelAdmin();
+    $canViewBans = true; // Anyone with access to this page can view bans
     $canViewActivePlayers = SteamAuth::hasRole('ADMIN');
     ?>
     <?php include 'navbar.php'; ?>
