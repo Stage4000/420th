@@ -4,6 +4,7 @@
 
 class HtmlSanitizer {
     // Allowed tags for the whitelist agreement
+    /** @var list<string> */
     private static $allowedTags = [
         'p', 'strong', 'em', 'b', 'i', 'u', 
         'ul', 'ol', 'li', 'br',
@@ -15,7 +16,7 @@ class HtmlSanitizer {
      * @param string $html The HTML content to sanitize
      * @return string Sanitized HTML
      */
-    public static function sanitize($html) {
+    public static function sanitize(string $html): string {
         if (empty($html)) {
             return '';
         }
@@ -28,18 +29,18 @@ class HtmlSanitizer {
         
         // Additional security: remove any dangerous content
         // Remove javascript: protocol (including variations with whitespace/encoding)
-        $sanitized = preg_replace('/\bjavascript\s*:/i', '', $sanitized);
-        $sanitized = preg_replace('/\bdata\s*:/i', '', $sanitized);
-        $sanitized = preg_replace('/\bvbscript\s*:/i', '', $sanitized);
+        $sanitized = preg_replace('/\bjavascript\s*:/i', '', $sanitized) ?? $sanitized;
+        $sanitized = preg_replace('/\bdata\s*:/i', '', $sanitized) ?? $sanitized;
+        $sanitized = preg_replace('/\bvbscript\s*:/i', '', $sanitized) ?? $sanitized;
         
         // Remove event handlers (on* attributes) more thoroughly
-        $sanitized = preg_replace('/\s*on[a-z]+\s*=/i', ' ', $sanitized);
+        $sanitized = preg_replace('/\s*on[a-z]+\s*=/i', ' ', $sanitized) ?? $sanitized;
         
         // Remove any remaining script-like content
-        $sanitized = preg_replace('/<script[^>]*>.*?<\/script>/is', '', $sanitized);
-        $sanitized = preg_replace('/<iframe[^>]*>.*?<\/iframe>/is', '', $sanitized);
-        $sanitized = preg_replace('/<object[^>]*>.*?<\/object>/is', '', $sanitized);
-        $sanitized = preg_replace('/<embed[^>]*>/i', '', $sanitized);
+        $sanitized = preg_replace('/<script[^>]*>.*?<\/script>/is', '', $sanitized) ?? $sanitized;
+        $sanitized = preg_replace('/<iframe[^>]*>.*?<\/iframe>/is', '', $sanitized) ?? $sanitized;
+        $sanitized = preg_replace('/<object[^>]*>.*?<\/object>/is', '', $sanitized) ?? $sanitized;
+        $sanitized = preg_replace('/<embed[^>]*>/i', '', $sanitized) ?? $sanitized;
         
         return $sanitized;
     }
@@ -48,7 +49,7 @@ class HtmlSanitizer {
      * Get list of allowed tags for display
      * @return string Comma-separated list of allowed tags
      */
-    public static function getAllowedTagsList() {
+    public static function getAllowedTagsList(): string {
         return implode(', ', array_map(function($tag) {
             return '&lt;' . $tag . '&gt;';
         }, self::$allowedTags));

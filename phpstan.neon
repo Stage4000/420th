@@ -1,0 +1,9 @@
+parameters:
+    level: 7
+    paths:
+        - .
+    excludePaths:
+        analyse:
+            - vendor/*
+    bootstrapFiles:
+        - phpstan-bootstrap.php

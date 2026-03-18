@@ -8,7 +8,7 @@ require_once 'rcon_manager.php';
 require_once 'html_sanitizer.php';
 
 // Helper function to detect AJAX requests
-function isAjaxRequest() {
+function isAjaxRequest(): bool {
     return !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
 }
@@ -34,6 +34,8 @@ $allRoles = $db->fetchAll("SELECT * FROM roles ORDER BY name");
 
 // Get current RCON settings
 $rconSettings = $rconManager->getSettings();
+$message = '';
+$messageType = '';
 
 // Get whitelist agreement setting
 // Create server_settings table if it doesn't exist
@@ -190,7 +192,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $result = $rconManager->testConnection();
                 if ($result['success']) {
-                    $message = "RCON connection successful! Player count: " . $result['player_count'];
+                    $message = "RCON connection successful! Player count: " . (int) $result['player_count'];
                     $messageType = "success";
                 } else {
                     $message = "RCON connection failed: " . $result['message'];
@@ -653,7 +655,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <p>Configure role aliases and automatic role linking</p>
         </div>
         
-        <?php if (isset($message)): ?>
+        <?php if ($message !== ''): ?>
             <div class="message <?php echo $messageType; ?>">
                 <?php echo htmlspecialchars($message); ?>
             </div>
@@ -699,7 +701,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <input 
                                 type="text" 
                                 name="rcon_host" 
-                                value="<?php echo htmlspecialchars($rconSettings['rcon_host'] ?? ''); ?>" 
+                                value="<?php echo htmlspecialchars($rconSettings['rcon_host']); ?>" 
                                 placeholder="127.0.0.1 or server.example.com"
                                 style="width: 100%; padding: 0.75rem; border: 1px solid #2a3142; background: #1a1f2e; color: #e4e6eb; border-radius: 3px;"
                             >
@@ -712,7 +714,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <input 
                                 type="number" 
                                 name="rcon_port" 
-                                value="<?php echo htmlspecialchars($rconSettings['rcon_port'] ?? '2306'); ?>" 
+                                value="<?php echo htmlspecialchars((string) $rconSettings['rcon_port']); ?>" 
                                 placeholder="2306"
                                 min="1"
                                 max="65535"

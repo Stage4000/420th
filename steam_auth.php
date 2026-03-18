@@ -9,7 +9,7 @@ class SteamAuth {
     /**
      * Get Steam login URL
      */
-    public static function getLoginUrl() {
+    public static function getLoginUrl(): string {
         $params = [
             'openid.ns' => 'http://specs.openid.net/auth/2.0',
             'openid.mode' => 'checkid_setup',
@@ -25,7 +25,23 @@ class SteamAuth {
     /**
      * Validate Steam OAuth callback
      */
+    /**
+     * @return string|false
+     */
     public static function validate() {
+        $requiredKeys = [
+            'openid_assoc_handle',
+            'openid_signed',
+            'openid_sig',
+            'openid_claimed_id',
+        ];
+
+        foreach ($requiredKeys as $key) {
+            if (!isset($_GET[$key]) || !is_string($_GET[$key])) {
+                return false;
+            }
+        }
+
         if (!isset($_GET['openid_assoc_handle'])) {
             return false;
         }
@@ -40,7 +56,12 @@ class SteamAuth {
 
         $signed = explode(',', $_GET['openid_signed']);
         foreach ($signed as $item) {
-            $val = $_GET['openid_' . str_replace('.', '_', $item)];
+            $paramKey = 'openid_' . str_replace('.', '_', $item);
+            if (!isset($_GET[$paramKey]) || !is_string($_GET[$paramKey])) {
+                return false;
+            }
+
+            $val = $_GET[$paramKey];
             $params['openid.' . $item] = $val;
         }
 
@@ -60,7 +81,11 @@ class SteamAuth {
         }
 
         preg_match("#^https?://steamcommunity.com/openid/id/([0-9]{17,25})#", $_GET['openid_claimed_id'], $matches);
-        $steamId = is_numeric($matches[1]) ? $matches[1] : 0;
+        if (!isset($matches[1])) {
+            return false;
+        }
+
+        $steamId = $matches[1];
 
         return preg_match("#is_valid\s*:\s*true#i", $result) == 1 ? $steamId : false;
     }
@@ -68,7 +93,10 @@ class SteamAuth {
     /**
      * Get Steam user info
      */
-    public static function getUserInfo($steamId) {
+    /**
+     * @return array<string, mixed>|null
+     */
+    public static function getUserInfo(string $steamId): ?array {
         $url = "https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=" . STEAM_API_KEY . "&steamids=" . $steamId;
         
         // Use error handling for API call
@@ -90,7 +118,7 @@ class SteamAuth {
     /**
      * Login user and create session
      */
-    public static function login($steamId) {
+    public static function login(string $steamId): bool {
         $db = Database::getInstance();
         
         // Get Steam user info
@@ -108,10 +136,10 @@ class SteamAuth {
                 "INSERT INTO users (steam_id, steam_name, avatar_url) VALUES (?, ?, ?)",
                 [$steamId, $steamInfo['personaname'], $steamInfo['avatarfull']]
             );
-            $userId = $db->lastInsertId();
+            $userId = (int) $db->lastInsertId();
         } else {
             // Update existing user
-            $userId = $user['id'];
+            $userId = (int) $user['id'];
             $db->execute(
                 "UPDATE users SET steam_name = ?, avatar_url = ?, last_login = NOW() WHERE id = ?",
                 [$steamInfo['personaname'], $steamInfo['avatarfull'], $userId]
@@ -134,7 +162,7 @@ class SteamAuth {
     /**
      * Logout user
      */
-    public static function logout() {
+    public static function logout(): void {
         session_destroy();
         session_start();
     }
@@ -142,23 +170,37 @@ class SteamAuth {
     /**
      * Check if user is logged in
      */
-    public static function isLoggedIn() {
+    public static function isLoggedIn(): bool {
         return isset($_SESSION['user_id']);
     }
 
     /**
      * Get current user
      */
-    public static function getCurrentUser() {
+    /**
+     * @return array{id: int, steam_id: string, steam_name: string, avatar_url: string, roles: array<int, array{name: string, display_name: string, alias: string|null}>}|null
+     */
+    public static function getCurrentUser(): ?array {
         if (!self::isLoggedIn()) {
+            return null;
+        }
+
+        $requiredKeys = ['user_id', 'steam_id', 'steam_name', 'avatar_url', 'roles'];
+        foreach ($requiredKeys as $key) {
+            if (!isset($_SESSION[$key])) {
+                return null;
+            }
+        }
+
+        if (!is_array($_SESSION['roles'])) {
             return null;
         }
         
         return [
-            'id' => $_SESSION['user_id'],
-            'steam_id' => $_SESSION['steam_id'],
-            'steam_name' => $_SESSION['steam_name'],
-            'avatar_url' => $_SESSION['avatar_url'],
+            'id' => (int) $_SESSION['user_id'],
+            'steam_id' => (string) $_SESSION['steam_id'],
+            'steam_name' => (string) $_SESSION['steam_name'],
+            'avatar_url' => (string) $_SESSION['avatar_url'],
             'roles' => $_SESSION['roles']
         ];
     }
@@ -166,7 +208,10 @@ class SteamAuth {
     /**
      * Get user roles
      */
-    public static function getUserRoles($userId) {
+    /**
+     * @return array<int, array{name: string, display_name: string, alias: string|null}>
+     */
+    public static function getUserRoles(int $userId): array {
         $db = Database::getInstance();
         
         // Get user's role columns
@@ -216,13 +261,17 @@ class SteamAuth {
     /**
      * Check if user has role
      */
-    public static function hasRole($roleName) {
+    public static function hasRole(string $roleName): bool {
         if (!self::isLoggedIn()) {
             return false;
         }
         
+        if (!isset($_SESSION['roles']) || !is_array($_SESSION['roles'])) {
+            return false;
+        }
+
         foreach ($_SESSION['roles'] as $role) {
-            if ($role['name'] === $roleName) {
+            if (is_array($role) && isset($role['name']) && $role['name'] === $roleName) {
                 return true;
             }
         }
@@ -233,15 +282,19 @@ class SteamAuth {
     /**
      * Check if user is panel admin
      */
-    public static function isPanelAdmin() {
+    public static function isPanelAdmin(): bool {
         return self::hasRole('PANEL');
     }
 
     /**
      * Get base URL
      */
-    private static function getBaseUrl() {
-        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
-        return $protocol . $_SERVER['HTTP_HOST'];
+    private static function getBaseUrl(): string {
+        $httpsEnabled = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+        $serverPort = isset($_SERVER['SERVER_PORT']) ? (int) $_SERVER['SERVER_PORT'] : 80;
+        $protocol = ($httpsEnabled || $serverPort === 443) ? "https://" : "http://";
+        $host = isset($_SERVER['HTTP_HOST']) && is_string($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost';
+
+        return $protocol . $host;
     }
 }

@@ -18,7 +18,7 @@ if (file_exists('config.php')) {
         );
         // Check if roles table exists
         $stmt = $testConn->query("SHOW TABLES LIKE 'roles'");
-        if ($stmt->rowCount() > 0) {
+        if ($stmt instanceof PDOStatement && $stmt->rowCount() > 0) {
             // Already installed, redirect to index
             header('Location: index');
             exit;
@@ -81,9 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Split into individual statements and execute
                 $statements = array_filter(array_map('trim', explode(';', $schema)));
                 foreach ($statements as $statement) {
-                    if (!empty($statement)) {
-                        $testConn->exec($statement);
-                    }
+                    $testConn->exec($statement);
                 }
                 
                 // Save configuration
@@ -369,11 +367,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php if (!empty($error)): ?>
             <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
         <?php endif; ?>
-        
-        <?php if (!empty($success)): ?>
-            <div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div>
-        <?php endif; ?>
-        
         <?php if ($step === 1): ?>
             <h2 style="margin-bottom: 1rem; color: #1e3c72;">Step 1: Database Configuration</h2>
             

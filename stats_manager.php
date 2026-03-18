@@ -4,7 +4,7 @@
 require_once 'db.php';
 
 class StatsManager {
-    private $db;
+    private Database $db;
     
     public function __construct() {
         $this->db = Database::getInstance();
@@ -19,7 +19,7 @@ class StatsManager {
      * @param int $amount Amount to add
      * @return bool Success status
      */
-    public function addPlayerStat($steamId, $name, $statId, $serverId, $amount) {
+    public function addPlayerStat(string $steamId, ?string $name, string $statId, string $serverId, int $amount): bool {
         try {
             // Call the stored procedure
             $stmt = $this->db->getConnection()->prepare("CALL add_player_stat(?, ?, ?, ?, ?)");
@@ -39,9 +39,12 @@ class StatsManager {
      * @param int $limit Number of results to return (default: 50)
      * @return array Leaderboard data
      */
-    public function getLeaderboard($statId, $period = 'alltime', $serverId = 'main', $limit = 50) {
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function getLeaderboard(string $statId, string $period = 'alltime', string $serverId = 'main', int $limit = 50): array {
         $validPeriods = ['daily', 'weekly', 'monthly', 'alltime'];
-        if (!in_array($period, $validPeriods)) {
+        if (!in_array($period, $validPeriods, true)) {
             $period = 'alltime';
         }
         
@@ -78,7 +81,10 @@ class StatsManager {
      * Get all available stats
      * @return array Array of stats
      */
-    public function getAllStats() {
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function getAllStats(): array {
         try {
             return $this->db->fetchAll("SELECT * FROM stat ORDER BY stat_id");
         } catch (PDOException $e) {
@@ -91,7 +97,10 @@ class StatsManager {
      * Get all available servers
      * @return array Array of servers
      */
-    public function getAllServers() {
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function getAllServers(): array {
         try {
             return $this->db->fetchAll("SELECT * FROM stat_server ORDER BY server_id");
         } catch (PDOException $e) {
@@ -107,9 +116,12 @@ class StatsManager {
      * @param string $serverId Server ID (default: 'main')
      * @return array Player stats
      */
-    public function getPlayerStats($steamId, $period = 'alltime', $serverId = 'main') {
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function getPlayerStats(string $steamId, string $period = 'alltime', string $serverId = 'main'): array {
         $validPeriods = ['daily', 'weekly', 'monthly', 'alltime'];
-        if (!in_array($period, $validPeriods)) {
+        if (!in_array($period, $validPeriods, true)) {
             $period = 'alltime';
         }
         
@@ -145,7 +157,7 @@ class StatsManager {
      * Check if stats tables exist
      * @return bool True if stats tables exist
      */
-    public function statsTablesExist() {
+    public function statsTablesExist(): bool {
         try {
             $this->db->fetchOne("SELECT 1 FROM stat_player LIMIT 1");
             return true;

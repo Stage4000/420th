@@ -13,7 +13,7 @@ try {
     
     // Check if table already exists
     $tableCheck = $conn->query("SHOW TABLES LIKE 'staff_notes'");
-    if ($tableCheck->rowCount() > 0) {
+    if ($tableCheck instanceof PDOStatement && $tableCheck->rowCount() > 0) {
         echo "✓ staff_notes table already exists, skipping creation.\n";
     } else {
         echo "Creating staff_notes table...\n";

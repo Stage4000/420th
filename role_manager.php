@@ -4,12 +4,14 @@
 require_once 'db.php';
 
 class RoleManager {
-    private $db;
+    private Database $db;
     
     // Define staff roles that require the ALL role
+    /** @var list<string> */
     private static $staffRoles = ['ADMIN', 'MODERATOR', 'DEVELOPER', 'CURATOR'];
     
     // Role name to column mapping
+    /** @var array<string, string> */
     private static $roleColumnMap = [
         'S3' => 'role_s3',
         'CAS' => 'role_cas',
@@ -35,7 +37,7 @@ class RoleManager {
      * @param string $roleName Role name (e.g., 'ADMIN', 'S3')
      * @return bool Success status
      */
-    public function addRole($userId, $roleName) {
+    public function addRole(int $userId, string $roleName): bool {
         try {
             if (!isset(self::$roleColumnMap[$roleName])) {
                 throw new Exception("Invalid role name: $roleName");
@@ -68,7 +70,7 @@ class RoleManager {
             );
             
             // Check if this is a staff role - automatically add ALL role
-            if (in_array($roleName, self::$staffRoles)) {
+            if (in_array($roleName, self::$staffRoles, true)) {
                 $this->db->execute(
                     "UPDATE users SET role_all = 1 WHERE id = ?",
                     [$userId]
@@ -94,7 +96,7 @@ class RoleManager {
      * @param string $roleName Role name to remove
      * @return bool Success status
      */
-    public function removeRole($userId, $roleName) {
+    public function removeRole(int $userId, string $roleName): bool {
         try {
             if (!isset(self::$roleColumnMap[$roleName])) {
                 throw new Exception("Invalid role name: $roleName");
@@ -112,7 +114,7 @@ class RoleManager {
             );
             
             // Check if this is a staff role - remove ALL if no other staff roles remain
-            if (in_array($roleName, self::$staffRoles)) {
+            if (in_array($roleName, self::$staffRoles, true)) {
                 if (!$this->hasStaffRole($userId)) {
                     $this->db->execute(
                         "UPDATE users SET role_all = 0 WHERE id = ?",
@@ -147,7 +149,7 @@ class RoleManager {
      * This can be run to fix any existing data
      * @return int Number of users fixed
      */
-    public function syncStaffRoles() {
+    public function syncStaffRoles(): int {
         try {
             // Get all users with at least one staff role but missing ALL
             $result = $this->db->execute("
@@ -170,7 +172,7 @@ class RoleManager {
      * @param int $userId User ID
      * @return bool
      */
-    public function hasStaffRole($userId) {
+    public function hasStaffRole(int $userId): bool {
         $result = $this->db->fetchOne("
             SELECT (role_admin + role_moderator + role_developer + role_curator) as staff_count
             FROM users 
@@ -185,7 +187,7 @@ class RoleManager {
      * @param int $roleId
      * @return string|null
      */
-    public function getRoleName($roleId) {
+    public function getRoleName(int $roleId): ?string {
         $role = $this->db->fetchOne("SELECT name FROM roles WHERE id = ?", [$roleId]);
         return $role ? $role['name'] : null;
     }
@@ -195,8 +197,8 @@ class RoleManager {
      * @param string $roleName
      * @return int|null
      */
-    public function getRoleId($roleName) {
+    public function getRoleId(string $roleName): ?int {
         $role = $this->db->fetchOne("SELECT id FROM roles WHERE name = ?", [$roleName]);
-        return $role ? $role['id'] : null;
+        return $role ? (int) $role['id'] : null;
     }
 }

@@ -4,8 +4,9 @@
 require_once 'config.php';
 
 class Database {
+    /** @var self|null */
     private static $instance = null;
-    private $connection;
+    private PDO $connection;
 
     private function __construct() {
         try {
@@ -24,51 +25,67 @@ class Database {
         }
     }
 
-    public static function getInstance() {
+    public static function getInstance(): self {
         if (self::$instance === null) {
             self::$instance = new self();
         }
         return self::$instance;
     }
 
-    public function getConnection() {
+    public function getConnection(): PDO {
         return $this->connection;
     }
 
-    public function query($sql, $params = []) {
+    /**
+     * @param array<int, mixed> $params
+     */
+    public function query(string $sql, array $params = []): PDOStatement {
         $stmt = $this->connection->prepare($sql);
         $stmt->execute($params);
         return $stmt;
     }
 
-    public function fetchAll($sql, $params = []) {
+    /**
+     * @param array<int, mixed> $params
+     * @return array<int, array<string, mixed>>
+     */
+    public function fetchAll(string $sql, array $params = []): array {
         $stmt = $this->query($sql, $params);
         return $stmt->fetchAll();
     }
 
-    public function fetchOne($sql, $params = []) {
+    /**
+     * @param array<int, mixed> $params
+     * @return array<string, mixed>|null
+     */
+    public function fetchOne(string $sql, array $params = []): ?array {
         $stmt = $this->query($sql, $params);
-        return $stmt->fetch();
+        $result = $stmt->fetch();
+
+        return $result === false ? null : $result;
     }
 
-    public function execute($sql, $params = []) {
+    /**
+     * @param array<int, mixed> $params
+     */
+    public function execute(string $sql, array $params = []): int {
         $stmt = $this->query($sql, $params);
         return $stmt->rowCount();
     }
 
-    public function lastInsertId() {
-        return $this->connection->lastInsertId();
+    public function lastInsertId(): string {
+        return (string) $this->connection->lastInsertId();
     }
 
-    public function beginTransaction() {
+    public function beginTransaction(): bool {
         return $this->connection->beginTransaction();
     }
 
-    public function commit() {
+    public function commit(): bool {
         return $this->connection->commit();
     }
 
-    public function rollback() {
+    public function rollback(): bool {
         return $this->connection->rollback();
     }
 
@@ -77,7 +94,7 @@ class Database {
      * @param PDOException $e The exception to check
      * @return bool True if the error is due to a missing table
      */
-    public static function isTableNotFoundError($e) {
+    public static function isTableNotFoundError(PDOException $e): bool {
         return $e->getCode() === '42S02' || strpos($e->getMessage(), '42S02') !== false;
     }
 
@@ -85,7 +102,7 @@ class Database {
      * Create the server_settings table if it doesn't exist
      * This is called automatically when the table is detected as missing
      */
-    public function createServerSettingsTable() {
+    public function createServerSettingsTable(): void {
         // Create server_settings table
         $this->query("
             CREATE TABLE IF NOT EXISTS `server_settings` (
