@@ -325,7 +325,7 @@ class RconManager {
      * @param array $player Raw player data
      * @return array
      */
-    public static function normalizePlayer(array $player) {
+    private static function normalizePlayer(array $player) {
         $number = self::firstPlayerValue($player, ['num', 'number', 'id', 'player', 'player_id', 'slot']);
         $name = self::firstPlayerValue($player, ['name', 'player_name', 'playerName', 'nickname', 'nick']);
         $guid = self::normalizeSteamId(self::firstPlayerValue($player, ['guid', 'steam_id', 'steamid', 'steamId']));
@@ -383,8 +383,8 @@ class RconManager {
             return null;
         }
 
-        if (preg_match('/\b\d{' . self::STEAM_ID64_LENGTH . '}\b/', $value, $matches)) {
-            return $matches[0];
+        if (preg_match('/(?:^|\D)(\d{' . self::STEAM_ID64_LENGTH . '})(?:\D|$)/', $value, $matches)) {
+            return $matches[1];
         }
 
         return $value;
