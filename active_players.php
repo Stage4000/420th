@@ -172,6 +172,9 @@ if ($rconEnabled) {
                 
                 if ($user) {
                     $player['db_user'] = $user;
+                    if (empty($player['name']) && !empty($user['steam_name'])) {
+                        $player['name'] = $user['steam_name'];
+                    }
                     $player['has_ban'] = $banManager->isUserBanned($user['id']) !== false;
                     
                     // Get ban history count
@@ -186,6 +189,10 @@ if ($rconEnabled) {
                     $player['ban_count'] = 0;
                     $player['note_count'] = 0;
                 }
+            }
+
+            if (empty($player['name']) && !empty($player['db_user']['steam_name'])) {
+                $player['name'] = $player['db_user']['steam_name'];
             }
         }
     } catch (Exception $e) {
