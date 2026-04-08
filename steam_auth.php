@@ -24,8 +24,6 @@ class SteamAuth {
 
     /**
      * Validate Steam OAuth callback
-     */
-    /**
      * @return string|false
      */
     public static function validate() {

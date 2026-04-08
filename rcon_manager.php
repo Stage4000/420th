@@ -110,9 +110,6 @@ class RconManager {
     
     /**
      * Get current RCON settings (password masked)
-     * @return array
-     */
-    /**
      * @return array{rcon_enabled: bool, rcon_host: string, rcon_port: int, rcon_password_set: bool}
      */
     public function getSettings(): array {
@@ -126,10 +123,6 @@ class RconManager {
     
     /**
      * Establish RCON connection
-     * @return bool
-     * @throws Exception
-     */
-    /**
      * @return \Nizarii\ARC
      * @throws Exception
      */

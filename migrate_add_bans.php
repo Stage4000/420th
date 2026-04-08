@@ -190,7 +190,7 @@ try {
                     echo '<div class="step-title">Checking existing table structure...</div>';
                     
                     $columnsStmt = $pdo->query("SHOW COLUMNS FROM whitelist_bans");
-                    if (!$columnsStmt instanceof PDOStatement) {
+                    if (!($columnsStmt instanceof PDOStatement)) {
                         throw new RuntimeException('Failed to inspect whitelist_bans columns');
                     }
 

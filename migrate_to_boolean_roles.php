@@ -86,7 +86,7 @@ try {
         FROM user_roles ur
         JOIN roles r ON ur.role_id = r.id
     ");
-    if (!$stmt instanceof PDOStatement) {
+    if (!($stmt instanceof PDOStatement)) {
         throw new RuntimeException('Failed to load existing role assignments');
     }
     
@@ -154,7 +154,7 @@ try {
         role_s3 = 1 OR role_cas = 1 OR role_s1 = 1 OR role_opfor = 1 OR 
         role_all = 1 OR role_admin = 1 OR role_moderator = 1 OR role_trusted = 1 OR 
         role_media = 1 OR role_curator = 1 OR role_developer = 1 OR role_panel = 1");
-    if (!$stmt instanceof PDOStatement) {
+    if (!($stmt instanceof PDOStatement)) {
         throw new RuntimeException('Failed to verify migrated role counts');
     }
     

@@ -26,9 +26,6 @@ class BanManager {
      * @param string|null $expiresAt Ban expiration (null for indefinite)
      * @param bool $serverKick Whether to kick from game server
      * @param bool $serverBan Whether to ban from game server
-     * @return array Result with success status and messages
-     */
-    /**
      * @return array{success: bool, messages: list<string>}
      */
     public function banUser(int $userId, int $bannedByUserId, string $banType = 'Whitelist', string $reason = '', ?string $expiresAt = null, bool $serverKick = false, bool $serverBan = false): array {
