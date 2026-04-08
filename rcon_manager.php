@@ -154,7 +154,7 @@ class RconManager {
             $this->connect();
             
             // Try to get player list as connection test
-            $players = $this->rcon->getPlayersArray();
+            $players = $this->fetchPlayersArray();
             
             return [
                 'success' => true,
@@ -176,7 +176,7 @@ class RconManager {
     public function getPlayers() {
         try {
             $this->connect();
-            return $this->rcon->getPlayersArray();
+            return array_map([self::class, 'normalizePlayer'], $this->fetchPlayersArray());
         } catch (Exception $e) {
             throw new Exception("Failed to get player list: " . $e->getMessage());
         }
@@ -194,7 +194,7 @@ class RconManager {
             
             // Try to find player by Steam ID if 17-digit number
             if (preg_match('/^\d{' . self::STEAM_ID64_LENGTH . '}$/', $identifier)) {
-                $players = $this->rcon->getPlayersArray();
+                $players = $this->getPlayers();
                 foreach ($players as $player) {
                     if (isset($player['guid']) && $player['guid'] === $identifier) {
                         $identifier = $player['num'];
@@ -230,7 +230,7 @@ class RconManager {
                 $guid = $identifier;
             } else {
                 // Try to find player's GUID from player list
-                $players = $this->rcon->getPlayersArray();
+                $players = $this->getPlayers();
                 $guid = null;
                 
                 foreach ($players as $player) {
@@ -310,5 +310,83 @@ class RconManager {
         } catch (Exception $e) {
             throw new Exception("Failed to execute command: " . $e->getMessage());
         }
+    }
+
+    /**
+     * Fetch raw player list from the RCON library.
+     * @return array
+     */
+    private function fetchPlayersArray() {
+        return $this->rcon->getPlayersArray();
+    }
+
+    /**
+     * Normalize player payloads from the RCON library into the keys used by the UI.
+     * @param array $player Raw player data
+     * @return array
+     */
+    private static function normalizePlayer(array $player) {
+        $number = self::firstPlayerValue($player, ['num', 'number', 'id', 'player', 'player_id', 'slot']);
+        $name = self::firstPlayerValue($player, ['name', 'player_name', 'playerName', 'nickname', 'nick']);
+        $guid = self::normalizeSteamId(self::firstPlayerValue($player, ['guid', 'steam_id', 'steamid', 'steamId']));
+        $time = self::firstPlayerValue($player, ['time', 'playtime', 'duration', 'connected', 'connection_time']);
+        $ping = self::firstPlayerValue($player, ['ping', 'latency']);
+
+        $player['num'] = $number !== null ? (string)$number : null;
+        $player['name'] = $name !== null ? trim((string)$name) : null;
+        $player['guid'] = $guid;
+        $player['time'] = $time !== null ? trim((string)$time) : null;
+        $player['ping'] = $ping !== null ? trim((string)$ping) : null;
+
+        return $player;
+    }
+
+    /**
+     * Return the first non-empty player value from a list of keys.
+     * @param array $player
+     * @param array $keys
+     * @return mixed|null
+     */
+    private static function firstPlayerValue(array $player, array $keys) {
+        foreach ($keys as $key) {
+            if (!array_key_exists($key, $player)) {
+                continue;
+            }
+
+            $value = $player[$key];
+            if ($value === null) {
+                continue;
+            }
+
+            if (is_string($value) && trim($value) === '') {
+                continue;
+            }
+
+            return $value;
+        }
+
+        return null;
+    }
+
+    /**
+     * Extract a Steam ID64 from the RCON payload when possible.
+     * @param mixed $value
+     * @return string|null
+     */
+    private static function normalizeSteamId($value) {
+        if ($value === null) {
+            return null;
+        }
+
+        $value = trim((string)$value);
+        if ($value === '') {
+            return null;
+        }
+
+        if (preg_match('/(?:^|\D)(\d{' . self::STEAM_ID64_LENGTH . '})(?:\D|$)/', $value, $matches)) {
+            return $matches[1];
+        }
+
+        return $value;
     }
 }
