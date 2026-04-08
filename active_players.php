@@ -188,12 +188,13 @@ if ($rconEnabled) {
                 }
             }
 
-            if (isset($player['db_user']) &&
+            if (!empty($player['db_user']) &&
                 !empty($player['db_user']['steam_name']) &&
                 (!isset($player['name']) || $player['name'] === null || $player['name'] === '')) {
                 $player['name'] = $player['db_user']['steam_name'];
             }
         }
+        unset($player);
     } catch (Exception $e) {
         $message = "Error fetching players: " . $e->getMessage();
         $messageType = "error";
