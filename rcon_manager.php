@@ -13,13 +13,14 @@ class RconManager {
     // Steam ID64 is always 17 digits
     const STEAM_ID64_LENGTH = 17;
     
-    private $db;
-    private $rcon;
-    private $enabled;
-    private $host;
-    private $port;
-    private $password;
-    private $libraryAvailable;
+    private Database $db;
+    /** @var \Nizarii\ARC|null */
+    private $rcon = null;
+    private bool $enabled = false;
+    private string $host = '';
+    private int $port = 0;
+    private string $password = '';
+    private bool $libraryAvailable = false;
     
     public function __construct() {
         // Check if RCON library is available
@@ -31,7 +32,7 @@ class RconManager {
     /**
      * Load RCON settings from database
      */
-    private function loadSettings() {
+    private function loadSettings(): void {
         try {
             $settings = $this->db->fetchAll(
                 "SELECT setting_key, setting_value FROM server_settings 
@@ -64,7 +65,7 @@ class RconManager {
      * Check if RCON is enabled and configured
      * @return bool
      */
-    public function isEnabled() {
+    public function isEnabled(): bool {
         return $this->libraryAvailable &&
                $this->enabled && 
                !empty($this->host) && 
@@ -74,11 +75,11 @@ class RconManager {
     
     /**
      * Update RCON settings
-     * @param array $settings Associative array of settings to update
+     * @param array<string, scalar|null> $settings Associative array of settings to update
      * @param int $userId User ID making the change
      * @return bool
      */
-    public function updateSettings($settings, $userId) {
+    public function updateSettings(array $settings, int $userId): bool {
         try {
             $this->db->beginTransaction();
             
@@ -109,9 +110,9 @@ class RconManager {
     
     /**
      * Get current RCON settings (password masked)
-     * @return array
+     * @return array{rcon_enabled: bool, rcon_host: string, rcon_port: int, rcon_password_set: bool}
      */
-    public function getSettings() {
+    public function getSettings(): array {
         return [
             'rcon_enabled' => $this->enabled,
             'rcon_host' => $this->host,
@@ -122,7 +123,7 @@ class RconManager {
     
     /**
      * Establish RCON connection
-     * @return bool
+     * @return \Nizarii\ARC
      * @throws Exception
      */
     private function connect() {
@@ -134,7 +135,7 @@ class RconManager {
             throw new Exception("RCON is not enabled or not configured");
         }
         
-        if (!$this->rcon) {
+        if ($this->rcon === null) {
             try {
                 $this->rcon = new \Nizarii\ARC($this->host, $this->password, $this->port);
             } catch (Exception $e) {
@@ -142,19 +143,19 @@ class RconManager {
             }
         }
         
-        return true;
+        return $this->rcon;
     }
     
     /**
      * Test RCON connection
-     * @return array Result with success status and message
+     * @return array{success: bool, message: string, player_count: int}
      */
-    public function testConnection() {
+    public function testConnection(): array {
         try {
-            $this->connect();
+            $rcon = $this->connect();
             
             // Try to get player list as connection test
-            $players = $this->rcon->getPlayersArray();
+            $players = $rcon->getPlayersArray();
             
             return [
                 'success' => true,
@@ -164,7 +165,8 @@ class RconManager {
         } catch (Exception $e) {
             return [
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
+                'player_count' => 0,
             ];
         }
     }
@@ -173,10 +175,13 @@ class RconManager {
      * Get list of online players
      * @return array Array of players
      */
-    public function getPlayers() {
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function getPlayers(): array {
         try {
-            $this->connect();
-            return $this->rcon->getPlayersArray();
+            $rcon = $this->connect();
+            return $rcon->getPlayersArray();
         } catch (Exception $e) {
             throw new Exception("Failed to get player list: " . $e->getMessage());
         }
@@ -188,13 +193,13 @@ class RconManager {
      * @param string $reason Kick reason
      * @return bool
      */
-    public function kickPlayer($identifier, $reason = '') {
+    public function kickPlayer(string $identifier, string $reason = ''): bool {
         try {
-            $this->connect();
+            $rcon = $this->connect();
             
             // Try to find player by Steam ID if 17-digit number
             if (preg_match('/^\d{' . self::STEAM_ID64_LENGTH . '}$/', $identifier)) {
-                $players = $this->rcon->getPlayersArray();
+                $players = $rcon->getPlayersArray();
                 foreach ($players as $player) {
                     if (isset($player['guid']) && $player['guid'] === $identifier) {
                         $identifier = $player['num'];
@@ -205,7 +210,7 @@ class RconManager {
             
             // Execute kick command
             $fullReason = !empty($reason) ? $reason : 'Kicked by admin';
-            $result = $this->rcon->kickPlayer($identifier, $fullReason);
+            $rcon->kickPlayer($identifier, $fullReason);
             
             return true;
         } catch (Exception $e) {
@@ -220,9 +225,9 @@ class RconManager {
      * @param int $duration Ban duration in minutes (0 = permanent)
      * @return bool
      */
-    public function banPlayer($identifier, $reason = '', $duration = 0) {
+    public function banPlayer(string $identifier, string $reason = '', int $duration = 0): bool {
         try {
-            $this->connect();
+            $rcon = $this->connect();
             
             // For BattlEye, we need the GUID (Steam ID)
             // If identifier looks like a Steam ID, use it directly
@@ -230,12 +235,12 @@ class RconManager {
                 $guid = $identifier;
             } else {
                 // Try to find player's GUID from player list
-                $players = $this->rcon->getPlayersArray();
+                $players = $rcon->getPlayersArray();
                 $guid = null;
                 
                 foreach ($players as $player) {
                     if ($player['num'] == $identifier || 
-                        stripos($player['name'], $identifier) !== false) {
+                         stripos((string) $player['name'], $identifier) !== false) {
                         $guid = isset($player['guid']) ? $player['guid'] : null;
                         $identifier = $player['num'];
                         break;
@@ -253,9 +258,9 @@ class RconManager {
             // BattlEye ban format: #exec ban <player_number> <duration_in_minutes> <reason>
             // Duration: 0 = permanent, or number of minutes
             if ($duration > 0) {
-                $result = $this->rcon->sendCommand("ban {$identifier} {$duration} {$fullReason}");
+                $rcon->command("ban {$identifier} {$duration} {$fullReason}");
             } else {
-                $result = $this->rcon->sendCommand("ban {$identifier} 0 {$fullReason}");
+                $rcon->command("ban {$identifier} 0 {$fullReason}");
             }
             
             return true;
@@ -269,13 +274,13 @@ class RconManager {
      * @param string $steamId Player's Steam ID (GUID) to unban
      * @return bool
      */
-    public function unbanPlayer($steamId) {
+    public function unbanPlayer(string $steamId): bool {
         try {
-            $this->connect();
+            $rcon = $this->connect();
             
             // BattlEye unban command uses the GUID (Steam ID)
             // Command format: removeBan <GUID>
-            $result = $this->rcon->sendCommand("removeBan {$steamId}");
+            $rcon->command("removeBan {$steamId}");
             
             return true;
         } catch (Exception $e) {
@@ -288,10 +293,10 @@ class RconManager {
      * @param string $message Message to send
      * @return bool
      */
-    public function sendGlobalMessage($message) {
+    public function sendGlobalMessage(string $message): bool {
         try {
-            $this->connect();
-            $this->rcon->sayGlobal($message);
+            $rcon = $this->connect();
+            $rcon->sayGlobal($message);
             return true;
         } catch (Exception $e) {
             throw new Exception("Failed to send message: " . $e->getMessage());
@@ -303,10 +308,10 @@ class RconManager {
      * @param string $command Command to execute
      * @return string Command response
      */
-    public function executeCommand($command) {
+    public function executeCommand(string $command): string {
         try {
-            $this->connect();
-            return $this->rcon->sendCommand($command);
+            $rcon = $this->connect();
+            return $rcon->command($command);
         } catch (Exception $e) {
             throw new Exception("Failed to execute command: " . $e->getMessage());
         }

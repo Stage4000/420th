@@ -211,7 +211,8 @@ if (!in_array($remoteAddr, $allowedIps) && !in_array($_SERVER['REMOTE_ADDR'], $a
         }
         
         // Check file permissions
-        if (is_writable(session_save_path())) {
+        $sessionPath = session_save_path();
+        if ($sessionPath !== false && is_writable($sessionPath)) {
             echo '<div class="check success"><span class="icon">✅</span><div><strong>Session Directory:</strong> Writable</div></div>';
         } else {
             echo '<div class="check error"><span class="icon">❌</span><div><strong>Session Directory:</strong> Not writable</div></div>';

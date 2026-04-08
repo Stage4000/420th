@@ -77,7 +77,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($banDuration !== 'indefinite') {
                     $hours = intval($banDuration);
                     if ($hours > 0) {
-                        $banExpires = date('Y-m-d H:i:s', strtotime("+$hours hours"));
+                        $banExpiresTimestamp = strtotime("+$hours hours");
+                        if ($banExpiresTimestamp !== false) {
+                            $banExpires = date('Y-m-d H:i:s', $banExpiresTimestamp);
+                        }
                     }
                 }
                 
@@ -92,9 +95,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         "INSERT INTO users (steam_id, steam_name, created_at) VALUES (?, ?, NOW())",
                         [$steamId, $placeholderName]
                     );
-                    $userId = $db->getConnection()->lastInsertId();
+                    $userId = (int) $db->getConnection()->lastInsertId();
                 } else {
-                    $userId = $user['id'];
+                    $userId = (int) $user['id'];
                 }
                 
                 // Issue ban
@@ -172,7 +175,7 @@ if ($rconEnabled) {
                 
                 if ($user) {
                     $player['db_user'] = $user;
-                    $player['has_ban'] = $banManager->isUserBanned($user['id']) !== false;
+                    $player['has_ban'] = $banManager->isUserBanned((int) $user['id']) !== null;
                     
                     // Get ban history count
                     $bans = $banManager->getUserBans($user['id']);

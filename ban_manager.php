@@ -6,13 +6,11 @@ require_once 'role_manager.php';
 require_once 'rcon_manager.php';
 
 class BanManager {
-    private $db;
-    private $roleManager;
-    private $rconManager;
+    private Database $db;
+    private RconManager $rconManager;
     
     public function __construct() {
         $this->db = Database::getInstance();
-        $this->roleManager = new RoleManager();
         $this->rconManager = new RconManager();
     }
     
@@ -28,14 +26,14 @@ class BanManager {
      * @param string|null $expiresAt Ban expiration (null for indefinite)
      * @param bool $serverKick Whether to kick from game server
      * @param bool $serverBan Whether to ban from game server
-     * @return array Result with success status and messages
+     * @return array{success: bool, messages: list<string>}
      */
-    public function banUser($userId, $bannedByUserId, $banType = 'Whitelist', $reason = '', $expiresAt = null, $serverKick = false, $serverBan = false) {
+    public function banUser(int $userId, int $bannedByUserId, string $banType = 'Whitelist', string $reason = '', ?string $expiresAt = null, bool $serverKick = false, bool $serverBan = false): array {
         $messages = [];
         
         try {
             // Validate ban type
-            if (!in_array($banType, ['S3', 'CAS', 'Whitelist'])) {
+            if (!in_array($banType, ['S3', 'CAS', 'Whitelist'], true)) {
                 throw new Exception("Invalid ban type");
             }
             
@@ -127,7 +125,10 @@ class BanManager {
      * @param string $reason Unban reason
      * @return array Result with success status and messages
      */
-    public function unbanUser($userId, $unbannedByUserId, $reason = '') {
+    /**
+     * @return array{success: bool, messages: list<string>}
+     */
+    public function unbanUser(int $userId, int $unbannedByUserId, string $reason = ''): array {
         $messages = [];
         
         try {
@@ -185,7 +186,10 @@ class BanManager {
      * @param int $userId User ID to check
      * @return array|bool Ban info array if banned, false if not banned
      */
-    public function isUserBanned($userId) {
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function isUserBanned(int $userId): ?array {
         // First, expire any old bans
         $this->expireOldBans();
         
@@ -202,7 +206,7 @@ class BanManager {
             [$userId]
         );
         
-        return $ban ? $ban : false;
+        return $ban;
     }
     
     /**
@@ -211,13 +215,16 @@ class BanManager {
      * @param string $steamId Steam ID to check
      * @return array|bool Ban info array if banned, false if not banned
      */
-    public function isUserBannedBySteamId($steamId) {
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function isUserBannedBySteamId(string $steamId): ?array {
         // First, expire any old bans
         $this->expireOldBans();
         
         $user = $this->db->fetchOne("SELECT id FROM users WHERE steam_id = ?", [$steamId]);
         if (!$user) {
-            return false;
+            return null;
         }
         
         return $this->isUserBanned($user['id']);
@@ -229,7 +236,10 @@ class BanManager {
      * @param int $userId User ID
      * @return array Array of ban records
      */
-    public function getUserBans($userId) {
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function getUserBans(int $userId): array {
         return $this->db->fetchAll(
             "SELECT wb.*, 
                     banned_by.steam_name as banned_by_name,
@@ -249,16 +259,14 @@ class BanManager {
      * 
      * @return int Number of bans expired
      */
-    private function expireOldBans() {
-        $result = $this->db->query(
+    private function expireOldBans(): int {
+        return $this->db->execute(
             "UPDATE whitelist_bans 
              SET is_active = 0 
              WHERE is_active = 1 
              AND ban_expires IS NOT NULL 
              AND ban_expires < NOW()"
         );
-        
-        return $result;
     }
     
     /**
@@ -269,7 +277,10 @@ class BanManager {
      * @param string $search Optional search term
      * @return array Array with 'bans' and 'total' keys
      */
-    public function getAllBans($page = 1, $perPage = 20, $search = '') {
+    /**
+     * @return array{bans: array<int, array<string, mixed>>, total: int}
+     */
+    public function getAllBans(int $page = 1, int $perPage = 20, string $search = ''): array {
         $this->expireOldBans();
         
         $offset = ($page - 1) * $perPage;
@@ -287,7 +298,7 @@ class BanManager {
                        JOIN users banned_user ON wb.user_id = banned_user.id
                        $whereClause";
         $totalResult = $this->db->fetchOne($countQuery, $params);
-        $total = $totalResult['total'];
+        $total = isset($totalResult['total']) ? (int) $totalResult['total'] : 0;
         
         // Get bans
         $query = "SELECT wb.*, 

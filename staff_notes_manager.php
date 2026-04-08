@@ -4,7 +4,7 @@
 require_once 'db.php';
 
 class StaffNotesManager {
-    private $db;
+    private Database $db;
     
     public function __construct() {
         $this->db = Database::getInstance();
@@ -17,7 +17,7 @@ class StaffNotesManager {
      * @return string Trimmed note text
      * @throws Exception if note text is empty
      */
-    private function validateNoteText($noteText) {
+    private function validateNoteText(string $noteText): string {
         $noteText = trim($noteText);
         
         if (empty($noteText)) {
@@ -35,7 +35,7 @@ class StaffNotesManager {
      * @param string $noteText Note content
      * @return int Note ID
      */
-    public function addNote($userId, $createdByUserId, $noteText) {
+    public function addNote(int $userId, int $createdByUserId, string $noteText): int {
         $noteText = $this->validateNoteText($noteText);
         
         $this->db->query(
@@ -44,7 +44,7 @@ class StaffNotesManager {
             [$userId, $createdByUserId, $noteText]
         );
         
-        return $this->db->getConnection()->lastInsertId();
+        return (int) $this->db->getConnection()->lastInsertId();
     }
     
     /**
@@ -55,7 +55,7 @@ class StaffNotesManager {
      * @param string $noteText New note content
      * @return bool Success
      */
-    public function updateNote($noteId, $updatedByUserId, $noteText) {
+    public function updateNote(int $noteId, int $updatedByUserId, string $noteText): bool {
         $noteText = $this->validateNoteText($noteText);
         
         $result = $this->db->query(
@@ -65,7 +65,7 @@ class StaffNotesManager {
             [$noteText, $updatedByUserId, $noteId]
         );
         
-        return $result > 0; // Return true if at least one row was updated
+        return $result->rowCount() > 0; // Return true if at least one row was updated
     }
     
     /**
@@ -74,9 +74,9 @@ class StaffNotesManager {
      * @param int $noteId Note ID to delete
      * @return bool Success
      */
-    public function deleteNote($noteId) {
+    public function deleteNote(int $noteId): bool {
         $result = $this->db->query("DELETE FROM staff_notes WHERE id = ?", [$noteId]);
-        return $result > 0; // Return true if at least one row was deleted
+        return $result->rowCount() > 0; // Return true if at least one row was deleted
     }
     
     /**
@@ -85,7 +85,10 @@ class StaffNotesManager {
      * @param int $userId User ID
      * @return array Array of notes with creator/updater info
      */
-    public function getUserNotes($userId) {
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function getUserNotes(int $userId): array {
         return $this->db->fetchAll(
             "SELECT sn.*, 
                     created_by.steam_name as created_by_name,
@@ -107,7 +110,10 @@ class StaffNotesManager {
      * @param int $noteId Note ID
      * @return array|null Note data or null if not found
      */
-    public function getNote($noteId) {
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getNote(int $noteId): ?array {
         return $this->db->fetchOne(
             "SELECT sn.*, 
                     created_by.steam_name as created_by_name,
@@ -126,7 +132,7 @@ class StaffNotesManager {
      * @param int $userId User ID
      * @return int Number of notes
      */
-    public function countUserNotes($userId) {
+    public function countUserNotes(int $userId): int {
         $result = $this->db->fetchOne(
             "SELECT COUNT(*) as count FROM staff_notes WHERE user_id = ?",
             [$userId]
@@ -140,7 +146,7 @@ class StaffNotesManager {
      * @param int $userId User ID
      * @return bool True if user has notes
      */
-    public function hasNotes($userId) {
+    public function hasNotes(int $userId): bool {
         return $this->countUserNotes($userId) > 0;
     }
     
@@ -149,7 +155,10 @@ class StaffNotesManager {
      * 
      * @return array Array of user IDs with note counts
      */
-    public function getUsersWithNotes() {
+    /**
+     * @return array<int, int>
+     */
+    public function getUsersWithNotes(): array {
         $results = $this->db->fetchAll(
             "SELECT user_id, COUNT(*) as note_count 
              FROM staff_notes 
@@ -158,7 +167,7 @@ class StaffNotesManager {
         
         $noteCounts = [];
         foreach ($results as $row) {
-            $noteCounts[$row['user_id']] = (int)$row['note_count'];
+            $noteCounts[(int) $row['user_id']] = (int) $row['note_count'];
         }
         
         return $noteCounts;

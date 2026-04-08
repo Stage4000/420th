@@ -6,9 +6,18 @@
         "php": ">=7.4",
         "nizarii/arma-rcon-class": "^2.0"
     },
+    "require-dev": {
+        "phpstan/phpstan": "^2.1.42"
+    },
     "autoload": {
         "classmap": [
             "."
         ]
+    },
+    "scripts": {
+        "phpstan": "phpstan analyse"
+    },
+    "config": {
+        "sort-packages": true
     }
 }

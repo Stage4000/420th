@@ -184,12 +184,17 @@ try {
             try {
                 // Check if table already exists
                 $stmt = $pdo->query("SHOW TABLES LIKE 'whitelist_bans'");
-                if ($stmt->rowCount() > 0) {
+                if ($stmt instanceof PDOStatement && $stmt->rowCount() > 0) {
                     // Table exists, check if columns need to be fixed
                     echo '<div class="step">';
                     echo '<div class="step-title">Checking existing table structure...</div>';
                     
-                    $columns = $pdo->query("SHOW COLUMNS FROM whitelist_bans")->fetchAll(PDO::FETCH_ASSOC);
+                    $columnsStmt = $pdo->query("SHOW COLUMNS FROM whitelist_bans");
+                    if (!($columnsStmt instanceof PDOStatement)) {
+                        throw new RuntimeException('Failed to inspect whitelist_bans columns');
+                    }
+
+                    $columns = $columnsStmt->fetchAll(PDO::FETCH_ASSOC);
                     $columnNames = array_column($columns, 'Field');
                     
                     // Check if columns need to be added or fixed

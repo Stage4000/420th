@@ -124,7 +124,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($banDuration !== 'indefinite') {
                     $hours = intval($banDuration);
                     if ($hours > 0) {
-                        $banExpires = date('Y-m-d H:i:s', strtotime("+$hours hours"));
+                        $banExpiresTimestamp = strtotime("+$hours hours");
+                        if ($banExpiresTimestamp !== false) {
+                            $banExpires = date('Y-m-d H:i:s', $banExpiresTimestamp);
+                        }
                     }
                 }
                 

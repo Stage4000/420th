@@ -8,7 +8,7 @@ require_once 'ban_manager.php';
 require_once 'html_sanitizer.php';
 
 // Helper function to detect AJAX requests
-function isAjaxRequest() {
+function isAjaxRequest(): bool {
     return !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
 }
@@ -20,17 +20,22 @@ if (!SteamAuth::isLoggedIn()) {
 }
 
 $user = SteamAuth::getCurrentUser();
+if ($user === null) {
+    header('Location: index');
+    exit;
+}
+
 $isPanelAdmin = SteamAuth::isPanelAdmin();
 $db = Database::getInstance();
 $roleManager = new RoleManager();
 $banManager = new BanManager();
 
 // Check if user is banned
-$banInfo = $banManager->isUserBanned($user['id']);
-$isBanned = $banInfo !== false;
+$banInfo = $banManager->isUserBanned((int) $user['id']);
+$isBanned = $banInfo !== null;
 
 // Refresh user roles from database (ensures roles are up-to-date after ban/unban)
-$freshRoles = SteamAuth::getUserRoles($user['id']);
+$freshRoles = SteamAuth::getUserRoles((int) $user['id']);
 $_SESSION['roles'] = $freshRoles;
 $user['roles'] = $freshRoles;
 
@@ -64,8 +69,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         // Check if user is banned
         if ($isBanned) {
             $message = "You cannot whitelist yourself while banned. ";
-            if ($banInfo['ban_expires']) {
-                $message .= "Your ban expires on " . date('F j, Y g:i A', strtotime($banInfo['ban_expires'])) . ".";
+            if (!empty($banInfo['ban_expires'])) {
+                $banExpiresTimestamp = strtotime((string) $banInfo['ban_expires']);
+                if ($banExpiresTimestamp !== false) {
+                    $message .= "Your ban expires on " . date('F j, Y g:i A', $banExpiresTimestamp) . ".";
+                }
             } else {
                 $message .= "Your ban is indefinite.";
             }
@@ -79,11 +87,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } else {
             try {
                 // Use RoleManager to add roles (handles automatic linking)
-                $roleManager->addRole($user['id'], 'S3');
-                $roleManager->addRole($user['id'], 'CAS');
+                $roleManager->addRole((int) $user['id'], 'S3');
+                $roleManager->addRole((int) $user['id'], 'CAS');
                 
                 // Refresh user roles in session
-                $roles = SteamAuth::getUserRoles($user['id']);
+                $roles = SteamAuth::getUserRoles((int) $user['id']);
                 $_SESSION['roles'] = $roles;
                 $user['roles'] = $roles;
                 
@@ -477,14 +485,15 @@ $isWhitelisted = $hasS3 && $hasCAS;
                 <p style="color: #ff6b6b; margin-bottom: 0.5rem; font-weight: bold;">
                     You have been banned from using the whitelist system.
                 </p>
-                <?php if ($banInfo['ban_reason']): ?>
+                <?php if (!empty($banInfo['ban_reason'])): ?>
                 <p style="color: #8b92a8; margin-bottom: 0.5rem;">
-                    <strong>Reason:</strong> <?php echo htmlspecialchars($banInfo['ban_reason']); ?>
+                    <strong>Reason:</strong> <?php echo htmlspecialchars((string) $banInfo['ban_reason']); ?>
                 </p>
                 <?php endif; ?>
                 <p style="color: #8b92a8; margin: 0;">
-                    <?php if ($banInfo['ban_expires']): ?>
-                        <strong>Expires:</strong> <?php echo date('F j, Y g:i A', strtotime($banInfo['ban_expires'])); ?>
+                    <?php if (!empty($banInfo['ban_expires'])): ?>
+                        <?php $banExpiryTimestamp = strtotime((string) $banInfo['ban_expires']); ?>
+                        <strong>Expires:</strong> <?php echo $banExpiryTimestamp === false ? 'Unknown' : date('F j, Y g:i A', $banExpiryTimestamp); ?>
                     <?php else: ?>
                         <strong>Duration:</strong> Indefinite
                     <?php endif; ?>

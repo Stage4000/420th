@@ -25,12 +25,17 @@ try {
     
     // Step 1: Check if migration is needed
     $stmt = $pdo->query("SHOW COLUMNS FROM users LIKE 'role_%'");
-    if ($stmt->rowCount() > 0) {
+    if ($stmt instanceof PDOStatement && $stmt->rowCount() > 0) {
         echo "⚠ Migration appears to already be complete (boolean columns exist)\n";
         echo "Do you want to re-run the migration? (yes/no): ";
         $handle = fopen("php://stdin", "r");
-        $line = trim(fgets($handle));
+        if ($handle === false) {
+            throw new RuntimeException('Unable to read confirmation from STDIN');
+        }
+
+        $line = fgets($handle);
         fclose($handle);
+        $line = $line === false ? '' : trim($line);
         
         if (strtolower($line) !== 'yes') {
             echo "Migration cancelled.\n";
@@ -81,6 +86,9 @@ try {
         FROM user_roles ur
         JOIN roles r ON ur.role_id = r.id
     ");
+    if (!($stmt instanceof PDOStatement)) {
+        throw new RuntimeException('Failed to load existing role assignments');
+    }
     
     $assignments = $stmt->fetchAll();
     $migratedCount = 0;
@@ -146,6 +154,9 @@ try {
         role_s3 = 1 OR role_cas = 1 OR role_s1 = 1 OR role_opfor = 1 OR 
         role_all = 1 OR role_admin = 1 OR role_moderator = 1 OR role_trusted = 1 OR 
         role_media = 1 OR role_curator = 1 OR role_developer = 1 OR role_panel = 1");
+    if (!($stmt instanceof PDOStatement)) {
+        throw new RuntimeException('Failed to verify migrated role counts');
+    }
     
     $result = $stmt->fetch();
     echo "  ✓ Users with roles after migration: " . $result['count'] . "\n";
